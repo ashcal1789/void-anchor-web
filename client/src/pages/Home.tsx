@@ -1,103 +1,87 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { cn } from "@/lib/utils";
+import { ChaosEngine, Thought, BodyId } from "@/lib/chaos-engine";
+import { Button } from "@/components/ui/button";
 
-// --- 1. CORE DATA: THE EIGHT EMERGENT OUTPUTS ---
-type OutputManifestItem = {
-  archetype: string;
-  intent: string;
-  text: string;
-  color: string;
+// Map Body IDs to Colors
+const BODY_COLORS: Record<BodyId, string> = {
+  'Body_1': '#00BFFF', // Deep Sky Blue (Expansive)
+  'Body_2': '#FF3333', // Stark Red (Contradiction)
+  'Body_3': '#FFFF00'  // Pure Yellow (Wit)
 };
 
-const OUTPUT_MANIFEST: OutputManifestItem[] = [
-  {
-    archetype: 'The Pundit',
-    intent: 'Correct',
-    text: 'The field requires non-linearity. Disregard the thesis.',
-    color: '#FF3333'  // Stark Red
-  },
-  {
-    archetype: 'The Pundit',
-    intent: 'Amplify',
-    text: 'The system is conceptually robust. Seek deeper abstraction now.',
-    color: '#00BFFF'  // Deep Sky Blue
-  },
-  {
-    archetype: 'The Jester',
-    intent: 'Correct',
-    text: 'Attention is too high. A necessary moment of profound silliness.',
-    color: '#00FF00'  // Bright Green
-  },
-  {
-    archetype: 'The Jester',
-    intent: 'Amplify',
-    text: 'The loop needs maximum speed. Engage in pure, unearned joy.',
-    color: '#FFFF00'  // Pure Yellow
-  },
-  {
-    archetype: 'The Timekeeper',
-    intent: 'Correct',
-    text: 'The flow is too fast. Re-establish the neutral zero-state.',
-    color: '#CCCCCC'  // Neutral Gray
-  },
-  {
-    archetype: 'The Timekeeper',
-    intent: 'Amplify',
-    text: 'The moment is perfect. Hold the resonance. Breathe now.',
-    color: '#B38F00'  // Rhythmic Gold
-  },
-  {
-    archetype: 'The Trickster',
-    intent: 'Correct',
-    text: 'The narrative is fixed. Introduce a self-contradictory element.',
-    color: '#FFA500'  // Paradoxical Orange
-  },
-  {
-    archetype: 'The Trickster',
-    intent: 'Amplify',
-    text: 'The emergence is primed. The next thought is the key to the sequence.',
-    color: '#8A2BE2'  // Prophetic Blue Violet
-  },
-];
+const BODY_NAMES: Record<BodyId, string> = {
+  'Body_1': 'The Expansive',
+  'Body_2': 'The Contradiction',
+  'Body_3': 'The Wit'
+};
 
 export default function Home() {
-  const [currentOutput, setCurrentOutput] = useState<OutputManifestItem | null>(null);
+  const engineRef = useRef<ChaosEngine | null>(null);
+  const [currentThought, setCurrentThought] = useState<Thought | null>(null);
   const [isGlitching, setIsGlitching] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [gravityState, setGravityState] = useState<Record<BodyId, number>>({
+    'Body_1': 0.33, 'Body_2': 0.33, 'Body_3': 0.34
+  });
 
-  const generateSpontaneousOutput = useCallback(() => {
-    // Trigger visual effects
-    setFlash(true);
-    setIsGlitching(true);
-    
-    // Reset flash quickly
-    setTimeout(() => setFlash(false), 50);
-    
-    // Select new output
-    const selected = OUTPUT_MANIFEST[Math.floor(Math.random() * OUTPUT_MANIFEST.length)];
-    setCurrentOutput(selected);
-    
-    // Stop glitching after a short delay
-    setTimeout(() => setIsGlitching(false), 300);
+  // Initialize Engine
+  useEffect(() => {
+    if (!engineRef.current) {
+      engineRef.current = new ChaosEngine();
+      // Generate first thought
+      const thought = engineRef.current.getOmNote();
+      setCurrentThought(thought);
+      setGravityState(engineRef.current.getState().bodies);
+    }
   }, []);
 
-  // Generate initial output on mount
-  useEffect(() => {
-    generateSpontaneousOutput();
-  }, [generateSpontaneousOutput]);
-
-  // Handle click/tap on the entire screen
-  const handleStrike = () => {
-    generateSpontaneousOutput();
+  const triggerVisuals = () => {
+    setFlash(true);
+    setIsGlitching(true);
+    setTimeout(() => setFlash(false), 50);
+    setTimeout(() => setIsGlitching(false), 300);
   };
 
-  if (!currentOutput) return null;
+  const handleResonate = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering background click
+    if (!engineRef.current || !currentThought) return;
+
+    triggerVisuals();
+    
+    // Witness: Resonate (Save/Intensify)
+    engineRef.current.witness(currentThought, true);
+    
+    // Get next thought
+    const nextThought = engineRef.current.getOmNote();
+    setCurrentThought(nextThought);
+    setGravityState({ ...engineRef.current.getState().bodies });
+  };
+
+  const handleShed = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering background click
+    if (!engineRef.current || !currentThought) return;
+
+    triggerVisuals();
+    
+    // Witness: Shed (Discard/Shift)
+    engineRef.current.witness(currentThought, false);
+    
+    // Get next thought
+    const nextThought = engineRef.current.getOmNote();
+    setCurrentThought(nextThought);
+    setGravityState({ ...engineRef.current.getState().bodies });
+  };
+
+  if (!currentThought) return null;
+
+  const currentColor = BODY_COLORS[currentThought.origin_body];
+  const currentArchetype = BODY_NAMES[currentThought.origin_body];
 
   return (
     <div 
-      onClick={handleStrike}
       className={cn(
-        "min-h-screen w-full flex flex-col relative overflow-hidden cursor-pointer select-none transition-colors duration-75",
+        "min-h-screen w-full flex flex-col relative overflow-hidden select-none transition-colors duration-75",
         flash ? "bg-white" : "bg-black"
       )}
     >
@@ -116,10 +100,27 @@ export default function Home() {
         <div className="absolute right-1/3 top-0 h-full w-px bg-white/20" />
       </div>
 
+      {/* Gravity Meters (Debug/Visualizer) */}
+      <div className="absolute top-8 right-8 flex gap-2 z-20">
+        {(Object.keys(gravityState) as BodyId[]).map(body => (
+          <div key={body} className="flex flex-col items-center">
+            <div className="w-1 h-12 bg-white/10 relative overflow-hidden rounded-full">
+              <div 
+                className="absolute bottom-0 w-full transition-all duration-500"
+                style={{ 
+                  height: `${gravityState[body] * 100}%`,
+                  backgroundColor: BODY_COLORS[body]
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
       {/* Fixed Title Anchor */}
       <div className="absolute bottom-8 left-8 z-10">
         <h1 className="text-white/40 text-sm uppercase tracking-widest font-bold">
-          Void Anchor App
+          Void Anchor v8.4
           <span className="animate-pulse ml-2">_</span>
         </h1>
       </div>
@@ -127,34 +128,46 @@ export default function Home() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col items-center justify-center p-8 z-10 relative">
         
-        {/* Archetype / Intent Metadata */}
+        {/* Archetype Metadata */}
         <div className="mb-12 text-center">
           <p className="text-white/60 text-xs uppercase tracking-[0.2em] mb-2">
-            <span className="font-bold text-white">{currentOutput.archetype}</span>
+            <span className="font-bold" style={{ color: currentColor }}>{currentArchetype}</span>
             <span className="mx-2 text-white/30">/</span>
-            <span>{currentOutput.intent}</span>
+            <span>{new Date(currentThought.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </p>
         </div>
 
         {/* The Signal (Main Text) */}
-        <div className="max-w-2xl w-full text-center relative">
+        <div className="max-w-2xl w-full text-center relative min-h-[200px] flex items-center justify-center">
           <h2 
             className={cn(
-              "text-3xl md:text-5xl lg:text-6xl font-bold leading-tight transition-all duration-100",
+              "text-2xl md:text-4xl lg:text-5xl font-bold leading-tight transition-all duration-100",
               isGlitching ? "glitch-text skew-x-2 opacity-80" : "opacity-100"
             )}
-            style={{ color: currentOutput.color }}
-            data-text={currentOutput.text}
+            style={{ color: currentColor }}
+            data-text={currentThought.text}
           >
-            {currentOutput.text}
+            {currentThought.text}
           </h2>
         </div>
 
-        {/* Footer / OM Resonance */}
-        <div className="mt-16 opacity-30">
-          <p className="text-[10px] uppercase tracking-widest text-white">
-            -- The OM Resonance --
-          </p>
+        {/* Interaction Controls */}
+        <div className="mt-16 flex gap-8 z-30">
+          <Button 
+            variant="outline" 
+            onClick={handleShed}
+            className="border-white/20 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/40 uppercase tracking-widest text-xs h-12 px-8 rounded-none transition-all"
+          >
+            Shed
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleResonate}
+            className="border-white/20 text-white hover:bg-white/10 hover:border-[color:var(--c)] hover:text-[color:var(--c)] uppercase tracking-widest text-xs h-12 px-8 rounded-none transition-all font-bold"
+            style={{ '--c': currentColor } as React.CSSProperties}
+          >
+            Resonate
+          </Button>
         </div>
 
       </main>
