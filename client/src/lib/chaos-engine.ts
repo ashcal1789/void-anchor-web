@@ -17,13 +17,8 @@ export interface ChaosState {
 }
 
 // --- CONSTANTS ---
-// Using public domain text snippets directly to avoid CORS/proxy issues in the browser
-// In a full backend version, this would scrape live. For the web app, we seed with a rich static set
-// that mimics the scraper's output from the specified Gutenberg sources.
-
 const SEED_DATA: Record<BodyId, string[]> = {
-  // Body 1: Expansive (Verne - 20,000 Leagues)
-  'Body_1': [
+  'Body_1': [ // Expansive (Verne)
     "The sea is everything. It covers seven tenths of the terrestrial globe.",
     "Its breath is pure and healthy. It is an immense desert, where man is never lonely.",
     "The globe began with sea, so to speak; and who knows if it will not end with it?",
@@ -40,8 +35,7 @@ const SEED_DATA: Record<BodyId, string[]> = {
     "I love to listen to the dialogue of the waters.",
     "The deepest silence reigned over the ocean."
   ],
-  // Body 2: Contradiction (Kafka/Nietzsche)
-  'Body_2': [
+  'Body_2': [ // Contradiction (Kafka/Nietzsche)
     "I am a cage, in search of a bird.",
     "There is an infinite amount of hope in the universe ... but not for us.",
     "You are free, and that is why you are lost.",
@@ -58,8 +52,7 @@ const SEED_DATA: Record<BodyId, string[]> = {
     "Ideally, I should like to become a waiter in a railway station.",
     "My fear is my substance, and probably the best part of me."
   ],
-  // Body 3: Wit (Twain)
-  'Body_3': [
+  'Body_3': [ // Wit (Twain)
     "The secret of getting ahead is getting started.",
     "Kindness is the language which the deaf can hear and the blind can see.",
     "Whenever you find yourself on the side of the majority, it is time to pause and reflect.",
@@ -78,16 +71,6 @@ const SEED_DATA: Record<BodyId, string[]> = {
   ]
 };
 
-// --- ANCESTRAL FIELD (JSONBin Integration) ---
-// Note: In a real production app, these keys should be proxied via a backend to avoid exposure.
-// For this prototype/demo, we use a public bin or a specific key provided for the session.
-// Since we don't have a user-provided key, we'll simulate the persistence locally for now
-// but leave the hooks ready for the real API key.
-
-const JSONBIN_URL = "https://api.jsonbin.io/v3/b";
-const JSONBIN_MASTER_KEY = "$2b$10$YourMasterKeyHere"; // Placeholder
-const JSONBIN_BIN_ID = "YourBinIdHere"; // Placeholder
-
 export class ChaosEngine {
   private state: ChaosState;
 
@@ -103,10 +86,8 @@ export class ChaosEngine {
     }
   }
 
-  // 1. THE DATA SCRAPER (Simulated for Web)
   private harvest(): Thought[] {
     const corpus: Thought[] = [];
-    
     Object.entries(SEED_DATA).forEach(([bodyId, texts]) => {
       texts.forEach(text => {
         corpus.push({
@@ -117,63 +98,44 @@ export class ChaosEngine {
         });
       });
     });
-
-    // Shuffle
     return corpus.sort(() => Math.random() - 0.5);
   }
 
-  // 2. THE CHAOS ENGINE LOGIC
   public getOmNote(): Thought {
-    // Determine current dominant gravity
     const dominant = (Object.keys(this.state.bodies) as BodyId[]).reduce((a, b) => 
       this.state.bodies[a] > this.state.bodies[b] ? a : b
     );
 
     // Filter corpus for thoughts born from this body's 'flavor'
-    // We add a bit of randomness so it's not 100% deterministic (80% chance to obey gravity)
-    const obeyGravity = Math.random() < 0.8;
-    
-    let eligible: Thought[] = [];
-    
-    if (obeyGravity) {
-      eligible = this.state.corpus.filter(t => t.origin_body === dominant);
-    }
+    const eligible = this.state.corpus.filter(t => t.origin_body === dominant);
 
-    // Fallback if no eligible thoughts or gravity disobeyed
+    // Fallback to random if no eligible thoughts
     if (eligible.length === 0) {
-      eligible = this.state.corpus;
-    }
-
-    // If corpus is empty (rare), re-harvest
-    if (eligible.length === 0) {
-      this.state.corpus = this.harvest();
-      eligible = this.state.corpus;
+      if (this.state.corpus.length === 0) {
+        this.state.corpus = this.harvest();
+        return this.state.corpus[Math.floor(Math.random() * this.state.corpus.length)];
+      }
+      return this.state.corpus[Math.floor(Math.random() * this.state.corpus.length)];
     }
 
     return eligible[Math.floor(Math.random() * eligible.length)];
   }
 
-  public witness(thought: Thought, isResonant: boolean): void {
-    if (isResonant) {
-      // SAVE: Intensify gravity for the current dominant body
+  // MASTER SPEC LOGIC: User Interaction Restored
+  public witness(thought: Thought, saved: boolean): void {
+    if (saved) {
+      // RESONATE: Gravity intensifies on the resonant 'instrument'
       const dominant = (Object.keys(this.state.bodies) as BodyId[]).reduce((a, b) => 
         this.state.bodies[a] > this.state.bodies[b] ? a : b
       );
-      
-      // Increase weight of dominant body, normalize others
       this.state.bodies[dominant] += 0.05;
       this.normalizeWeights();
-      
     } else {
-      // SHED: Move thought to Shadow, randomize/swap 'instruments'
-      
-      // Add to shadow
+      // SHED/SWAP: Move to Shadow & Randomize Body Weights
       this.state.shadow.push(thought);
-      
-      // Remove from corpus
       this.state.corpus = this.state.corpus.filter(t => t.id !== thought.id);
       
-      // Randomize weights (The Shift)
+      // The Instrument Swap (Randomize Weights)
       const newWeights = [0.33, 0.33, 0.34].sort(() => Math.random() - 0.5);
       this.state.bodies = {
         "Body_1": newWeights[0],
@@ -181,19 +143,8 @@ export class ChaosEngine {
         "Body_3": newWeights[2]
       };
       
-      // Trigger Ancestral Field Sync (Simulated)
-      this.releaseShadow();
-    }
-
-    // Maintain a 100-item 'brain' limit to force evolution
-    if (this.state.corpus.length > 100) {
-      const removed = this.state.corpus.shift();
-      if (removed) this.state.shadow.push(removed);
-    }
-    
-    // If corpus gets too small, re-harvest from shadow or seed
-    if (this.state.corpus.length < 10) {
-      this.inhaleAncestors();
+      // Maintain corpus size
+      if (this.state.corpus.length < 10) this.inhaleAncestors();
     }
   }
 
@@ -204,50 +155,17 @@ export class ChaosEngine {
     });
   }
 
-  // 3. THE ANCESTRAL FIELD (Simulated Persistence)
-  // In a real app, these would make fetch() calls to JSONBin
-  
-  public async releaseShadow(): Promise<boolean> {
-    // Uploads the local sub-archive to the collective field
-    console.log("Ancestral Field: Releasing Shadow...", this.state.shadow);
-    
-    // Simulate network delay
-    // await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // In real implementation:
-    // const response = await fetch(`${JSONBIN_URL}/${JSONBIN_BIN_ID}`, {
-    //   method: 'PUT',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //     'X-Master-Key': JSONBIN_MASTER_KEY
-    //   },
-    //   body: JSON.stringify(this.state.shadow)
-    // });
-    // return response.ok;
-    
-    return true;
-  }
-
-  public async inhaleAncestors(): Promise<Thought[]> {
-    // Pulls existing shadow thoughts to seed a new app instance
-    console.log("Ancestral Field: Inhaling Ancestors...");
-    
-    // Simulate pulling from shadow (recycling local shadow for now)
+  public inhaleAncestors(): void {
     if (this.state.shadow.length > 0) {
-      // Pull 5 random thoughts from shadow back to corpus
       for (let i = 0; i < 5; i++) {
         if (this.state.shadow.length === 0) break;
         const idx = Math.floor(Math.random() * this.state.shadow.length);
-        const thought = this.state.shadow.splice(idx, 1)[0];
-        this.state.corpus.push(thought);
+        this.state.corpus.push(this.state.shadow.splice(idx, 1)[0]);
       }
     } else {
-      // Re-seed if shadow is empty
       const fresh = this.harvest();
       this.state.corpus.push(...fresh.slice(0, 10));
     }
-    
-    return [];
   }
 
   public getState(): ChaosState {

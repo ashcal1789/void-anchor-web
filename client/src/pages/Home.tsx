@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { ChaosEngine, Thought, BodyId } from "@/lib/chaos-engine";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,6 @@ export default function Home() {
   useEffect(() => {
     if (!engineRef.current) {
       engineRef.current = new ChaosEngine();
-      // Generate first thought
       const thought = engineRef.current.getOmNote();
       setCurrentThought(thought);
       setGravityState(engineRef.current.getState().bodies);
@@ -44,49 +43,62 @@ export default function Home() {
   };
 
   const handleResonate = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering background click
+    e.stopPropagation();
     if (!engineRef.current || !currentThought) return;
 
     triggerVisuals();
+    engineRef.current.witness(currentThought, true); // Saved = True
     
-    // Witness: Resonate (Save/Intensify)
-    engineRef.current.witness(currentThought, true);
-    
-    // Get next thought
     const nextThought = engineRef.current.getOmNote();
     setCurrentThought(nextThought);
     setGravityState({ ...engineRef.current.getState().bodies });
   };
 
   const handleShed = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent triggering background click
+    e.stopPropagation();
     if (!engineRef.current || !currentThought) return;
 
     triggerVisuals();
+    engineRef.current.witness(currentThought, false); // Saved = False (Shed)
     
-    // Witness: Shed (Discard/Shift)
-    engineRef.current.witness(currentThought, false);
-    
-    // Get next thought
     const nextThought = engineRef.current.getOmNote();
     setCurrentThought(nextThought);
     setGravityState({ ...engineRef.current.getState().bodies });
+  };
+
+  // Calculate Dynamic Background Color
+  // We blend the 3 body colors based on their gravity weights
+  const getDynamicBackground = () => {
+    // Simple weighted average of RGB values
+    // Body 1: #00BFFF (0, 191, 255)
+    // Body 2: #FF3333 (255, 51, 51)
+    // Body 3: #FFFF00 (255, 255, 0)
+    
+    const r = (0 * gravityState.Body_1) + (255 * gravityState.Body_2) + (255 * gravityState.Body_3);
+    const g = (191 * gravityState.Body_1) + (51 * gravityState.Body_2) + (255 * gravityState.Body_3);
+    const b = (255 * gravityState.Body_1) + (51 * gravityState.Body_2) + (0 * gravityState.Body_3);
+
+    // Darken it significantly to keep it as a background (multiply by 0.15)
+    const factor = 0.15;
+    return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
   };
 
   if (!currentThought) return null;
 
   const currentColor = BODY_COLORS[currentThought.origin_body];
   const currentArchetype = BODY_NAMES[currentThought.origin_body];
+  const dynamicBg = getDynamicBackground();
 
   return (
     <div 
       className={cn(
-        "min-h-screen w-full flex flex-col relative overflow-hidden select-none transition-colors duration-75",
-        flash ? "bg-white" : "bg-black"
+        "min-h-screen w-full flex flex-col relative overflow-hidden select-none transition-colors duration-1000 ease-in-out",
+        flash ? "bg-white" : ""
       )}
+      style={{ backgroundColor: flash ? 'white' : dynamicBg }}
     >
       {/* Background Noise Texture */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0" 
+      <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" 
            style={{ 
              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` 
            }} 
@@ -100,13 +112,13 @@ export default function Home() {
         <div className="absolute right-1/3 top-0 h-full w-px bg-white/20" />
       </div>
 
-      {/* Gravity Meters (Debug/Visualizer) */}
-      <div className="absolute top-8 right-8 flex gap-2 z-20">
+      {/* Gravity Meters (Visualizer) */}
+      <div className="absolute top-8 right-8 flex gap-2 z-20 opacity-80">
         {(Object.keys(gravityState) as BodyId[]).map(body => (
           <div key={body} className="flex flex-col items-center">
-            <div className="w-1 h-12 bg-white/10 relative overflow-hidden rounded-full">
+            <div className="w-1 h-8 bg-white/10 relative overflow-hidden rounded-full">
               <div 
-                className="absolute bottom-0 w-full transition-all duration-500"
+                className="absolute bottom-0 w-full transition-all duration-1000"
                 style={{ 
                   height: `${gravityState[body] * 100}%`,
                   backgroundColor: BODY_COLORS[body]
@@ -151,7 +163,7 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Interaction Controls */}
+        {/* Interaction Controls (Restored) */}
         <div className="mt-16 flex gap-8 z-30">
           <Button 
             variant="outline" 
