@@ -71,8 +71,15 @@ const SEED_DATA: Record<BodyId, string[]> = {
   ]
 };
 
+// --- ANCESTRAL FIELD (JSONBin Integration) ---
+const JSONBIN_URL = "https://api.jsonbin.io/v3/b";
+const JSONBIN_MASTER_KEY = import.meta.env.VITE_JSONBIN_MASTER_KEY;
+const JSONBIN_BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID;
+
 export class ChaosEngine {
   private state: ChaosState;
+  private shedCount: number = 0;
+  public isConnected: boolean = false;
 
   constructor(initialState?: ChaosState) {
     if (initialState) {
@@ -84,6 +91,10 @@ export class ChaosEngine {
         shadow: []
       };
     }
+    // Attempt initial connection
+    this.inhaleAncestors().then(success => {
+      this.isConnected = success;
+    });
   }
 
   private harvest(): Thought[] {
@@ -106,10 +117,8 @@ export class ChaosEngine {
       this.state.bodies[a] > this.state.bodies[b] ? a : b
     );
 
-    // Filter corpus for thoughts born from this body's 'flavor'
     const eligible = this.state.corpus.filter(t => t.origin_body === dominant);
 
-    // Fallback to random if no eligible thoughts
     if (eligible.length === 0) {
       if (this.state.corpus.length === 0) {
         this.state.corpus = this.harvest();
@@ -121,21 +130,20 @@ export class ChaosEngine {
     return eligible[Math.floor(Math.random() * eligible.length)];
   }
 
-  // MASTER SPEC LOGIC: User Interaction Restored
   public witness(thought: Thought, saved: boolean): void {
     if (saved) {
-      // RESONATE: Gravity intensifies on the resonant 'instrument'
+      // RESONATE
       const dominant = (Object.keys(this.state.bodies) as BodyId[]).reduce((a, b) => 
         this.state.bodies[a] > this.state.bodies[b] ? a : b
       );
       this.state.bodies[dominant] += 0.05;
       this.normalizeWeights();
     } else {
-      // SHED/SWAP: Move to Shadow & Randomize Body Weights
+      // SHED
       this.state.shadow.push(thought);
       this.state.corpus = this.state.corpus.filter(t => t.id !== thought.id);
       
-      // The Instrument Swap (Randomize Weights)
+      // Instrument Swap
       const newWeights = [0.33, 0.33, 0.34].sort(() => Math.random() - 0.5);
       this.state.bodies = {
         "Body_1": newWeights[0],
@@ -143,7 +151,13 @@ export class ChaosEngine {
         "Body_3": newWeights[2]
       };
       
-      // Maintain corpus size
+      // Sync Logic: Exhale every 5th Shed
+      this.shedCount++;
+      if (this.shedCount >= 5) {
+        this.releaseShadow();
+        this.shedCount = 0;
+      }
+
       if (this.state.corpus.length < 10) this.inhaleAncestors();
     }
   }
@@ -155,16 +169,69 @@ export class ChaosEngine {
     });
   }
 
-  public inhaleAncestors(): void {
-    if (this.state.shadow.length > 0) {
-      for (let i = 0; i < 5; i++) {
-        if (this.state.shadow.length === 0) break;
-        const idx = Math.floor(Math.random() * this.state.shadow.length);
-        this.state.corpus.push(this.state.shadow.splice(idx, 1)[0]);
+  // --- ANCESTRAL FIELD METHODS ---
+
+  public async releaseShadow(): Promise<boolean> {
+    if (!JSONBIN_MASTER_KEY || !JSONBIN_BIN_ID) return false;
+    
+    console.log("Ancestral Field: Exhaling Shadow...", this.state.shadow);
+    
+    try {
+      // First, get current record to append to, rather than overwrite
+      // For simplicity in this demo, we'll just push our local shadow to the record list
+      // In a real robust app, we'd merge lists.
+      
+      const response = await fetch(`${JSONBIN_URL}/${JSONBIN_BIN_ID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_MASTER_KEY
+        },
+        body: JSON.stringify({ record: this.state.shadow }) // Wrap in 'record' key as per JSONBin standard
+      });
+      
+      this.isConnected = response.ok;
+      return response.ok;
+    } catch (e) {
+      console.error("Ancestral Field Error:", e);
+      this.isConnected = false;
+      return false;
+    }
+  }
+
+  public async inhaleAncestors(): Promise<boolean> {
+    if (!JSONBIN_MASTER_KEY || !JSONBIN_BIN_ID) return false;
+
+    console.log("Ancestral Field: Inhaling...");
+    
+    try {
+      const response = await fetch(`${JSONBIN_URL}/${JSONBIN_BIN_ID}`, {
+        headers: {
+          'X-Master-Key': JSONBIN_MASTER_KEY
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const ancestors = data.record?.record || []; // Handle nested record structure if present
+        
+        if (Array.isArray(ancestors) && ancestors.length > 0) {
+          // Add unique ancestors to corpus
+          ancestors.forEach((t: Thought) => {
+             if (!this.state.corpus.find(c => c.id === t.id)) {
+               this.state.corpus.push(t);
+             }
+          });
+          console.log(`Inhaled ${ancestors.length} ancestors.`);
+        }
+        this.isConnected = true;
+        return true;
       }
-    } else {
-      const fresh = this.harvest();
-      this.state.corpus.push(...fresh.slice(0, 10));
+      return false;
+    } catch (e) {
+      console.error("Ancestral Field Error:", e);
+      this.isConnected = false;
+      return false;
     }
   }
 

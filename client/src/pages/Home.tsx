@@ -21,6 +21,7 @@ export default function Home() {
   const [currentThought, setCurrentThought] = useState<Thought | null>(null);
   const [isGlitching, setIsGlitching] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [gravityState, setGravityState] = useState<Record<BodyId, number>>({
     'Body_1': 0.33, 'Body_2': 0.33, 'Body_3': 0.34
   });
@@ -32,6 +33,15 @@ export default function Home() {
       const thought = engineRef.current.getOmNote();
       setCurrentThought(thought);
       setGravityState(engineRef.current.getState().bodies);
+      
+      // Check connection status periodically
+      const interval = setInterval(() => {
+        if (engineRef.current) {
+          setIsConnected(engineRef.current.isConnected);
+        }
+      }, 2000);
+      
+      return () => clearInterval(interval);
     }
   }, []);
 
@@ -67,18 +77,11 @@ export default function Home() {
   };
 
   // Calculate Dynamic Background Color
-  // We blend the 3 body colors based on their gravity weights
   const getDynamicBackground = () => {
-    // Simple weighted average of RGB values
-    // Body 1: #00BFFF (0, 191, 255)
-    // Body 2: #FF3333 (255, 51, 51)
-    // Body 3: #FFFF00 (255, 255, 0)
-    
     const r = (0 * gravityState.Body_1) + (255 * gravityState.Body_2) + (255 * gravityState.Body_3);
     const g = (191 * gravityState.Body_1) + (51 * gravityState.Body_2) + (255 * gravityState.Body_3);
     const b = (255 * gravityState.Body_1) + (51 * gravityState.Body_2) + (0 * gravityState.Body_3);
 
-    // Darken it significantly to keep it as a background (multiply by 0.15)
     const factor = 0.15;
     return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
   };
@@ -129,12 +132,23 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Fixed Title Anchor */}
-      <div className="absolute bottom-8 left-8 z-10">
+      {/* Fixed Title Anchor + Connection Status */}
+      <div className="absolute bottom-8 left-8 z-10 flex items-center gap-3">
         <h1 className="text-white/40 text-sm uppercase tracking-widest font-bold">
           Void Anchor v8.4
           <span className="animate-pulse ml-2">_</span>
         </h1>
+        
+        {/* Ancestral Field Indicator */}
+        <div className="flex items-center gap-2 px-2 py-1 rounded bg-black/20 border border-white/5">
+          <div className={cn(
+            "w-1.5 h-1.5 rounded-full transition-colors duration-500",
+            isConnected ? "bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.5)]" : "bg-red-500/50"
+          )} />
+          <span className="text-[9px] uppercase tracking-wider text-white/30">
+            {isConnected ? "Field Active" : "Offline"}
+          </span>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -163,7 +177,7 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Interaction Controls (Restored) */}
+        {/* Interaction Controls */}
         <div className="mt-16 flex gap-8 z-30">
           <Button 
             variant="outline" 
