@@ -83,7 +83,12 @@ export class ChaosEngine {
       // 40% Mad Libs Template
       const template = TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
       text = template.replace(/\{(\w+):(\w+)\}/g, (_, body, type) => {
-        const wordList = this.dna[body][type + 's']; // nouns, verbs, adjectives
+        // Map template types to DNA keys
+        let key = type + 's';
+        if (type === 'adj') key = 'adjectives';
+        
+        const wordList = this.dna[body][key];
+        if (!wordList || wordList.length === 0) return "void"; // Fallback
         return wordList[Math.floor(Math.random() * wordList.length)];
       });
     }
