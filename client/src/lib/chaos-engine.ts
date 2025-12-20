@@ -125,8 +125,8 @@ export class ChaosEngine {
       return Math.floor(Math.random() * (25000 - 18000) + 18000);
     } else if (dominant === 'Body_1') { // Explorer (Adrenaline)
       return Math.floor(Math.random() * (12000 - 8000) + 8000);
-    } else { // Wit (Arrhythmia)
-      return Math.floor(Math.random() * (15000 - 3000) + 3000);
+    } else { // Wit (Arrhythmia) - Slowed down for readability (min 8s)
+      return Math.floor(Math.random() * (20000 - 8000) + 8000);
     }
   }
 
@@ -135,8 +135,14 @@ export class ChaosEngine {
     // 1. Move to Shadow
     this.state.shadow.push(currentThought);
     
-    // 2. Randomize Weights (The Glitch)
-    const newWeights = [0.33, 0.33, 0.34].sort(() => Math.random() - 0.5);
+    // 2. Randomize Weights (The Tower Moment)
+    // Force a dramatic shift by ensuring the new dominant body is different if possible
+    const currentDominant = this.getDominantBody();
+    let newWeights = [0.1, 0.1, 0.8]; // Extreme imbalance for "Tower Moment"
+    
+    // Shuffle weights
+    newWeights = newWeights.sort(() => Math.random() - 0.5);
+    
     this.state.bodies = {
       "Body_1": newWeights[0],
       "Body_2": newWeights[1],

@@ -13,9 +13,11 @@ SOURCES = {
         "https://www.gutenberg.org/files/2680/2680-0.txt", # Meditations
         "https://www.gutenberg.org/cache/epub/5200/pg5200.txt" # Metamorphosis
     ],
-    "Body_3": [ # Wit (Twain, Flapper Fanny)
+    "Body_3": [ # Wit (Twain, Flapper Fanny, Carroll, Lear)
         "https://www.gutenberg.org/files/74/74-0.txt", # Tom Sawyer
-        "https://www.gutenberg.org/cache/epub/74404/pg74404.txt" # Flapper Fanny
+        "https://www.gutenberg.org/cache/epub/74404/pg74404.txt", # Flapper Fanny
+        "https://www.gutenberg.org/files/11/11-0.txt", # Alice in Wonderland
+        "https://www.gutenberg.org/files/136/136-0.txt" # Book of Nonsense
     ]
 }
 

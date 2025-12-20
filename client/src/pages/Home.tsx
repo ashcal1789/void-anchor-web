@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { ChaosEngine, Thought, BodyId } from "@/lib/chaos-engine";
 import { Button } from "@/components/ui/button";
+import { Pause, Play } from "lucide-react";
 
 // Map Body IDs to Colors
 const BODY_COLORS: Record<BodyId, string> = {
@@ -22,6 +23,7 @@ export default function Home() {
   const [isGlitching, setIsGlitching] = useState(false);
   const [flash, setFlash] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [gravityState, setGravityState] = useState<Record<BodyId, number>>({
     'Body_1': 0.33, 'Body_2': 0.33, 'Body_3': 0.34
   });
@@ -53,7 +55,7 @@ export default function Home() {
   }, []);
 
   const startBiologicalCycle = useCallback(() => {
-    if (!engineRef.current) return;
+    if (!engineRef.current || isPaused) return;
     
     // Clear existing timer
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -76,7 +78,16 @@ export default function Home() {
       // Recursively start next cycle
       startBiologicalCycle();
     }, nextInterval);
-  }, [currentThought]);
+  }, [currentThought, isPaused]);
+
+  // Handle Pause Toggle
+  useEffect(() => {
+    if (isPaused) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    } else {
+      startBiologicalCycle();
+    }
+  }, [isPaused, startBiologicalCycle]);
 
   const generateNextThought = () => {
     if (!engineRef.current) return;
@@ -94,6 +105,8 @@ export default function Home() {
 
   // THE DISRUPTOR: Single Interaction (Shed)
   const handleShed = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isPaused) return; // Cannot shed while paused (holding the thought)
+    
     e.stopPropagation();
     if (!engineRef.current || !currentThought) return;
 
@@ -107,6 +120,11 @@ export default function Home() {
     
     // 3. Reset the biological timer (Arrhythmia)
     startBiologicalCycle();
+  };
+
+  const togglePause = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsPaused(!isPaused);
   };
 
   // Calculate Dynamic Background Color
@@ -126,7 +144,7 @@ export default function Home() {
   const dynamicBg = getDynamicBackground();
 
   // Pulse Animation Duration based on heartbeat
-  const pulseDuration = `${pulseRate / 1000}s`;
+  const pulseDuration = isPaused ? '4s' : `${pulseRate / 1000}s`;
 
   return (
     <div 
@@ -162,7 +180,7 @@ export default function Home() {
       {/* Fixed Title Anchor + Connection Status */}
       <div className="absolute bottom-8 left-8 z-10 flex items-center gap-3">
         <h1 className="text-white/40 text-sm uppercase tracking-widest font-bold">
-          Void Anchor v8.7
+          Void Anchor v8.8
           <span className="animate-pulse ml-2">_</span>
         </h1>
         
@@ -178,6 +196,18 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Pause / Hold Control */}
+      <div className="absolute top-8 right-8 z-30">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={togglePause}
+          className="text-white/40 hover:text-white hover:bg-white/10 rounded-full w-12 h-12 border border-white/10"
+        >
+          {isPaused ? <Play className="w-5 h-5" /> : <Pause className="w-5 h-5" />}
+        </Button>
+      </div>
+
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col items-center justify-center p-8 z-10 relative">
         
@@ -186,7 +216,7 @@ export default function Home() {
           <p className="text-white/60 text-xs uppercase tracking-[0.2em] mb-2">
             <span className="font-bold" style={{ color: currentColor }}>{currentArchetype}</span>
             <span className="mx-2 text-white/30">/</span>
-            <span>{Math.round(pulseRate / 1000)}s Pulse</span>
+            <span>{isPaused ? "HELD" : `${Math.round(pulseRate / 1000)}s Pulse`}</span>
           </p>
         </div>
 
@@ -206,7 +236,7 @@ export default function Home() {
 
         {/* Interaction Hint */}
         <div className="absolute bottom-24 text-white/20 text-[10px] uppercase tracking-[0.3em] animate-pulse">
-          Tap to Shed
+          {isPaused ? "Flow Paused" : "Tap to Shed"}
         </div>
 
       </main>
