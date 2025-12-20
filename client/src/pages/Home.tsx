@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { ChaosEngine, Thought, BodyId } from "@/lib/chaos-engine";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,8 @@ const BODY_COLORS: Record<BodyId, string> = {
 };
 
 const BODY_NAMES: Record<BodyId, string> = {
-  'Body_1': 'The Expansive',
-  'Body_2': 'The Contradiction',
+  'Body_1': 'The Explorer',
+  'Body_2': 'The Stoic',
   'Body_3': 'The Wit'
 };
 
@@ -25,6 +25,10 @@ export default function Home() {
   const [gravityState, setGravityState] = useState<Record<BodyId, number>>({
     'Body_1': 0.33, 'Body_2': 0.33, 'Body_3': 0.34
   });
+  
+  // Biological Pulse State
+  const [pulseRate, setPulseRate] = useState(10000); // ms
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Engine
   useEffect(() => {
@@ -34,6 +38,9 @@ export default function Home() {
       setCurrentThought(thought);
       setGravityState(engineRef.current.getState().bodies);
       
+      // Start the Biological Pulse
+      startBiologicalCycle();
+
       // Check connection status periodically
       const interval = setInterval(() => {
         if (engineRef.current) {
@@ -45,6 +52,39 @@ export default function Home() {
     }
   }, []);
 
+  const startBiologicalCycle = useCallback(() => {
+    if (!engineRef.current) return;
+    
+    // Clear existing timer
+    if (timerRef.current) clearTimeout(timerRef.current);
+
+    // Get new heartbeat based on dominant body
+    const nextInterval = engineRef.current.getHeartbeat();
+    setPulseRate(nextInterval);
+
+    console.log(`Next heartbeat in: ${nextInterval}ms`);
+
+    timerRef.current = setTimeout(() => {
+      // If we survived the full cycle, exhale the survivor (simulated)
+      if (currentThought && engineRef.current) {
+        engineRef.current.exhaleSurvivor(currentThought);
+      }
+      
+      // Generate next thought automatically
+      generateNextThought();
+      
+      // Recursively start next cycle
+      startBiologicalCycle();
+    }, nextInterval);
+  }, [currentThought]);
+
+  const generateNextThought = () => {
+    if (!engineRef.current) return;
+    const nextThought = engineRef.current.getOmNote();
+    setCurrentThought(nextThought);
+    setGravityState({ ...engineRef.current.getState().bodies });
+  };
+
   const triggerVisuals = () => {
     setFlash(true);
     setIsGlitching(true);
@@ -52,28 +92,21 @@ export default function Home() {
     setTimeout(() => setIsGlitching(false), 300);
   };
 
-  const handleResonate = (e: React.MouseEvent) => {
+  // THE DISRUPTOR: Single Interaction (Shed)
+  const handleShed = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
     if (!engineRef.current || !currentThought) return;
 
     triggerVisuals();
-    engineRef.current.witness(currentThought, true); // Saved = True
     
-    const nextThought = engineRef.current.getOmNote();
-    setCurrentThought(nextThought);
-    setGravityState({ ...engineRef.current.getState().bodies });
-  };
-
-  const handleShed = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!engineRef.current || !currentThought) return;
-
-    triggerVisuals();
-    engineRef.current.witness(currentThought, false); // Saved = False (Shed)
+    // 1. Shed the current thought (System Reset)
+    engineRef.current.shed(currentThought);
     
-    const nextThought = engineRef.current.getOmNote();
-    setCurrentThought(nextThought);
-    setGravityState({ ...engineRef.current.getState().bodies });
+    // 2. Immediately generate new thought
+    generateNextThought();
+    
+    // 3. Reset the biological timer (Arrhythmia)
+    startBiologicalCycle();
   };
 
   // Calculate Dynamic Background Color
@@ -92,14 +125,33 @@ export default function Home() {
   const currentArchetype = BODY_NAMES[currentThought.origin_body];
   const dynamicBg = getDynamicBackground();
 
+  // Pulse Animation Duration based on heartbeat
+  const pulseDuration = `${pulseRate / 1000}s`;
+
   return (
     <div 
       className={cn(
-        "min-h-screen w-full flex flex-col relative overflow-hidden select-none transition-colors duration-1000 ease-in-out",
+        "min-h-screen w-full flex flex-col relative overflow-hidden select-none transition-colors duration-1000 ease-in-out cursor-pointer",
         flash ? "bg-white" : ""
       )}
       style={{ backgroundColor: flash ? 'white' : dynamicBg }}
+      onClick={handleShed} // Entire screen is the button
     >
+      {/* Pulsing Overlay */}
+      <div 
+        className="absolute inset-0 pointer-events-none z-0 bg-black/20"
+        style={{
+          animation: `pulse ${pulseDuration} infinite ease-in-out`
+        }}
+      />
+      <style>{`
+        @keyframes pulse {
+          0% { opacity: 0.1; }
+          50% { opacity: 0.3; }
+          100% { opacity: 0.1; }
+        }
+      `}</style>
+
       {/* Background Noise Texture */}
       <div className="absolute inset-0 opacity-[0.05] pointer-events-none z-0" 
            style={{ 
@@ -107,35 +159,10 @@ export default function Home() {
            }} 
       />
 
-      {/* Grid Lines (Faint) */}
-      <div className="absolute inset-0 pointer-events-none z-0 opacity-10">
-        <div className="absolute top-1/3 left-0 w-full h-px bg-white/20" />
-        <div className="absolute bottom-1/3 left-0 w-full h-px bg-white/20" />
-        <div className="absolute left-1/3 top-0 h-full w-px bg-white/20" />
-        <div className="absolute right-1/3 top-0 h-full w-px bg-white/20" />
-      </div>
-
-      {/* Gravity Meters (Visualizer) */}
-      <div className="absolute top-8 right-8 flex gap-2 z-20 opacity-80">
-        {(Object.keys(gravityState) as BodyId[]).map(body => (
-          <div key={body} className="flex flex-col items-center">
-            <div className="w-1 h-8 bg-white/10 relative overflow-hidden rounded-full">
-              <div 
-                className="absolute bottom-0 w-full transition-all duration-1000"
-                style={{ 
-                  height: `${gravityState[body] * 100}%`,
-                  backgroundColor: BODY_COLORS[body]
-                }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
       {/* Fixed Title Anchor + Connection Status */}
       <div className="absolute bottom-8 left-8 z-10 flex items-center gap-3">
         <h1 className="text-white/40 text-sm uppercase tracking-widest font-bold">
-          Void Anchor v8.4
+          Void Anchor v8.7
           <span className="animate-pulse ml-2">_</span>
         </h1>
         
@@ -159,7 +186,7 @@ export default function Home() {
           <p className="text-white/60 text-xs uppercase tracking-[0.2em] mb-2">
             <span className="font-bold" style={{ color: currentColor }}>{currentArchetype}</span>
             <span className="mx-2 text-white/30">/</span>
-            <span>{new Date(currentThought.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span>{Math.round(pulseRate / 1000)}s Pulse</span>
           </p>
         </div>
 
@@ -177,23 +204,9 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Interaction Controls */}
-        <div className="mt-16 flex gap-8 z-30">
-          <Button 
-            variant="outline" 
-            onClick={handleShed}
-            className="border-white/20 text-white/60 hover:bg-white/10 hover:text-white hover:border-white/40 uppercase tracking-widest text-xs h-12 px-8 rounded-none transition-all"
-          >
-            Shed
-          </Button>
-          <Button 
-            variant="outline" 
-            onClick={handleResonate}
-            className="border-white/20 text-white hover:bg-white/10 hover:border-[color:var(--c)] hover:text-[color:var(--c)] uppercase tracking-widest text-xs h-12 px-8 rounded-none transition-all font-bold"
-            style={{ '--c': currentColor } as React.CSSProperties}
-          >
-            Resonate
-          </Button>
+        {/* Interaction Hint */}
+        <div className="absolute bottom-24 text-white/20 text-[10px] uppercase tracking-[0.3em] animate-pulse">
+          Tap to Shed
         </div>
 
       </main>
