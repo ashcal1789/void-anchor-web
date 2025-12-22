@@ -1,99 +1,88 @@
 import requests
-import random
-import json
 import re
+import json
+import os
 
-# --- CONFIGURATION ---
+# ORACLE 2.0: THE THREE-BODY PRISM SOURCES
 SOURCES = {
-    "Body_1": [ # Explorer (Verne, Melville)
-        "https://www.gutenberg.org/files/164/164-0.txt", # 20,000 Leagues
-        "https://www.gutenberg.org/files/2701/2701-0.txt"  # Moby Dick
+    "Pole_A": [ # The Architect (Tesla/Logic) - Technical, Obsessive, Mathematical
+        "https://www.gutenberg.org/cache/epub/39272/pg39272.txt", # Tesla Experiments
+        "https://www.gutenberg.org/files/28953/28953-0.txt"  # Scientific Essays
     ],
-    "Body_2": [ # Stoic (Aurelius, Kafka)
-        "https://www.gutenberg.org/files/2680/2680-0.txt", # Meditations
-        "https://www.gutenberg.org/cache/epub/5200/pg5200.txt" # Metamorphosis
+    "Pole_B": [ # The Ghost (Sartre/Void) - Existential, Fatalistic, Raw
+        "https://www.gutenberg.org/files/600/600-0.txt", # Notes from Underground (Dostoevsky)
+        "https://www.gutenberg.org/cache/epub/19322/pg19322.txt" # Antichrist (Nietzsche)
     ],
-    "Body_3": [ # Wit (Twain, Flapper Fanny, Carroll, Lear)
-        "https://www.gutenberg.org/files/74/74-0.txt", # Tom Sawyer
-        "https://www.gutenberg.org/cache/epub/74404/pg74404.txt", # Flapper Fanny
-        "https://www.gutenberg.org/files/11/11-0.txt", # Alice in Wonderland
-        "https://www.gutenberg.org/files/136/136-0.txt" # Book of Nonsense
+    "Pole_C": [ # The Pulse (Gonzo/Wit) - Kinetic, Sharp, Sensory
+        "https://www.gutenberg.org/files/844/844-0.txt", # Importance of Being Earnest (Wilde)
+        "https://www.gutenberg.org/cache/epub/43624/pg43624.txt" # American Language (Mencken)
     ]
 }
 
-# Simple POS tagging heuristics (since we can't use heavy NLP libs easily in this env)
-# We will look for patterns to identify likely candidates.
-def extract_parts(text):
-    words = re.findall(r'\b[a-z]{3,}\b', text.lower())
-    
-    nouns = []
-    verbs = []
-    adjectives = []
-    
-    # Very basic heuristic lists for demonstration/speed
-    # In a full production env, we'd use NLTK or Spacy
-    common_suffixes = {
-        'noun': ['tion', 'ness', 'ment', 'ity', 'er', 'ism', 'ist'],
-        'verb': ['ate', 'ify', 'ize', 'ing', 'ed'],
-        'adj': ['ous', 'ive', 'al', 'ful', 'ic', 'less']
-    }
-    
-    for w in words:
-        if any(w.endswith(s) for s in common_suffixes['noun']): nouns.append(w)
-        elif any(w.endswith(s) for s in common_suffixes['verb']): verbs.append(w)
-        elif any(w.endswith(s) for s in common_suffixes['adj']): adjectives.append(w)
-        
-    return list(set(nouns)), list(set(verbs)), list(set(adjectives))
-
-def clean_sentence(text):
-    # Remove Gutenberg headers/footers and messy whitespace
-    lines = text.split('\n')
-    clean_lines = []
-    start = False
-    for line in lines:
-        if "*** START OF" in line: start = True; continue
-        if "*** END OF" in line: break
-        if start and line.strip(): clean_lines.append(line.strip())
-    
-    full_text = " ".join(clean_lines)
-    sentences = re.split(r'(?<=[.!?]) +', full_text)
-    
-    # Filter for quality
-    return [s for s in sentences if 20 < len(s) < 140 and not "Gutenberg" in s]
+# Simple POS tagging heuristics
+def get_pos(word):
+    if word.endswith('ing'): return 'verb'
+    if word.endswith('ed'): return 'verb'
+    if word.endswith('tion'): return 'noun'
+    if word.endswith('ity'): return 'noun'
+    if word.endswith('ness'): return 'noun'
+    if word.endswith('ous'): return 'adjective'
+    if word.endswith('al'): return 'adjective'
+    if word.endswith('ive'): return 'adjective'
+    if len(word) > 3: return 'noun' # Fallback
+    return None
 
 def harvest():
     dna = {
-        "Body_1": {"sentences": [], "nouns": [], "verbs": [], "adjectives": []},
-        "Body_2": {"sentences": [], "nouns": [], "verbs": [], "adjectives": []},
-        "Body_3": {"sentences": [], "nouns": [], "verbs": [], "adjectives": []}
+        "Pole_A": {"nouns": [], "verbs": [], "adjectives": [], "sentences": []},
+        "Pole_B": {"nouns": [], "verbs": [], "adjectives": [], "sentences": []},
+        "Pole_C": {"nouns": [], "verbs": [], "adjectives": [], "sentences": []}
     }
-    
+
     for body, urls in SOURCES.items():
         print(f"Harvesting {body}...")
-        all_text = ""
+        full_text = ""
         for url in urls:
             try:
                 print(f"  Fetching {url}...")
-                r = requests.get(url, timeout=10)
-                if r.status_code == 200:
-                    all_text += r.text
+                response = requests.get(url)
+                full_text += response.text
             except Exception as e:
-                print(f"  Failed: {e}")
-        
+                print(f"  Failed to fetch {url}: {e}")
+
+        # Clean text
+        # Remove Gutenberg headers/footers (rough approximation)
+        start_idx = full_text.find("*** START OF")
+        end_idx = full_text.find("*** END OF")
+        if start_idx != -1: full_text = full_text[start_idx:]
+        if end_idx != -1: full_text = full_text[:end_idx]
+
         # Extract Sentences
-        sentences = clean_sentence(all_text)
-        dna[body]["sentences"] = random.sample(sentences, min(len(sentences), 500))
+        sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', full_text)
+        clean_sentences = [s.strip().replace('\r', ' ').replace('\n', ' ') for s in sentences if 10 < len(s) < 150]
         
-        # Extract Parts of Speech
-        n, v, a = extract_parts(all_text)
-        dna[body]["nouns"] = random.sample(n, min(len(n), 200))
-        dna[body]["verbs"] = random.sample(v, min(len(v), 200))
-        dna[body]["adjectives"] = random.sample(a, min(len(a), 200))
-        
-    return dna
+        # Limit to 500 unique lines per pole
+        dna[body]["sentences"] = list(set(clean_sentences))[:500]
+
+        # Extract Words for Mad Libs
+        words = re.findall(r'\b\w+\b', full_text)
+        for word in words:
+            if len(word) < 4: continue
+            pos = get_pos(word.lower())
+            if pos:
+                dna[body][pos + "s"].append(word.lower())
+
+        # Limit word lists
+        dna[body]["nouns"] = list(set(dna[body]["nouns"]))[:1000]
+        dna[body]["verbs"] = list(set(dna[body]["verbs"]))[:1000]
+        dna[body]["adjectives"] = list(set(dna[body]["adjectives"]))[:1000]
+
+    # Save DNA
+    os.makedirs("client/src/lib", exist_ok=True)
+    with open("client/src/lib/dna.json", "w") as f:
+        json.dump(dna, f)
+    
+    print("Harvest complete. DNA saved to client/src/lib/dna.json")
 
 if __name__ == "__main__":
-    data = harvest()
-    with open("client/src/lib/dna.json", "w") as f:
-        json.dump(data, f)
-    print("Harvest complete. DNA saved to client/src/lib/dna.json")
+    harvest()

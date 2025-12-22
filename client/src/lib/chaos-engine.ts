@@ -1,216 +1,200 @@
 import { v4 as uuidv4 } from 'uuid';
 import dnaData from './dna.json';
 
-// --- TYPES ---
-export type BodyId = 'Body_1' | 'Body_2' | 'Body_3';
+// ORACLE 2.0: THE THREE-BODY PRISM
+export type PoleId = 'Pole_A' | 'Pole_B' | 'Pole_C';
 
 export interface Thought {
   id: string;
   text: string;
-  origin_body: BodyId;
+  roles: {
+    seed: PoleId;
+    syntax: PoleId;
+    lexicon: PoleId;
+  };
   timestamp: number;
 }
 
 export interface ChaosState {
-  bodies: Record<BodyId, number>;
-  corpus: Thought[];
+  poles: Record<PoleId, number>; // Gravity weights
   shadow: Thought[];
+  pulse_input: string | null;
 }
 
-// --- ANCESTRAL FIELD (JSONBin Integration) ---
-const JSONBIN_URL = "https://api.jsonbin.io/v3/b";
-const JSONBIN_MASTER_KEY = import.meta.env.VITE_JSONBIN_MASTER_KEY;
-const JSONBIN_BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID;
-
-// --- GRAMMAR FORGE TEMPLATES ---
+// Templates for High-Tension Synthesis
 const TEMPLATES = [
-  "The {Body_1:noun} is simply {Body_2:adj} {Body_3:noun}.",
-  "If you {Body_2:verb}, you will eventually {Body_1:verb} like a {Body_3:noun}.",
-  "A {Body_2:adj} {Body_3:noun} always {Body_1:verb}s in the dark.",
-  "Why does the {Body_1:noun} {Body_3:verb} so {Body_2:adj}?",
-  "To {Body_2:verb} is to {Body_1:verb} without {Body_3:noun}.",
-  "Beware the {Body_3:adj} {Body_1:noun}, for it {Body_2:verb}s.",
-  "My {Body_2:noun} is a {Body_1:noun} in search of a {Body_3:noun}.",
-  "The {Body_3:noun} is the {Body_2:adj} form of {Body_1:noun}.",
-  "We must {Body_1:verb} before we can {Body_3:verb}.",
-  "Every {Body_2:noun} contains a hidden {Body_1:noun}."
+  "The {seed:noun} is merely a {lexicon:adjective} {syntax:noun} in disguise.",
+  "If you {syntax:verb} the {seed:noun}, you must also {lexicon:verb} the {lexicon:noun}.",
+  "Why {syntax:verb} when the {seed:noun} is so {lexicon:adjective}?",
+  "A {lexicon:adjective} {seed:noun} always {syntax:verb}s the {syntax:noun}.",
+  "To {lexicon:verb} is human; to {syntax:verb} the {seed:noun} is divine.",
+  "The {seed:noun} {syntax:verb}s like a {lexicon:adjective} {lexicon:noun}.",
+  "Beware the {lexicon:adjective} {seed:noun}, for it {syntax:verb}s without mercy.",
+  "In the end, every {seed:noun} becomes a {lexicon:noun} of {syntax:noun}."
 ];
 
 export class ChaosEngine {
   private state: ChaosState;
+  private dna: any;
   private shedCount: number = 0;
   public isConnected: boolean = false;
-  private dna: any;
 
-  constructor(initialState?: ChaosState) {
+  // JSONBin Config
+  private BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID;
+  private MASTER_KEY = import.meta.env.VITE_JSONBIN_MASTER_KEY;
+
+  constructor() {
     this.dna = dnaData;
-    if (initialState) {
-      this.state = initialState;
-    } else {
-      this.state = {
-        bodies: { "Body_1": 0.33, "Body_2": 0.33, "Body_3": 0.34 },
-        corpus: [], // Will be populated by forge
-        shadow: []
-      };
-    }
-    // Attempt initial connection
-    this.inhaleAncestors().then(success => {
-      this.isConnected = success;
-    });
+    this.state = {
+      poles: {
+        "Pole_A": 0.33, // Architect (Tesla)
+        "Pole_B": 0.33, // Ghost (Sartre)
+        "Pole_C": 0.34  // Pulse (Gonzo)
+      },
+      shadow: [],
+      pulse_input: null
+    };
+    
+    this.inhaleShadow();
   }
 
-  // --- GRAMMAR FORGE ---
-  private forgeThought(dominantBody: BodyId): Thought {
-    const roll = Math.random();
-    let text = "";
+  // --- 1. THE TIGRA ROLE-SWAP ENGINE ---
+  public getOracleThought(): Thought {
+    // Functional Scramble: Assign roles randomly but uniquely
+    const poles: PoleId[] = ['Pole_A', 'Pole_B', 'Pole_C'];
+    const shuffled = poles.sort(() => Math.random() - 0.5);
+    
+    const roles = {
+      seed: shuffled[0],    // The Topic
+      syntax: shuffled[1],  // The Logic/Flow
+      lexicon: shuffled[2]  // The Vocabulary
+    };
 
-    if (roll < 0.3) {
-      // 30% Pure Original Line from Dominant Body
-      const sentences = this.dna[dominantBody].sentences;
+    // Generate Text using High-Tension Synthesis
+    let text = "";
+    
+    // 30% Chance: Pure Syntax Injection (Direct line from Syntax Pole)
+    if (Math.random() < 0.3) {
+      const sentences = this.dna[roles.syntax].sentences;
       text = sentences[Math.floor(Math.random() * sentences.length)];
-    } else if (roll < 0.6) {
-      // 30% Sentence Splicing (Two halves from different bodies)
-      const bodyA = dominantBody;
-      const bodyB = this.getRandomBody();
-      const sentA = this.dna[bodyA].sentences[Math.floor(Math.random() * this.dna[bodyA].sentences.length)];
-      const sentB = this.dna[bodyB].sentences[Math.floor(Math.random() * this.dna[bodyB].sentences.length)];
-      
-      // Simple splice at midpoint (heuristic)
-      const halfA = sentA.split(' ').slice(0, Math.floor(sentA.split(' ').length / 2)).join(' ');
-      const halfB = sentB.split(' ').slice(Math.floor(sentB.split(' ').length / 2)).join(' ');
-      text = `${halfA} ... ${halfB}`;
     } else {
-      // 40% Mad Libs Template
+      // 70% Chance: Template Synthesis (The "Lick" Factor)
       const template = TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
-      text = template.replace(/\{(\w+):(\w+)\}/g, (_, body, type) => {
-        // Map template types to DNA keys
-        let key = type + 's';
-        if (type === 'adj') key = 'adjectives';
+      text = template.replace(/\{(\w+):(\w+)\}/g, (_, roleType, pos) => {
+        // roleType is 'seed', 'syntax', or 'lexicon'
+        // pos is 'noun', 'verb', 'adjective'
+        const pole = roles[roleType as keyof typeof roles];
         
-        const wordList = this.dna[body][key];
-        if (!wordList || wordList.length === 0) return "void"; // Fallback
+        // Map 'adj' to 'adjectives' if needed
+        let key = pos + 's';
+        if (pos === 'adj') key = 'adjectives';
+        
+        const wordList = this.dna[pole][key];
+        if (!wordList || wordList.length === 0) return "void";
         return wordList[Math.floor(Math.random() * wordList.length)];
       });
     }
 
     return {
       id: uuidv4(),
-      text,
-      origin_body: dominantBody,
+      text: text,
+      roles: roles,
       timestamp: Date.now()
     };
   }
 
-  private getRandomBody(): BodyId {
-    const bodies: BodyId[] = ['Body_1', 'Body_2', 'Body_3'];
-    return bodies[Math.floor(Math.random() * bodies.length)];
-  }
-
-  public getOmNote(): Thought {
-    const dominant = this.getDominantBody();
-    return this.forgeThought(dominant);
-  }
-
-  public getDominantBody(): BodyId {
-    return (Object.keys(this.state.bodies) as BodyId[]).reduce((a, b) => 
-      this.state.bodies[a] > this.state.bodies[b] ? a : b
-    );
-  }
-
-  // --- BIOLOGICAL PULSE ---
+  // --- 2. THE RESONANCE ENGINE (Heartbeat) ---
   public getHeartbeat(): number {
-    const dominant = this.getDominantBody();
+    // Determine dominant pole based on weights
+    const dominant = this.getDominantPole();
     
-    if (dominant === 'Body_2') { // Stoic (Calm)
-      return Math.floor(Math.random() * (25000 - 18000) + 18000);
-    } else if (dominant === 'Body_1') { // Explorer (Adrenaline)
+    if (dominant === 'Pole_A') { // Architect (Logic) - Precise, Fast
       return Math.floor(Math.random() * (12000 - 8000) + 8000);
-    } else { // Wit (Arrhythmia) - Slowed down for readability (min 8s)
-      return Math.floor(Math.random() * (20000 - 8000) + 8000);
+    } else if (dominant === 'Pole_B') { // Ghost (Void) - Slow, Heavy
+      return Math.floor(Math.random() * (25000 - 18000) + 18000);
+    } else { // Pulse (Gonzo) - Erratic, Kinetic
+      return Math.floor(Math.random() * (15000 - 5000) + 5000);
     }
   }
 
-  // --- INTERACTION: THE DISRUPTOR ---
-  public shed(currentThought: Thought): void {
-    // 1. Move to Shadow
-    this.state.shadow.push(currentThought);
-    
-    // 2. Randomize Weights (The Tower Moment)
-    // Force a dramatic shift by ensuring the new dominant body is different if possible
-    const currentDominant = this.getDominantBody();
-    let newWeights = [0.1, 0.1, 0.8]; // Extreme imbalance for "Tower Moment"
-    
-    // Shuffle weights
-    newWeights = newWeights.sort(() => Math.random() - 0.5);
-    
-    this.state.bodies = {
-      "Body_1": newWeights[0],
-      "Body_2": newWeights[1],
-      "Body_3": newWeights[2]
-    };
+  public getDominantPole(): PoleId {
+    return Object.keys(this.state.poles).reduce((a, b) => 
+      this.state.poles[a as PoleId] > this.state.poles[b as PoleId] ? a : b
+    ) as PoleId;
+  }
 
-    // 3. Sync Logic: Exhale every 5th Shed
+  // --- 3. PUBLIC INTERACTION: SEND A PULSE ---
+  public sendPulse(input: string): void {
+    // Convert input to atmospheric weight shift
+    // Simple hash-like effect: length of input shifts gravity
+    const shift = input.length % 3;
+    const targetPole = shift === 0 ? 'Pole_A' : shift === 1 ? 'Pole_B' : 'Pole_C';
+    
+    // Apply subtle gravity shift (The Butterfly Effect)
+    this.state.poles[targetPole] += 0.1;
+    
+    // Normalize weights
+    const total = Object.values(this.state.poles).reduce((a, b) => a + b, 0);
+    this.state.poles['Pole_A'] /= total;
+    this.state.poles['Pole_B'] /= total;
+    this.state.poles['Pole_C'] /= total;
+    
+    this.state.pulse_input = input;
+  }
+
+  // --- 4. ANCESTRAL FIELD (JSONBin) ---
+  private async inhaleShadow() {
+    if (!this.MASTER_KEY || !this.BIN_ID) return;
+    try {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${this.BIN_ID}/latest`, {
+        headers: { 'X-Master-Key': this.MASTER_KEY }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.record && Array.isArray(data.record.shadow)) {
+          this.state.shadow = data.record.shadow;
+          this.isConnected = true;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to inhale shadow:", e);
+    }
+  }
+
+  public exhaleSurvivor(thought: Thought) {
+    // Only save if connected
+    if (!this.isConnected) return;
+    
+    this.state.shadow.push(thought);
+    
+    // Sync every 5th thought to avoid rate limits
     this.shedCount++;
     if (this.shedCount >= 5) {
-      this.releaseShadow();
+      this.syncToCloud();
       this.shedCount = 0;
     }
   }
 
-  // --- ANCESTRAL FIELD METHODS ---
-  public async releaseShadow(): Promise<boolean> {
-    if (!JSONBIN_MASTER_KEY || !JSONBIN_BIN_ID) return false;
+  private async syncToCloud() {
+    if (!this.MASTER_KEY || !this.BIN_ID) return;
     try {
-      const response = await fetch(`${JSONBIN_URL}/${JSONBIN_BIN_ID}`, {
+      // Keep only last 100 thoughts to prevent bloat
+      const recentShadow = this.state.shadow.slice(-100);
+      
+      await fetch(`https://api.jsonbin.io/v3/b/${this.BIN_ID}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'X-Master-Key': JSONBIN_MASTER_KEY
+          'X-Master-Key': this.MASTER_KEY
         },
-        body: JSON.stringify({ record: this.state.shadow })
+        body: JSON.stringify({ shadow: recentShadow })
       });
-      this.isConnected = response.ok;
-      return response.ok;
     } catch (e) {
-      console.error("Ancestral Field Error:", e);
-      this.isConnected = false;
-      return false;
+      console.error("Failed to exhale shadow:", e);
     }
   }
 
-  public async inhaleAncestors(): Promise<boolean> {
-    if (!JSONBIN_MASTER_KEY || !JSONBIN_BIN_ID) return false;
-    try {
-      const response = await fetch(`${JSONBIN_URL}/${JSONBIN_BIN_ID}`, {
-        headers: { 'X-Master-Key': JSONBIN_MASTER_KEY }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        const ancestors = data.record?.record || [];
-        // In v8.7, we don't add to corpus directly since we generate on fly,
-        // but we could add them to a 'memory' pool for the forge to use later.
-        // For now, we just confirm connection.
-        this.isConnected = true;
-        return true;
-      }
-      return false;
-    } catch (e) {
-      console.error("Ancestral Field Error:", e);
-      this.isConnected = false;
-      return false;
-    }
-  }
-
-  // Secret Exhale: Upload current phrase if it survives a full cycle
-  public async exhaleSurvivor(thought: Thought): Promise<void> {
-     // In a real app, we'd push this single thought. 
-     // Reusing releaseShadow logic for simplicity but appending just one would require reading first.
-     // For this demo, we'll skip the complexity of read-modify-write for single survivors to save credits/latency.
-     // We'll just log it locally.
-     console.log("Survivor exhaled to local memory:", thought);
-  }
-
-  public getState(): ChaosState {
+  public getState() {
     return this.state;
   }
 }
