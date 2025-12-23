@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pause, Play, Send } from "lucide-react";
 
-// ORACLE 2.0: THE THREE-BODY PRISM COLORS
+// ORACLE FINAL: THE GENETIC ARCHITECTURE
 const POLE_COLORS: Record<PoleId, string> = {
-  'Pole_A': '#00FFFF', // Cyan (Tesla/Architect)
-  'Pole_B': '#FF00FF', // Magenta (Sartre/Ghost)
-  'Pole_C': '#FFFF00'  // Yellow (Gonzo/Pulse)
+  'Pole_A': '#00FFFF', // Cyan (Architect)
+  'Pole_B': '#FF00FF', // Magenta (Ghost)
+  'Pole_C': '#FFFF00'  // Yellow (Pulse)
 };
 
 const POLE_NAMES: Record<PoleId, string> = {
@@ -27,9 +27,7 @@ export default function Home() {
   const [gravityState, setGravityState] = useState<Record<PoleId, number>>({
     'Pole_A': 0.33, 'Pole_B': 0.33, 'Pole_C': 0.34
   });
-  
-  // Biological Pulse State
-  const [pulseRate, setPulseRate] = useState(10000); // ms
+  const [pulseRate, setPulseRate] = useState(10000);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Initialize Engine
@@ -40,10 +38,8 @@ export default function Home() {
       setCurrentThought(thought);
       setGravityState(engineRef.current.getState().poles);
       
-      // Start the Biological Pulse
       startBiologicalCycle();
 
-      // Check connection status periodically
       const interval = setInterval(() => {
         if (engineRef.current) {
           setIsConnected(engineRef.current.isConnected);
@@ -57,28 +53,21 @@ export default function Home() {
   const startBiologicalCycle = useCallback(() => {
     if (!engineRef.current || isPaused) return;
     
-    // Clear existing timer
     if (timerRef.current) clearTimeout(timerRef.current);
 
-    // Get new heartbeat based on dominant pole
     const nextInterval = engineRef.current.getHeartbeat();
     setPulseRate(nextInterval);
 
     timerRef.current = setTimeout(() => {
-      // Exhale survivor if it lasted the full cycle
       if (currentThought && engineRef.current) {
         engineRef.current.exhaleSurvivor(currentThought);
       }
       
-      // Generate next thought automatically
       generateNextThought();
-      
-      // Recursively start next cycle
       startBiologicalCycle();
     }, nextInterval);
   }, [currentThought, isPaused]);
 
-  // Handle Pause Toggle (The Anchor)
   useEffect(() => {
     if (isPaused) {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -98,11 +87,8 @@ export default function Home() {
     e.preventDefault();
     if (!engineRef.current || !pulseInput.trim()) return;
     
-    // Send Pulse to Engine (shifts gravity)
     engineRef.current.sendPulse(pulseInput);
     setPulseInput("");
-    
-    // Visual feedback could go here
   };
 
   const togglePause = (e: React.MouseEvent) => {
@@ -110,7 +96,7 @@ export default function Home() {
     setIsPaused(!isPaused);
   };
 
-  // Calculate Dynamic Background Color
+  // Dynamic Background: Blend all three pole colors based on gravity
   const getDynamicBackground = () => {
     const r = (0 * gravityState.Pole_A) + (255 * gravityState.Pole_B) + (255 * gravityState.Pole_C);
     const g = (255 * gravityState.Pole_A) + (0 * gravityState.Pole_B) + (255 * gravityState.Pole_C);
@@ -122,7 +108,6 @@ export default function Home() {
 
   if (!currentThought) return null;
 
-  // Determine dominant pole for color coding
   const dominantPole = Object.keys(gravityState).reduce((a, b) => 
     gravityState[a as PoleId] > gravityState[b as PoleId] ? a : b
   ) as PoleId;
@@ -130,9 +115,11 @@ export default function Home() {
   const currentColor = POLE_COLORS[dominantPole];
   const currentArchetype = POLE_NAMES[dominantPole];
   const dynamicBg = getDynamicBackground();
-
-  // Pulse Animation Duration based on heartbeat
   const pulseDuration = isPaused ? '4s' : `${pulseRate / 1000}s`;
+
+  // Determine if this is a Subconscious thought (Fractal Archive)
+  const isSubconscious = currentThought.isSubconscious || false;
+  const subconsciosLabel = isSubconscious ? " [ECHO]" : "";
 
   return (
     <div 
@@ -164,7 +151,7 @@ export default function Home() {
       {/* Header: Title & Connection */}
       <div className="absolute top-8 left-8 z-10 flex items-center gap-3">
         <h1 className="text-white/40 text-sm uppercase tracking-widest font-bold">
-          Oracle 2.0
+          Oracle Final
           <span className="animate-pulse ml-2">_</span>
         </h1>
         
@@ -191,12 +178,21 @@ export default function Home() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col items-center justify-center p-8 z-10 relative">
         
-        {/* Archetype Metadata */}
+        {/* Archetype Metadata with Infusions */}
         <div className="mb-12 text-center">
           <p className="text-white/60 text-xs uppercase tracking-[0.2em] mb-2">
-            <span className="font-bold" style={{ color: currentColor }}>{currentArchetype}</span>
+            <span className="font-bold" style={{ color: currentColor }}>
+              {currentArchetype}{subconsciosLabel}
+            </span>
             <span className="mx-2 text-white/30">/</span>
             <span>{isPaused ? "ANCHORED" : `${Math.round(pulseRate / 1000)}s Pulse`}</span>
+          </p>
+          
+          {/* Infusion Display */}
+          <p className="text-white/30 text-[8px] uppercase tracking-[0.15em] mt-1">
+            Seed: {currentThought.infusions.seed} • 
+            Syntax: {currentThought.infusions.syntax} • 
+            Lexicon: {currentThought.infusions.lexicon}
           </p>
         </div>
 
