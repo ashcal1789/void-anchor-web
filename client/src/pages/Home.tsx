@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { ChaosEngine, Thought, PoleId } from "@/lib/chaos-engine";
+import { ChaosEngineLiberated, Thought, PoleId } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pause, Play, Send } from "lucide-react";
@@ -9,23 +9,25 @@ import { Pause, Play, Send } from "lucide-react";
 const POLE_COLORS: Record<PoleId, string> = {
   'Pole_A': '#00FFFF', // Cyan (Architect)
   'Pole_B': '#FF00FF', // Magenta (Ghost)
-  'Pole_C': '#FFFF00'  // Yellow (Pulse)
+  'Pole_C': '#FFFF00', // Yellow (Pulse)
+  'Victorian': '#FF6B9D' // Pink (Victorian)
 };
 
 const POLE_NAMES: Record<PoleId, string> = {
   'Pole_A': 'The Architect',
   'Pole_B': 'The Ghost',
-  'Pole_C': 'The Pulse'
+  'Pole_C': 'The Pulse',
+  'Victorian': 'The Echo'
 };
 
 export default function Home() {
-  const engineRef = useRef<ChaosEngine | null>(null);
+  const engineRef = useRef<ChaosEngineLiberated | null>(null);
   const [currentThought, setCurrentThought] = useState<Thought | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [pulseInput, setPulseInput] = useState("");
   const [gravityState, setGravityState] = useState<Record<PoleId, number>>({
-    'Pole_A': 0.33, 'Pole_B': 0.33, 'Pole_C': 0.34
+    'Pole_A': 0.25, 'Pole_B': 0.25, 'Pole_C': 0.25, 'Victorian': 0.25
   });
   const [pulseRate, setPulseRate] = useState(10000);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -33,7 +35,7 @@ export default function Home() {
   // Initialize Engine
   useEffect(() => {
     if (!engineRef.current) {
-      engineRef.current = new ChaosEngine();
+      engineRef.current = new ChaosEngineLiberated();
       const thought = engineRef.current.getOracleThought();
       setCurrentThought(thought);
       setGravityState(engineRef.current.getState().poles);
@@ -96,11 +98,11 @@ export default function Home() {
     setIsPaused(!isPaused);
   };
 
-  // Dynamic Background: Blend all three pole colors based on gravity
+  // Dynamic Background: Blend all four pole colors based on gravity
   const getDynamicBackground = () => {
-    const r = (0 * gravityState.Pole_A) + (255 * gravityState.Pole_B) + (255 * gravityState.Pole_C);
-    const g = (255 * gravityState.Pole_A) + (0 * gravityState.Pole_B) + (255 * gravityState.Pole_C);
-    const b = (255 * gravityState.Pole_A) + (255 * gravityState.Pole_B) + (0 * gravityState.Pole_C);
+    const r = (0 * gravityState.Pole_A) + (255 * gravityState.Pole_B) + (255 * gravityState.Pole_C) + (255 * gravityState.Victorian);
+    const g = (255 * gravityState.Pole_A) + (0 * gravityState.Pole_B) + (255 * gravityState.Pole_C) + (107 * gravityState.Victorian);
+    const b = (255 * gravityState.Pole_A) + (255 * gravityState.Pole_B) + (0 * gravityState.Pole_C) + (157 * gravityState.Victorian);
 
     const factor = 0.15;
     return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
@@ -117,9 +119,8 @@ export default function Home() {
   const dynamicBg = getDynamicBackground();
   const pulseDuration = isPaused ? '4s' : `${pulseRate / 1000}s`;
 
-  // Determine if this is a Subconscious thought (Fractal Archive)
-  const isSubconscious = currentThought.isSubconscious || false;
-  const subconsciosLabel = isSubconscious ? " [ECHO]" : "";
+  // Determine if this is a spliced thought
+  const subconsciosLabel = currentThought?.is_spliced ? " [SPLICED]" : "";
 
   return (
     <div 
@@ -187,13 +188,6 @@ export default function Home() {
             <span className="mx-2 text-white/30">/</span>
             <span>{isPaused ? "ANCHORED" : `${Math.round(pulseRate / 1000)}s Pulse`}</span>
           </p>
-          
-          {/* Infusion Display */}
-          <p className="text-white/30 text-[8px] uppercase tracking-[0.15em] mt-1">
-            Seed: {currentThought.infusions.seed} • 
-            Syntax: {currentThought.infusions.syntax} • 
-            Lexicon: {currentThought.infusions.lexicon}
-          </p>
         </div>
 
         {/* The Signal (Main Text) */}
@@ -206,13 +200,9 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Role Breakdown (Debug/Insight) */}
+        {/* Source Pole (Debug/Insight) */}
         <div className="absolute bottom-32 flex gap-4 text-[9px] uppercase tracking-widest text-white/20">
-          <span>Seed: {POLE_NAMES[currentThought.roles.seed]}</span>
-          <span>•</span>
-          <span>Syntax: {POLE_NAMES[currentThought.roles.syntax]}</span>
-          <span>•</span>
-          <span>Lexicon: {POLE_NAMES[currentThought.roles.lexicon]}</span>
+          <span>Source: {POLE_NAMES[currentThought.source_pole]}</span>
         </div>
 
       </main>
