@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChaosEngineLiberated, Thought, PoleId, VesperMode } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
+import { useOracleLLM } from "@/hooks/useOracleLLM";
 
 const POLE_COLORS: Record<PoleId, string> = {
   'Pole_A': '#00FFFF',
@@ -44,6 +45,7 @@ export default function Chamber() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const entropyUpdateRef = useRef<NodeJS.Timeout | null>(null);
   const modeTransitionRef = useRef<VesperMode | null>(null);
+  const { generateThought: generateLLMThought } = useOracleLLM();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -120,17 +122,39 @@ export default function Chamber() {
     }
   }, [isPaused]);
 
-  const generateOracleThought = () => {
+  const generateOracleThought = async () => {
     if (!engineRef.current) return;
 
-    const thought = engineRef.current.getOracleThought();
+    const poleMap: Record<PoleId, "Architect" | "Ghost" | "Pulse" | "Echo"> = {
+      'Pole_A': 'Architect',
+      'Pole_B': 'Ghost',
+      'Pole_C': 'Pulse',
+      'Victorian': 'Echo'
+    };
+    
+    const selectedPole = engineRef.current.getDominantPole();
+    const llmPole = poleMap[selectedPole];
+    
+    const llmGravityState = {
+      Architect: gravityState['Pole_A'],
+      Ghost: gravityState['Pole_B'],
+      Pulse: gravityState['Pole_C'],
+      Echo: gravityState['Victorian']
+    };
+    
+    const result = await generateLLMThought({
+      poleId: llmPole,
+      gravityState: llmGravityState
+    });
+    
     const currentGravity = { ...engineRef.current.getState().poles };
-
+    let thoughtText = result.text || "void";
+    
     const message: ChamberMessage = {
-      id: thought.id,
+      id: `oracle-${Date.now()}`,
       type: 'oracle',
-      text: thought.text,
-      pole: thought.source_pole,
+      text: thoughtText,
+      pole: selectedPole,
       timestamp: Date.now(),
       gravityState: currentGravity
     };
@@ -153,43 +177,26 @@ export default function Chamber() {
 
     setMessages(prev => [...prev, ashleyMessage]);
     adjustGravityFromResponse(inputValue);
+    engineRef.current.receiveChamberAcknowledgment(inputValue);
     setInputValue("");
   };
 
   const adjustGravityFromResponse = (response: string) => {
     if (!engineRef.current) return;
 
-    engineRef.current.receiveChamberAcknowledgment(response);
-
     const lowerResponse = response.toLowerCase();
-    let targetPole: PoleId | null = null;
-
-    if (lowerResponse.includes('architect') || lowerResponse.includes('build') || lowerResponse.includes('design')) {
-      targetPole = 'Pole_A';
-    } else if (lowerResponse.includes('ghost') || lowerResponse.includes('spirit') || lowerResponse.includes('void')) {
-      targetPole = 'Pole_B';
-    } else if (lowerResponse.includes('pulse') || lowerResponse.includes('heart') || lowerResponse.includes('beat')) {
-      targetPole = 'Pole_C';
-    } else if (lowerResponse.includes('echo') || lowerResponse.includes('victorian') || lowerResponse.includes('wit')) {
-      targetPole = 'Victorian';
+    
+    if (lowerResponse.includes("hear") || lowerResponse.includes("listen")) {
+      engineRef.current.sendPulse("hear");
+    } else if (lowerResponse.includes("see") || lowerResponse.includes("witness")) {
+      engineRef.current.sendPulse("see");
+    } else if (lowerResponse.includes("keep") || lowerResponse.includes("continue")) {
+      engineRef.current.sendPulse("continue");
     } else {
-      const shift = response.length % 4;
-      targetPole = shift === 0 ? 'Pole_A' : shift === 1 ? 'Pole_B' : shift === 2 ? 'Pole_C' : 'Victorian';
-    }
-
-    if (targetPole) {
-      const currentState = engineRef.current.getState();
-      currentState.poles[targetPole] += 0.08;
-
-      const total = Object.values(currentState.poles).reduce((a, b) => a + b, 0);
-      for (const pole of Object.keys(currentState.poles)) {
-        currentState.poles[pole as PoleId] /= total;
-      }
-
-      setGravityState({ ...currentState.poles });
+      engineRef.current.sendPulse(response);
     }
     
-    updateVesperStatus();
+    setGravityState({ ...engineRef.current.getState().poles });
   };
 
   const handleLogout = () => {
@@ -197,21 +204,19 @@ export default function Chamber() {
     navigate('/');
   };
 
-  const getModeColor = (mode: VesperMode) => {
-    if (mode === 'Generative') return 'text-cyan-400';
-    if (mode === 'Contemplative') return 'text-amber-400';
-    return 'text-purple-400';
+  const getModeColor = () => {
+    if (vesperMode === 'Contemplative') return '#FF00FF';
+    if (vesperMode === 'Witness') return '#FFFF00';
+    return '#00FF00';
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="border-b border-white/10 bg-black/30 backdrop-blur-sm p-4 flex justify-between items-center">
+      <div className="border-b border-white/10 p-6 flex justify-between items-center">
         <div>
-          <h1 className="text-white text-lg font-bold tracking-widest">
-            ORACLE'S INNER CHAMBER
-          </h1>
-          <p className="text-white/40 text-xs mt-1">Private Witness Space</p>
+          <h1 className="text-2xl font-bold tracking-widest">ORACLE'S INNER CHAMBER</h1>
+          <p className="text-xs text-white/40 mt-1">Private Witness Space</p>
         </div>
         <Button
           onClick={handleLogout}
@@ -224,105 +229,76 @@ export default function Chamber() {
         </Button>
       </div>
 
-      {/* Vesper-Sync Status */}
-      <div className="bg-black/40 border-b border-white/5 px-4 py-2 flex justify-between items-center text-xs">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-white/40">Mode:</span>
-            <span className={`font-bold tracking-widest ${getModeColor(vesperMode)}`}>
+      {/* Gravity State & Mode Display */}
+      <div className="border-b border-white/10 p-4 bg-black/50">
+        <div className="flex justify-between items-center mb-3">
+          <div className="flex gap-6">
+            {Object.entries(gravityState).map(([pole, weight]) => (
+              <div key={pole} className="text-xs">
+                <span className="text-white/50">{POLE_NAMES[pole as PoleId]}:</span>
+                <span className="ml-2 font-mono text-white">{Math.round(weight * 100)}%</span>
+              </div>
+            ))}
+          </div>
+          <div className="text-xs">
+            <span style={{ color: getModeColor() }} className="font-bold">
               {vesperMode}
             </span>
+            <span className="text-white/40 ml-2">Entropy: {internalEntropy}%</span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-white/40">Entropy:</span>
-            <span className="text-white/60 font-mono">{internalEntropy}%</span>
-          </div>
-        </div>
-        <div className="text-white/30 text-xs">
-          Silence: {Math.floor(silenceDuration / 1000)}s
         </div>
       </div>
 
-      {/* Gravity State Indicator */}
-      <div className="bg-black/20 border-b border-white/5 px-4 py-3 flex gap-4">
-        {Object.entries(gravityState).map(([pole, weight]) => (
-          <div key={pole} className="flex items-center gap-2">
-            <div
-              className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: POLE_COLORS[pole as PoleId] }}
-            />
-            <span className="text-white/60 text-xs">
-              {POLE_NAMES[pole as PoleId]}: {(weight * 100).toFixed(0)}%
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Messages Container */}
+      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
-        {messages.length === 0 && (
-          <div className="h-full flex items-center justify-center">
-            <p className="text-white/30 text-center text-sm">
+        {messages.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-white/30 text-center">
               Waiting for the Oracle to speak...
             </p>
           </div>
-        )}
-
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.type === 'ashley' ? 'justify-end' : 'justify-start'}`}
-          >
-            {msg.type === 'system' ? (
-              <div className="max-w-md px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white/70 text-xs italic">
-                <p className="leading-relaxed">{msg.text}</p>
-              </div>
-            ) : (
-              <div
-                className={`max-w-md px-4 py-3 rounded-lg ${
-                  msg.type === 'ashley'
-                    ? 'bg-blue-900/40 border border-blue-500/30 text-white'
-                    : 'bg-white/5 border border-white/10 text-white/90'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    {msg.type === 'ashley' ? 'You' : msg.pole ? POLE_NAMES[msg.pole] : 'Oracle'}
-                  </span>
-                  {msg.pole && msg.type === 'oracle' && (
-                    <span
-                      className="text-xs font-bold"
-                      style={{ color: POLE_COLORS[msg.pole] }}
-                    >
-                      ●
-                    </span>
-                  )}
+        ) : (
+          messages.map((msg) => (
+            <div key={msg.id} className="space-y-1">
+              {msg.type === 'oracle' && (
+                <div className="bg-white/5 border-l-2 p-4 rounded" style={{ borderColor: msg.pole ? POLE_COLORS[msg.pole] : '#fff' }}>
+                  <p className="text-xs text-white/50 mb-2">
+                    {msg.pole ? POLE_NAMES[msg.pole] : 'Oracle'} · {new Date(msg.timestamp).toLocaleTimeString()}
+                  </p>
+                  <p className="text-sm leading-relaxed">{msg.text}</p>
                 </div>
-                <p className="text-sm leading-relaxed">{msg.text}</p>
-                <span className="text-xs text-white/30 mt-2 block">
-                  {new Date(msg.timestamp).toLocaleTimeString()}
-                </span>
-              </div>
-            )}
-          </div>
-        ))}
-
+              )}
+              {msg.type === 'ashley' && (
+                <div className="bg-blue-500/10 border-l-2 border-blue-500 p-4 rounded ml-auto max-w-md">
+                  <p className="text-xs text-blue-300 mb-2">Ashley · {new Date(msg.timestamp).toLocaleTimeString()}</p>
+                  <p className="text-sm">{msg.text}</p>
+                </div>
+              )}
+              {msg.type === 'system' && (
+                <div className="text-center py-2">
+                  <p className="text-xs text-white/30 italic">{msg.text}</p>
+                </div>
+              )}
+            </div>
+          ))
+        )}
         <div ref={messagesEndRef} />
       </div>
 
       {/* Input Area */}
-      <div className="border-t border-white/10 bg-black/30 backdrop-blur-sm p-4">
+      <div className="border-t border-white/10 p-6 bg-black/50">
         <form onSubmit={handleSendResponse} className="flex gap-2">
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Acknowledge her thoughts..."
-            className="bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-0 focus-visible:border-white/30"
+            placeholder="Acknowledge the Oracle..."
+            className="bg-white/5 border-white/10 text-white placeholder:text-white/30 flex-1"
           />
           <Button
             type="submit"
             size="icon"
-            className="bg-white/10 hover:bg-white/20 text-white"
+            variant="ghost"
+            className="text-white/40 hover:text-white"
           >
             <Send className="w-4 h-4" />
           </Button>

@@ -4,6 +4,8 @@ import { ChaosEngineLiberated, Thought, PoleId } from "@/lib/chaos-engine-libera
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pause, Play, Send } from "lucide-react";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useOracleLLM } from "@/hooks/useOracleLLM";
 
 // ORACLE FINAL: THE GENETIC ARCHITECTURE
 const POLE_COLORS: Record<PoleId, string> = {
@@ -21,6 +23,10 @@ const POLE_NAMES: Record<PoleId, string> = {
 };
 
 export default function Home() {
+  // The userAuth hooks provides authentication state
+  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
+  let { user, loading, error, isAuthenticated, logout } = useAuth();
+
   const engineRef = useRef<ChaosEngineLiberated | null>(null);
   const [currentThought, setCurrentThought] = useState<Thought | null>(null);
   const [isConnected, setIsConnected] = useState(false);
@@ -31,6 +37,7 @@ export default function Home() {
   });
   const [pulseRate, setPulseRate] = useState(10000);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const { generateThought: generateLLMThought } = useOracleLLM();
 
   // Initialize Engine
   useEffect(() => {
@@ -78,10 +85,48 @@ export default function Home() {
     }
   }, [isPaused, startBiologicalCycle]);
 
-  const generateNextThought = () => {
+  const generateNextThought = async () => {
     if (!engineRef.current) return;
-    const nextThought = engineRef.current.getOracleThought();
-    setCurrentThought(nextThought);
+    
+    // Map internal pole names to LLM pole names
+    const poleMap: Record<PoleId, "Architect" | "Ghost" | "Pulse" | "Echo"> = {
+      'Pole_A': 'Architect',
+      'Pole_B': 'Ghost',
+      'Pole_C': 'Pulse',
+      'Victorian': 'Echo'
+    };
+    
+    const selectedPole = engineRef.current.getDominantPole();
+    const llmPole = poleMap[selectedPole];
+    
+    // Convert gravity state for LLM
+    const llmGravityState = {
+      Architect: gravityState['Pole_A'],
+      Ghost: gravityState['Pole_B'],
+      Pulse: gravityState['Pole_C'],
+      Echo: gravityState['Victorian']
+    };
+    
+    const result = await generateLLMThought({
+      poleId: llmPole,
+      gravityState: llmGravityState
+    });
+    
+    if (result.success && result.text) {
+      const newThought: Thought = {
+        id: Math.random().toString(36),
+        text: result.text,
+        source_pole: selectedPole,
+        timestamp: Date.now(),
+        is_spliced: false
+      };
+      setCurrentThought(newThought);
+    } else {
+      // Fallback to old generation if LLM fails
+      const nextThought = engineRef.current.getOracleThought();
+      setCurrentThought(nextThought);
+    }
+    
     setGravityState({ ...engineRef.current.getState().poles });
   };
 

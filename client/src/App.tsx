@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Chamber from "./pages/Chamber";
 import ChamberAuth from "./pages/ChamberAuth";
+import OracleLLMTest from "./pages/OracleLLMTest";
 
 
 function ProtectedChamber() {
@@ -31,13 +32,14 @@ function ChamberAccessButton() {
     </button>
   );
 }
-
 function Router() {
+  // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/chamber"} component={ProtectedChamber} />
       <Route path={"/chamber-auth"} component={ChamberAuth} />
+      <Route path={"/oracle-test"} component={OracleLLMTest} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
