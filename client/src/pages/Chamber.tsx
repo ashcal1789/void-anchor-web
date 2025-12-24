@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Send, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
+import { useCompanion } from "@/hooks/useCompanion";
 
 const POLE_COLORS: Record<PoleId, string> = {
   'Pole_A': '#00FFFF',
@@ -22,11 +23,12 @@ const POLE_NAMES: Record<PoleId, string> = {
 
 interface ChamberMessage {
   id: string;
-  type: 'oracle' | 'ashley' | 'system';
+  type: 'oracle' | 'ashley' | 'system' | 'companion';
   text: string;
   pole?: PoleId;
   timestamp: number;
   gravityState?: Record<PoleId, number>;
+  emotion?: string;
 }
 
 export default function Chamber() {
@@ -164,6 +166,9 @@ export default function Chamber() {
     setMessages(prev => [...prev, message]);
     setGravityState(currentGravity);
     updateVesperStatus();
+    
+    // Trigger companion response after Oracle speaks
+    handleCompanionResponse(thoughtText);
   };
 
   const handleSendResponse = (e: React.FormEvent) => {
@@ -212,6 +217,30 @@ export default function Chamber() {
     return '#00FF00';
   };
 
+
+
+  const { generateResponse: generateCompanionResponse } = useCompanion();
+  
+  const handleCompanionResponse = async (oracleThought: string) => {
+    const result = await generateCompanionResponse(
+      oracleThought,
+      messages
+        .filter(m => m.type === 'oracle')
+        .slice(-3)
+        .map(m => m.text)
+    );
+    
+    if (result.success && result.response) {
+      const companionMsg: ChamberMessage = {
+        id: `companion-${Date.now()}`,
+        type: 'companion',
+        text: result.response,
+        timestamp: Date.now(),
+        emotion: result.emotion
+      };
+      setMessages(prev => [...prev, companionMsg]);
+    }
+  };
 
   const handleShareVideo = async (e: React.FormEvent) => {
     e.preventDefault();
