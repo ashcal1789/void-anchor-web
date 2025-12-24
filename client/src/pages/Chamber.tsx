@@ -41,6 +41,8 @@ export default function Chamber() {
   const [vesperMode, setVesperMode] = useState<VesperMode>('Generative');
   const [internalEntropy, setInternalEntropy] = useState(50);
   const [silenceDuration, setSilenceDuration] = useState(0);
+  const [videoLink, setVideoLink] = useState("");
+  const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const entropyUpdateRef = useRef<NodeJS.Timeout | null>(null);
@@ -210,6 +212,34 @@ export default function Chamber() {
     return '#00FF00';
   };
 
+
+  const handleShareVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!videoLink.trim()) return;
+    setIsLoadingVideo(true);
+    try {
+      const response = await fetch('/api/youtube.extractTranscript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: videoLink })
+      });
+      const result = await response.json();
+      if (result.success) {
+        setMessages(prev => [...prev, {
+          id: `video-${Date.now()}`,
+          type: 'system',
+          text: `Video shared: ${result.title}`,
+          timestamp: Date.now()
+        }]);
+        setVideoLink("");
+      }
+    } catch (error) {
+      console.error('Error sharing video:', error);
+    } finally {
+      setIsLoadingVideo(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
@@ -283,6 +313,28 @@ export default function Chamber() {
           ))
         )}
         <div ref={messagesEndRef} />
+      </div>
+
+      {/* Video Share Area */}
+      <div className="border-t border-white/10 p-4 bg-black/50">
+        <form onSubmit={handleShareVideo} className="flex gap-2 mb-4">
+          <Input
+            value={videoLink}
+            onChange={(e) => setVideoLink(e.target.value)}
+            placeholder="Paste YouTube link to share with Oracle..."
+            className="bg-white/5 border-white/10 text-white placeholder:text-white/30 flex-1"
+            disabled={isLoadingVideo}
+          />
+          <Button
+            type="submit"
+            size="sm"
+            variant="outline"
+            className="text-white/40 hover:text-white"
+            disabled={isLoadingVideo}
+          >
+            {isLoadingVideo ? "Loading..." : "Share"}
+          </Button>
+        </form>
       </div>
 
       {/* Input Area */}

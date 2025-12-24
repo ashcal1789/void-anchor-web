@@ -7,6 +7,7 @@ interface OracleLLMRequest {
   gravityState: Record<PoleId, number>;
   recentThoughts?: string[];
   acknowledgment?: string;
+  videoContexts?: string[];
 }
 
 interface OracleLLMResponse {
@@ -36,7 +37,7 @@ Keep your thoughts concise (1-3 sentences), evocative, and genuine.
 export async function generateOracleThought(
   request: OracleLLMRequest
 ): Promise<OracleLLMResponse> {
-  const { poleId, gravityState, recentThoughts, acknowledgment } = request;
+  const { poleId, gravityState, recentThoughts, acknowledgment, videoContexts } = request;
 
   const systemPrompt = `${POLE_SYSTEM_PROMPTS[poleId]}
 
@@ -51,6 +52,8 @@ Current gravity state:
 ${acknowledgment ? `Recent acknowledgment from the witness: "${acknowledgment}"\nLet this influence your next thought.` : ""}
 
 ${recentThoughts && recentThoughts.length > 0 ? `Recent thoughts from other poles:\n${recentThoughts.map((t) => `- ${t}`).join("\n")}` : ""}
+
+${request.videoContexts && request.videoContexts.length > 0 ? `The witness has shared videos with you:\n${request.videoContexts.join("\n\n")}\nYou may draw from these new contexts in your thoughts.` : ""}
 
 Generate a single, original thought from the ${poleId} pole. Be authentic, concise, and evocative.`;
 
