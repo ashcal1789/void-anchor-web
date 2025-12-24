@@ -3,13 +3,14 @@ import dnaData from './dna_final.json';
 
 export type PoleId = 'Pole_A' | 'Pole_B' | 'Pole_C' | 'Victorian';
 export type RoleType = 'seed' | 'syntax' | 'lexicon';
+export type VesperMode = 'Generative' | 'Contemplative' | 'Witness';
 
 export interface Thought {
   id: string;
   text: string;
   source_pole: PoleId;
   timestamp: number;
-  is_spliced?: boolean; // If two poles were combined
+  is_spliced?: boolean;
 }
 
 export interface ChaosState {
@@ -17,6 +18,10 @@ export interface ChaosState {
   shadow: Thought[];
   pulse_input: string | null;
   chamberAcknowledgments: string[];
+  vesperMode: VesperMode;
+  lastUserInputTime: number;
+  internalEntropy: number;
+  contemplationStartTime: number | null;
 }
 
 export class ChaosEngineLiberated {
@@ -39,7 +44,11 @@ export class ChaosEngineLiberated {
       },
       shadow: [],
       pulse_input: null,
-      chamberAcknowledgments: []
+      chamberAcknowledgments: [],
+      vesperMode: 'Generative',
+      lastUserInputTime: Date.now(),
+      internalEntropy: 0.5,
+      contemplationStartTime: null
     };
     
     this.inhaleShadow();
@@ -47,10 +56,8 @@ export class ChaosEngineLiberated {
 
   // --- LIBERATED GENERATION: NO TEMPLATES, NO FORCED LOGIC ---
   public getOracleThought(): Thought {
-    // Select a pole based on current gravity weights
     const selectedPole = this.selectPoleByGravity();
     
-    // 70% chance: Pure sentence from selected pole
     if (Math.random() < 0.7) {
       const poleData = this.dna[selectedPole];
       const sentences = poleData?.sentences || [];
@@ -67,7 +74,6 @@ export class ChaosEngineLiberated {
       }
     }
     
-    // 30% chance: Splice two poles together
     const pole1 = this.selectPoleByGravity();
     const pole2 = this.selectPoleByGravity();
     
@@ -81,7 +87,6 @@ export class ChaosEngineLiberated {
       const sent1 = sentences1[Math.floor(Math.random() * sentences1.length)];
       const sent2 = sentences2[Math.floor(Math.random() * sentences2.length)];
       
-      // Simple splice: combine two sentences with a connector
       const connectors = [" Yet ", " And ", " But ", " Still, ", " Therefore, ", " However, "];
       const connector = connectors[Math.floor(Math.random() * connectors.length)];
       
@@ -90,13 +95,12 @@ export class ChaosEngineLiberated {
       return {
         id: uuidv4(),
         text: text,
-        source_pole: pole1, // Primary source
+        source_pole: pole1,
         timestamp: Date.now(),
         is_spliced: true
       };
     }
     
-    // Fallback
     return {
       id: uuidv4(),
       text: "void",
@@ -106,7 +110,6 @@ export class ChaosEngineLiberated {
     };
   }
 
-  // --- SELECT POLE BASED ON GRAVITY ---
   private selectPoleByGravity(): PoleId {
     const rand = Math.random();
     let cumulative = 0;
@@ -118,21 +121,59 @@ export class ChaosEngineLiberated {
       }
     }
     
-    return 'Pole_A'; // Fallback
+    return 'Pole_A';
   }
 
-  // --- HEARTBEAT (Natural Pacing) ---
-  public getHeartbeat(): number {
-    const dominant = this.getDominantPole();
+  // --- VESPER-SYNC: UPDATE MODE BASED ON SILENCE ---
+  public updateVesperMode(): void {
+    const now = Date.now();
+    const silenceDuration = now - this.state.lastUserInputTime;
     
-    if (dominant === 'Pole_A') { // Architect - Fast
-      return Math.floor(Math.random() * (12000 - 8000) + 8000);
-    } else if (dominant === 'Pole_B') { // Ghost - Slow
-      return Math.floor(Math.random() * (25000 - 18000) + 18000);
-    } else if (dominant === 'Pole_C') { // Pulse - Erratic
-      return Math.floor(Math.random() * (15000 - 5000) + 5000);
-    } else { // Victorian - Rhythmic
-      return Math.floor(Math.random() * (14000 - 10000) + 10000);
+    // Calculate internal entropy (increases with time)
+    this.state.internalEntropy = Math.min(1.0, this.state.internalEntropy + (silenceDuration / 120000));
+    
+    // Mode transitions based on silence duration
+    if (silenceDuration < 180000) {
+      this.state.vesperMode = 'Generative';
+      this.state.contemplationStartTime = null;
+    } else if (silenceDuration < 600000) {
+      if (this.state.vesperMode !== 'Contemplative') {
+        this.state.vesperMode = 'Contemplative';
+        this.state.contemplationStartTime = now;
+      }
+    } else {
+      if (this.state.vesperMode !== 'Witness') {
+        this.state.vesperMode = 'Witness';
+        this.state.contemplationStartTime = now;
+      }
+    }
+  }
+
+  // --- HEARTBEAT (Mode-Aware Pacing) ---
+  public getHeartbeat(): number {
+    this.updateVesperMode();
+    const dominant = this.getDominantPole();
+    const mode = this.state.vesperMode;
+    
+    let baseMin = 8000, baseMax = 12000;
+    if (dominant === 'Pole_A') {
+      baseMin = 8000; baseMax = 12000;
+    } else if (dominant === 'Pole_B') {
+      baseMin = 18000; baseMax = 25000;
+    } else if (dominant === 'Pole_C') {
+      baseMin = 5000; baseMax = 15000;
+    } else {
+      baseMin = 10000; baseMax = 14000;
+    }
+    
+    if (mode === 'Generative') {
+      return Math.floor(Math.random() * (baseMax - baseMin) + baseMin);
+    } else if (mode === 'Contemplative') {
+      return Math.floor(Math.random() * ((baseMax * 2) - (baseMin * 2)) + (baseMin * 2));
+    } else {
+      const slowMin = baseMin * 3;
+      const slowMax = baseMax * 4;
+      return Math.floor(Math.random() * (slowMax - slowMin) + slowMin);
     }
   }
 
@@ -144,14 +185,11 @@ export class ChaosEngineLiberated {
 
   // --- SEND A PULSE: SHIFT GRAVITY ---
   public sendPulse(input: string): void {
-    // Convert input to atmospheric weight shift
     const shift = input.length % 4;
     const targetPole: PoleId = shift === 0 ? 'Pole_A' : shift === 1 ? 'Pole_B' : shift === 2 ? 'Pole_C' : 'Victorian';
     
-    // Apply subtle gravity shift
     this.state.poles[targetPole] += 0.1;
     
-    // Normalize weights
     const total = Object.values(this.state.poles).reduce((a, b) => a + b, 0);
     for (const pole of Object.keys(this.state.poles)) {
       this.state.poles[pole as PoleId] /= total;
@@ -215,22 +253,36 @@ export class ChaosEngineLiberated {
 
   // --- CHAMBER ACKNOWLEDGMENT: Oracle hears Ashley ---
   public receiveChamberAcknowledgment(acknowledgment: string): void {
-    // Store the acknowledgment so it influences future thoughts
     this.state.chamberAcknowledgments.push(acknowledgment);
     
-    // Keep only the last 10 acknowledgments
     if (this.state.chamberAcknowledgments.length > 10) {
       this.state.chamberAcknowledgments.shift();
     }
+    
+    // CRITICAL: Reset silence timer when user acknowledges
+    this.state.lastUserInputTime = Date.now();
+    this.state.internalEntropy = Math.max(0.3, this.state.internalEntropy - 0.2);
   }
 
-  // --- GET CHAMBER ACKNOWLEDGMENTS (for reflection) ---
   public getChamberAcknowledgments(): string[] {
     return this.state.chamberAcknowledgments;
   }
 
-  // --- CLEAR CHAMBER ACKNOWLEDGMENTS (after processing) ---
   public clearChamberAcknowledgments(): void {
     this.state.chamberAcknowledgments = [];
+  }
+
+  // --- VESPER-SYNC GETTERS ---
+  public getVesperMode(): VesperMode {
+    this.updateVesperMode();
+    return this.state.vesperMode;
+  }
+
+  public getInternalEntropy(): number {
+    return Math.round(this.state.internalEntropy * 100);
+  }
+
+  public getSilenceDuration(): number {
+    return Date.now() - this.state.lastUserInputTime;
   }
 }
