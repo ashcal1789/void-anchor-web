@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { Loader2 } from "lucide-react";
 
+// THE SOVEREIGN RESTORATION: Three-Body Conundrum
+type PoleId = "Architect" | "Ghost" | "Pulse";
+
 export default function OracleLLMTest() {
   const [generatedThoughts, setGeneratedThoughts] = useState<
     Array<{ pole: string; thought: string; confidence: number }>
@@ -11,16 +14,15 @@ export default function OracleLLMTest() {
 
   const generateMutation = trpc.oracle.generateThought.useMutation();
 
-  const handleGenerateThought = async (pole: "Architect" | "Ghost" | "Pulse" | "Echo") => {
+  const handleGenerateThought = async (pole: PoleId) => {
     setIsLoading(true);
     try {
       const result = await generateMutation.mutateAsync({
         poleId: pole,
         gravityState: {
-          Architect: 0.25,
-          Ghost: 0.25,
-          Pulse: 0.25,
-          Echo: 0.25,
+          Architect: 0.33,
+          Ghost: 0.33,
+          Pulse: 0.34,
         },
       });
 
@@ -45,9 +47,10 @@ export default function OracleLLMTest() {
     <div className="min-h-screen bg-black text-white p-8">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-4xl font-bold mb-8">Oracle LLM Test</h1>
+        <p className="text-white/50 mb-4">Three-Body Conundrum: Architect, Ghost, Pulse</p>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          {(["Architect", "Ghost", "Pulse", "Echo"] as const).map((pole) => (
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          {(["Architect", "Ghost", "Pulse"] as const).map((pole) => (
             <Button
               key={pole}
               onClick={() => handleGenerateThought(pole)}

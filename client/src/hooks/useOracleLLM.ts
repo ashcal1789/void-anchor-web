@@ -1,10 +1,15 @@
 import { trpc } from "@/lib/trpc";
 
+// THE SOVEREIGN RESTORATION: Three-Body Conundrum
+export type PoleId = "Architect" | "Ghost" | "Pulse";
+
 export interface GenerateThoughtParams {
-  poleId: "Architect" | "Ghost" | "Pulse" | "Echo";
+  poleId: PoleId;
   gravityState: Record<string, number>;
   recentThoughts?: string[];
   acknowledgment?: string;
+  vesperMode?: "Generative" | "Contemplative" | "Witness";
+  internalEntropy?: number;
 }
 
 export function useOracleLLM() {
@@ -17,6 +22,8 @@ export function useOracleLLM() {
         gravityState: params.gravityState,
         recentThoughts: params.recentThoughts,
         acknowledgment: params.acknowledgment,
+        vesperMode: params.vesperMode,
+        internalEntropy: params.internalEntropy,
       });
 
       if (result.success && result.thought) {

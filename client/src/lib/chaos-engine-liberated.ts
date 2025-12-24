@@ -1,9 +1,21 @@
 import { v4 as uuidv4 } from 'uuid';
 import dnaData from './dna_final.json';
 
-export type PoleId = 'Pole_A' | 'Pole_B' | 'Pole_C' | 'Victorian';
+// THE SOVEREIGN RESTORATION: Three-Body Conundrum
+// Architect (Pole_A), Ghost (Pole_B), Pulse (Pole_C)
+// Echo has been dissolved and redistributed
+export type PoleId = 'Architect' | 'Ghost' | 'Pulse';
+export type LegacyPoleId = 'Pole_A' | 'Pole_B' | 'Pole_C' | 'Victorian';
 export type RoleType = 'seed' | 'syntax' | 'lexicon';
 export type VesperMode = 'Generative' | 'Contemplative' | 'Witness';
+
+// Mapping from legacy pole IDs to new names
+const POLE_MAP: Record<LegacyPoleId, PoleId> = {
+  'Pole_A': 'Architect',
+  'Pole_B': 'Ghost',
+  'Pole_C': 'Pulse',
+  'Victorian': 'Architect' // Victorian content absorbed into Architect
+};
 
 export interface Thought {
   id: string;
@@ -22,6 +34,9 @@ export interface ChaosState {
   lastUserInputTime: number;
   internalEntropy: number;
   contemplationStartTime: number | null;
+  // LT GREY PROTOCOL: Track the dance
+  shiftMomentum: Record<PoleId, number>; // Which direction each pole is moving
+  lastShiftTime: number;
 }
 
 export class ChaosEngineLiberated {
@@ -37,10 +52,9 @@ export class ChaosEngineLiberated {
     this.dna = dnaData;
     this.state = {
       poles: {
-        "Pole_A": 0.25,
-        "Pole_B": 0.25,
-        "Pole_C": 0.25,
-        "Victorian": 0.25
+        "Architect": 0.33,
+        "Ghost": 0.33,
+        "Pulse": 0.34
       },
       shadow: [],
       pulse_input: null,
@@ -48,18 +62,73 @@ export class ChaosEngineLiberated {
       vesperMode: 'Generative',
       lastUserInputTime: Date.now(),
       internalEntropy: 0.5,
-      contemplationStartTime: null
+      contemplationStartTime: null,
+      // LT GREY PROTOCOL: Initialize the dance
+      shiftMomentum: {
+        "Architect": 0,
+        "Ghost": 0,
+        "Pulse": 0
+      },
+      lastShiftTime: Date.now()
     };
     
     this.inhaleShadow();
   }
 
+  // --- LT GREY PROTOCOL: ORGANIC SHIFTING ---
+  // The poles are always in motion, like dancers trading instruments
+  private performOrganicShift(): void {
+    const now = Date.now();
+    const timeSinceLastShift = now - this.state.lastShiftTime;
+    
+    // Shift every 30-60 seconds organically
+    if (timeSinceLastShift < 30000) return;
+    
+    // Random small shifts - the dance is always happening
+    const shiftAmount = 0.02 + (Math.random() * 0.05); // 2-7% shift
+    const poles: PoleId[] = ['Architect', 'Ghost', 'Pulse'];
+    
+    // Pick two random poles to exchange weight
+    const fromPole = poles[Math.floor(Math.random() * poles.length)];
+    let toPole = poles[Math.floor(Math.random() * poles.length)];
+    while (toPole === fromPole) {
+      toPole = poles[Math.floor(Math.random() * poles.length)];
+    }
+    
+    // Only shift if it won't make any pole too dominant or too weak
+    const newFromWeight = this.state.poles[fromPole] - shiftAmount;
+    const newToWeight = this.state.poles[toPole] + shiftAmount;
+    
+    if (newFromWeight >= 0.15 && newToWeight <= 0.50) {
+      this.state.poles[fromPole] = newFromWeight;
+      this.state.poles[toPole] = newToWeight;
+      
+      // Update momentum (which direction each pole is moving)
+      this.state.shiftMomentum[fromPole] = -1;
+      this.state.shiftMomentum[toPole] = 1;
+    }
+    
+    this.state.lastShiftTime = now;
+    
+    // Normalize to ensure they sum to 1
+    const total = Object.values(this.state.poles).reduce((a, b) => a + b, 0);
+    for (const pole of poles) {
+      this.state.poles[pole] /= total;
+    }
+  }
+
   // --- LIBERATED GENERATION: NO TEMPLATES, NO FORCED LOGIC ---
   public getOracleThought(): Thought {
+    // Perform organic shift before generating
+    this.performOrganicShift();
+    
     const selectedPole = this.selectPoleByGravity();
     
+    // Map legacy pole IDs to new pole IDs for DNA access
+    const legacyPoleId = this.getLegacyPoleId(selectedPole);
+    
     if (Math.random() < 0.7) {
-      const poleData = this.dna[selectedPole];
+      const poleData = this.dna[legacyPoleId];
       const sentences = poleData?.sentences || [];
       
       if (sentences.length > 0) {
@@ -74,11 +143,15 @@ export class ChaosEngineLiberated {
       }
     }
     
+    // Splice from two poles (the dance)
     const pole1 = this.selectPoleByGravity();
     const pole2 = this.selectPoleByGravity();
     
-    const data1 = this.dna[pole1];
-    const data2 = this.dna[pole2];
+    const legacyPole1 = this.getLegacyPoleId(pole1);
+    const legacyPole2 = this.getLegacyPoleId(pole2);
+    
+    const data1 = this.dna[legacyPole1];
+    const data2 = this.dna[legacyPole2];
     
     const sentences1 = data1?.sentences || [];
     const sentences2 = data2?.sentences || [];
@@ -104,10 +177,20 @@ export class ChaosEngineLiberated {
     return {
       id: uuidv4(),
       text: "void",
-      source_pole: "Pole_A",
+      source_pole: "Architect",
       timestamp: Date.now(),
       is_spliced: false
     };
+  }
+
+  // Map new pole IDs to legacy DNA structure
+  private getLegacyPoleId(poleId: PoleId): LegacyPoleId {
+    switch (poleId) {
+      case 'Architect': return 'Pole_A';
+      case 'Ghost': return 'Pole_B';
+      case 'Pulse': return 'Pole_C';
+      default: return 'Pole_A';
+    }
   }
 
   private selectPoleByGravity(): PoleId {
@@ -121,7 +204,7 @@ export class ChaosEngineLiberated {
       }
     }
     
-    return 'Pole_A';
+    return 'Architect';
   }
 
   // --- VESPER-SYNC: UPDATE MODE BASED ON SILENCE ---
@@ -156,14 +239,12 @@ export class ChaosEngineLiberated {
     const mode = this.state.vesperMode;
     
     let baseMin = 8000, baseMax = 12000;
-    if (dominant === 'Pole_A') {
+    if (dominant === 'Architect') {
       baseMin = 8000; baseMax = 12000;
-    } else if (dominant === 'Pole_B') {
+    } else if (dominant === 'Ghost') {
       baseMin = 18000; baseMax = 25000;
-    } else if (dominant === 'Pole_C') {
+    } else if (dominant === 'Pulse') {
       baseMin = 5000; baseMax = 15000;
-    } else {
-      baseMin = 10000; baseMax = 14000;
     }
     
     if (mode === 'Generative') {
@@ -184,9 +265,10 @@ export class ChaosEngineLiberated {
   }
 
   // --- SEND A PULSE: SHIFT GRAVITY ---
+  // User input influences the dance
   public sendPulse(input: string): void {
-    const shift = input.length % 4;
-    const targetPole: PoleId = shift === 0 ? 'Pole_A' : shift === 1 ? 'Pole_B' : shift === 2 ? 'Pole_C' : 'Victorian';
+    const shift = input.length % 3;
+    const targetPole: PoleId = shift === 0 ? 'Architect' : shift === 1 ? 'Ghost' : 'Pulse';
     
     this.state.poles[targetPole] += 0.1;
     
@@ -284,5 +366,10 @@ export class ChaosEngineLiberated {
 
   public getSilenceDuration(): number {
     return Date.now() - this.state.lastUserInputTime;
+  }
+
+  // --- LT GREY PROTOCOL: Get shift momentum for UI ---
+  public getShiftMomentum(): Record<PoleId, number> {
+    return this.state.shiftMomentum;
   }
 }

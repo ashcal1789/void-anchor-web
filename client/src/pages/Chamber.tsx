@@ -7,18 +7,17 @@ import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useCompanion } from "@/hooks/useCompanion";
 
+// THE SOVEREIGN RESTORATION: Three-Body Conundrum
 const POLE_COLORS: Record<PoleId, string> = {
-  'Pole_A': '#00FFFF',
-  'Pole_B': '#FF00FF',
-  'Pole_C': '#FFFF00',
-  'Victorian': '#FF6B9D'
+  'Architect': '#00FFFF',
+  'Ghost': '#FF00FF',
+  'Pulse': '#FFFF00'
 };
 
 const POLE_NAMES: Record<PoleId, string> = {
-  'Pole_A': 'Architect',
-  'Pole_B': 'Ghost',
-  'Pole_C': 'Pulse',
-  'Victorian': 'Echo'
+  'Architect': 'Architect',
+  'Ghost': 'Ghost',
+  'Pulse': 'Pulse'
 };
 
 interface ChamberMessage {
@@ -38,7 +37,7 @@ export default function Chamber() {
   const [inputValue, setInputValue] = useState("");
   const [isPaused, setIsPaused] = useState(false);
   const [gravityState, setGravityState] = useState<Record<PoleId, number>>({
-    'Pole_A': 0.25, 'Pole_B': 0.25, 'Pole_C': 0.25, 'Victorian': 0.25
+    'Architect': 0.33, 'Ghost': 0.33, 'Pulse': 0.34
   });
   const [vesperMode, setVesperMode] = useState<VesperMode>('Generative');
   const [internalEntropy, setInternalEntropy] = useState(50);
@@ -129,26 +128,11 @@ export default function Chamber() {
   const generateOracleThought = async () => {
     if (!engineRef.current) return;
 
-    const poleMap: Record<PoleId, "Architect" | "Ghost" | "Pulse" | "Echo"> = {
-      'Pole_A': 'Architect',
-      'Pole_B': 'Ghost',
-      'Pole_C': 'Pulse',
-      'Victorian': 'Echo'
-    };
-    
     const selectedPole = engineRef.current.getDominantPole();
-    const llmPole = poleMap[selectedPole];
-    
-    const llmGravityState = {
-      Architect: gravityState['Pole_A'],
-      Ghost: gravityState['Pole_B'],
-      Pulse: gravityState['Pole_C'],
-      Echo: gravityState['Victorian']
-    };
     
     const result = await generateLLMThought({
-      poleId: llmPole,
-      gravityState: llmGravityState
+      poleId: selectedPole,
+      gravityState: gravityState
     });
     
     const currentGravity = { ...engineRef.current.getState().poles };
@@ -275,7 +259,7 @@ export default function Chamber() {
       <div className="border-b border-white/10 p-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-widest">ORACLE'S INNER CHAMBER</h1>
-          <p className="text-xs text-white/40 mt-1">Private Witness Space</p>
+          <p className="text-xs text-white/40 mt-1">Private Witness Space · Three-Body Conundrum</p>
         </div>
         <Button
           onClick={handleLogout}
@@ -288,14 +272,22 @@ export default function Chamber() {
         </Button>
       </div>
 
-      {/* Gravity State & Mode Display */}
+      {/* Gravity State & Mode Display - Three Body Dance */}
       <div className="border-b border-white/10 p-4 bg-black/50">
         <div className="flex justify-between items-center mb-3">
           <div className="flex gap-6">
-            {Object.entries(gravityState).map(([pole, weight]) => (
-              <div key={pole} className="text-xs">
-                <span className="text-white/50">{POLE_NAMES[pole as PoleId]}:</span>
-                <span className="ml-2 font-mono text-white">{Math.round(weight * 100)}%</span>
+            {(['Architect', 'Ghost', 'Pulse'] as PoleId[]).map((pole) => (
+              <div key={pole} className="text-xs flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full transition-all duration-500"
+                  style={{ 
+                    backgroundColor: POLE_COLORS[pole],
+                    transform: `scale(${0.5 + gravityState[pole]})`,
+                    boxShadow: gravityState[pole] > 0.35 ? `0 0 8px ${POLE_COLORS[pole]}` : 'none'
+                  }}
+                />
+                <span className="text-white/50">{POLE_NAMES[pole]}:</span>
+                <span className="font-mono text-white">{Math.round(gravityState[pole] * 100)}%</span>
               </div>
             ))}
           </div>

@@ -6,10 +6,12 @@ export const oracleRouter = router({
   generateThought: publicProcedure
     .input(
       z.object({
-        poleId: z.enum(["Architect", "Ghost", "Pulse", "Echo"]),
+        poleId: z.enum(["Architect", "Ghost", "Pulse"]),
         gravityState: z.record(z.string(), z.number()),
         recentThoughts: z.array(z.string()).optional(),
         acknowledgment: z.string().optional(),
+        vesperMode: z.enum(["Generative", "Contemplative", "Witness"]).optional(),
+        internalEntropy: z.number().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -17,11 +19,13 @@ export const oracleRouter = router({
         const response = await generateOracleThought({
           poleId: input.poleId,
           gravityState: input.gravityState as Record<
-            "Architect" | "Ghost" | "Pulse" | "Echo",
+            "Architect" | "Ghost" | "Pulse",
             number
           >,
           recentThoughts: input.recentThoughts,
           acknowledgment: input.acknowledgment,
+          vesperMode: input.vesperMode,
+          internalEntropy: input.internalEntropy,
         });
 
         return {

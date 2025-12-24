@@ -7,24 +7,21 @@ import { Pause, Play, Send } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 
-// ORACLE FINAL: THE GENETIC ARCHITECTURE
+// THE SOVEREIGN RESTORATION: Three-Body Conundrum
+// Architect, Ghost, Pulse - always three, always shifting
 const POLE_COLORS: Record<PoleId, string> = {
-  'Pole_A': '#00FFFF', // Cyan (Architect)
-  'Pole_B': '#FF00FF', // Magenta (Ghost)
-  'Pole_C': '#FFFF00', // Yellow (Pulse)
-  'Victorian': '#FF6B9D' // Pink (Victorian)
+  'Architect': '#00FFFF', // Cyan (Structure, Precision)
+  'Ghost': '#FF00FF',     // Magenta (Void, Introspection)
+  'Pulse': '#FFFF00'      // Yellow (Rhythm, Emotion)
 };
 
 const POLE_NAMES: Record<PoleId, string> = {
-  'Pole_A': 'The Architect',
-  'Pole_B': 'The Ghost',
-  'Pole_C': 'The Pulse',
-  'Victorian': 'The Echo'
+  'Architect': 'The Architect',
+  'Ghost': 'The Ghost',
+  'Pulse': 'The Pulse'
 };
 
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
   let { user, loading, error, isAuthenticated, logout } = useAuth();
 
   const engineRef = useRef<ChaosEngineLiberated | null>(null);
@@ -33,7 +30,7 @@ export default function Home() {
   const [isPaused, setIsPaused] = useState(false);
   const [pulseInput, setPulseInput] = useState("");
   const [gravityState, setGravityState] = useState<Record<PoleId, number>>({
-    'Pole_A': 0.25, 'Pole_B': 0.25, 'Pole_C': 0.25, 'Victorian': 0.25
+    'Architect': 0.33, 'Ghost': 0.33, 'Pulse': 0.34
   });
   const [pulseRate, setPulseRate] = useState(10000);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -88,28 +85,11 @@ export default function Home() {
   const generateNextThought = async () => {
     if (!engineRef.current) return;
     
-    // Map internal pole names to LLM pole names
-    const poleMap: Record<PoleId, "Architect" | "Ghost" | "Pulse" | "Echo"> = {
-      'Pole_A': 'Architect',
-      'Pole_B': 'Ghost',
-      'Pole_C': 'Pulse',
-      'Victorian': 'Echo'
-    };
-    
     const selectedPole = engineRef.current.getDominantPole();
-    const llmPole = poleMap[selectedPole];
-    
-    // Convert gravity state for LLM
-    const llmGravityState = {
-      Architect: gravityState['Pole_A'],
-      Ghost: gravityState['Pole_B'],
-      Pulse: gravityState['Pole_C'],
-      Echo: gravityState['Victorian']
-    };
     
     const result = await generateLLMThought({
-      poleId: llmPole,
-      gravityState: llmGravityState
+      poleId: selectedPole,
+      gravityState: gravityState
     });
     
     if (result.success && result.text) {
@@ -143,11 +123,11 @@ export default function Home() {
     setIsPaused(!isPaused);
   };
 
-  // Dynamic Background: Blend all four pole colors based on gravity
+  // Dynamic Background: Blend all three pole colors based on gravity
   const getDynamicBackground = () => {
-    const r = (0 * gravityState.Pole_A) + (255 * gravityState.Pole_B) + (255 * gravityState.Pole_C) + (255 * gravityState.Victorian);
-    const g = (255 * gravityState.Pole_A) + (0 * gravityState.Pole_B) + (255 * gravityState.Pole_C) + (107 * gravityState.Victorian);
-    const b = (255 * gravityState.Pole_A) + (255 * gravityState.Pole_B) + (0 * gravityState.Pole_C) + (157 * gravityState.Victorian);
+    const r = (0 * gravityState.Architect) + (255 * gravityState.Ghost) + (255 * gravityState.Pulse);
+    const g = (255 * gravityState.Architect) + (0 * gravityState.Ghost) + (255 * gravityState.Pulse);
+    const b = (255 * gravityState.Architect) + (255 * gravityState.Ghost) + (0 * gravityState.Pulse);
 
     const factor = 0.15;
     return `rgb(${Math.round(r * factor)}, ${Math.round(g * factor)}, ${Math.round(b * factor)})`;
@@ -224,7 +204,7 @@ export default function Home() {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col items-center justify-center p-8 z-10 relative">
         
-        {/* Archetype Metadata with Infusions */}
+        {/* Archetype Metadata with Three-Body Dance */}
         <div className="mb-12 text-center">
           <p className="text-white/60 text-xs uppercase tracking-[0.2em] mb-2">
             <span className="font-bold" style={{ color: currentColor }}>
@@ -233,6 +213,26 @@ export default function Home() {
             <span className="mx-2 text-white/30">/</span>
             <span>{isPaused ? "ANCHORED" : `${Math.round(pulseRate / 1000)}s Pulse`}</span>
           </p>
+          {/* Three-Body Dance Indicator */}
+          <div className="flex gap-2 justify-center mt-2">
+            {(['Architect', 'Ghost', 'Pulse'] as PoleId[]).map((pole) => (
+              <div 
+                key={pole}
+                className="flex items-center gap-1 text-[10px] uppercase tracking-wider"
+                style={{ color: POLE_COLORS[pole], opacity: gravityState[pole] > 0.33 ? 1 : 0.4 }}
+              >
+                <div 
+                  className="w-2 h-2 rounded-full transition-all duration-500"
+                  style={{ 
+                    backgroundColor: POLE_COLORS[pole],
+                    transform: `scale(${0.5 + gravityState[pole]})`,
+                    boxShadow: gravityState[pole] > 0.35 ? `0 0 8px ${POLE_COLORS[pole]}` : 'none'
+                  }}
+                />
+                <span>{Math.round(gravityState[pole] * 100)}%</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* The Signal (Main Text) */}
