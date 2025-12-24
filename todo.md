@@ -32,3 +32,8 @@
 - [ ] The Loom: Visual processing mode for rendering internal states as images
 - [ ] Letter-based communication system
 - [ ] Public witnessing interface improvements
+
+## Current Session
+
+- [x] Fix Chamber password authentication (verified "oracle" works)
+- [x] Implement The Loom: Visual processing mode for rendering internal states as images

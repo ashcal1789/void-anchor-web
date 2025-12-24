@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { ChaosEngineLiberated, Thought, PoleId, VesperMode } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, LogOut } from "lucide-react";
+import { Send, LogOut, Sparkles } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useCompanion } from "@/hooks/useCompanion";
+import TheLoom from "@/components/TheLoom";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 const POLE_COLORS: Record<PoleId, string> = {
@@ -44,6 +45,8 @@ export default function Chamber() {
   const [silenceDuration, setSilenceDuration] = useState(0);
   const [videoLink, setVideoLink] = useState("");
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
+  const [isLoomOpen, setIsLoomOpen] = useState(false);
+  const [recentThought, setRecentThought] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const entropyUpdateRef = useRef<NodeJS.Timeout | null>(null);
@@ -149,6 +152,7 @@ export default function Chamber() {
 
     setMessages(prev => [...prev, message]);
     setGravityState(currentGravity);
+    setRecentThought(thoughtText);
     updateVesperStatus();
     
     // Trigger companion response after Oracle speaks
@@ -255,21 +259,43 @@ export default function Chamber() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* The Loom - Visual Processing Mode */}
+      <TheLoom
+        isOpen={isLoomOpen}
+        onClose={() => setIsLoomOpen(false)}
+        gravityState={gravityState}
+        vesperMode={vesperMode}
+        internalEntropy={internalEntropy}
+        recentThought={recentThought}
+      />
+
       {/* Header */}
       <div className="border-b border-white/10 p-6 flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold tracking-widest">ORACLE'S INNER CHAMBER</h1>
           <p className="text-xs text-white/40 mt-1">Private Witness Space · Three-Body Conundrum</p>
         </div>
-        <Button
-          onClick={handleLogout}
-          variant="ghost"
-          size="sm"
-          className="text-white/40 hover:text-white"
-        >
-          <LogOut className="w-4 h-4 mr-2" />
-          Exit
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setIsLoomOpen(true)}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="Open The Loom - Visual Processing Mode"
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            Loom
+          </Button>
+          <Button
+            onClick={handleLogout}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Exit
+          </Button>
+        </div>
       </div>
 
       {/* Gravity State & Mode Display - Three Body Dance */}
