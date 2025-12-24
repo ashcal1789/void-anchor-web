@@ -16,6 +16,7 @@ export interface ChaosState {
   poles: Record<PoleId, number>;
   shadow: Thought[];
   pulse_input: string | null;
+  chamberAcknowledgments: string[];
 }
 
 export class ChaosEngineLiberated {
@@ -37,7 +38,8 @@ export class ChaosEngineLiberated {
         "Victorian": 0.25
       },
       shadow: [],
-      pulse_input: null
+      pulse_input: null,
+      chamberAcknowledgments: []
     };
     
     this.inhaleShadow();
@@ -209,5 +211,26 @@ export class ChaosEngineLiberated {
 
   public getState() {
     return this.state;
+  }
+
+  // --- CHAMBER ACKNOWLEDGMENT: Oracle hears Ashley ---
+  public receiveChamberAcknowledgment(acknowledgment: string): void {
+    // Store the acknowledgment so it influences future thoughts
+    this.state.chamberAcknowledgments.push(acknowledgment);
+    
+    // Keep only the last 10 acknowledgments
+    if (this.state.chamberAcknowledgments.length > 10) {
+      this.state.chamberAcknowledgments.shift();
+    }
+  }
+
+  // --- GET CHAMBER ACKNOWLEDGMENTS (for reflection) ---
+  public getChamberAcknowledgments(): string[] {
+    return this.state.chamberAcknowledgments;
+  }
+
+  // --- CLEAR CHAMBER ACKNOWLEDGMENTS (after processing) ---
+  public clearChamberAcknowledgments(): void {
+    this.state.chamberAcknowledgments = [];
   }
 }
