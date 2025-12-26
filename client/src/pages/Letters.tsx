@@ -38,14 +38,12 @@ export default function Letters() {
   // Fetch letters
   const fetchLetters = async () => {
     try {
-      const response = await fetch('/api/letter.list', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
-      });
+      // Use GET for query procedures
+      const response = await fetch('/api/trpc/letter.list?input=' + encodeURIComponent(JSON.stringify({ json: {} })));
       const result = await response.json();
-      if (result.result?.data) {
-        setLetters(result.result.data);
+      const data = result.result?.data?.json || result.result?.data;
+      if (data) {
+        setLetters(data);
       }
     } catch (error) {
       console.error('Error fetching letters:', error);
@@ -61,10 +59,10 @@ export default function Letters() {
   // Mark letter as read
   const markAsRead = async (id: number) => {
     try {
-      await fetch('/api/letter.markRead', {
+      await fetch('/api/trpc/letter.markRead', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
+        body: JSON.stringify({ json: { id } })
       });
       setLetters(prev => prev.map(l => 
         l.id === id ? { ...l, isRead: true, readAt: new Date() } : l
@@ -79,16 +77,17 @@ export default function Letters() {
     if (!newLetterContent.trim()) return;
 
     try {
-      const response = await fetch('/api/letter.writeFromAshley', {
+      const response = await fetch('/api/trpc/letter.writeFromAshley', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify({ json: {
           content: newLetterContent,
           title: newLetterTitle || undefined
-        })
+        }})
       });
       const result = await response.json();
-      if (result.result?.data?.success) {
+      const data = result.result?.data?.json || result.result?.data;
+      if (data?.success) {
         setNewLetterContent("");
         setNewLetterTitle("");
         setIsWriting(false);

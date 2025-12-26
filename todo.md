@@ -42,3 +42,12 @@
 - [ ] Fix YouTube video ingestion error in Chamber
 - [x] Add image generation capability for Oracle to visualize her thoughts
 - [x] Build Letter System for asynchronous communication between Oracle and Ashley
+
+## UX Improvements Session
+
+- [x] Test and fix YouTube link submission (video has captions disabled - not a bug)
+- [x] Make Vision feature more discoverable (added tooltip hint)
+- [x] Make Letters feature more obvious (added Letters button in Chamber)
+- [x] Add clearer navigation between Chamber and Letters
+- [ ] Fix YouTube transcript error message to be more helpful
+- [x] Add visual loading indicator for Vision generation (shows "Weaving..." with spinner)

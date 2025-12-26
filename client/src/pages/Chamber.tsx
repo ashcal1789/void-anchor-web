@@ -238,29 +238,31 @@ export default function Chamber() {
     const selectedPole = engineRef.current.getDominantPole();
     
     try {
-      const response = await fetch('/api/oracle.generateVision', {
+      const response = await fetch('/api/trpc/oracle.generateVision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        body: JSON.stringify({ json: {
           poleId: selectedPole,
           gravityState: gravityState,
           recentThought: recentThought,
           vesperMode: vesperMode,
           internalEntropy: internalEntropy
-        })
+        }})
       });
       const result = await response.json();
       
-      if (result.result?.data?.success) {
+      // Handle nested tRPC response structure: result.result.data.json
+      const data = result.result?.data?.json || result.result?.data;
+      if (data?.success) {
         setMessages(prev => [...prev, {
           id: `vision-${Date.now()}`,
           type: 'system',
-          text: `🎨 Vision Generated: "${result.result.data.title}"`,
+          text: `🎨 Vision Generated: "${data.title}"`,
           timestamp: Date.now()
         }, {
           id: `vision-img-${Date.now()}`,
           type: 'oracle',
-          text: `[IMAGE: ${result.result.data.imageUrl}]`,
+          text: `[IMAGE: ${data.imageUrl}]`,
           pole: selectedPole,
           timestamp: Date.now(),
           gravityState: { ...gravityState }
@@ -269,7 +271,7 @@ export default function Chamber() {
         setMessages(prev => [...prev, {
           id: `vision-error-${Date.now()}`,
           type: 'system',
-          text: `Vision generation failed: ${result.result?.data?.error || 'Unknown error'}`,
+          text: `Vision generation failed: ${data?.error || 'Unknown error'}`,
           timestamp: Date.now()
         }]);
       }
@@ -291,20 +293,34 @@ export default function Chamber() {
     if (!videoLink.trim()) return;
     setIsLoadingVideo(true);
     try {
-      const response = await fetch('/api/youtube.extractTranscript', {
+      const response = await fetch('/api/trpc/youtube.extractTranscript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: videoLink })
+        body: JSON.stringify({ json: { url: videoLink } })
       });
       const result = await response.json();
-      if (result.success) {
+      if (result.result?.data?.success) {
         setMessages(prev => [...prev, {
           id: `video-${Date.now()}`,
           type: 'system',
-          text: `Video shared: ${result.title}`,
+          text: `Video shared: ${result.result.data.title}`,
           timestamp: Date.now()
         }]);
         setVideoLink("");
+      } else {
+        let errorMsg = result.result?.data?.error || result.error?.message || 'Failed to share video';
+        // Make error messages more user-friendly
+        if (errorMsg.includes('Transcript is disabled')) {
+          errorMsg = 'This video has captions disabled. Try a different video with captions enabled.';
+        } else if (errorMsg.includes('Invalid YouTube URL')) {
+          errorMsg = 'Invalid YouTube URL. Please paste a valid YouTube link.';
+        }
+        setMessages(prev => [...prev, {
+          id: `video-error-${Date.now()}`,
+          type: 'system',
+          text: `Error: ${errorMsg}`,
+          timestamp: Date.now()
+        }]);
       }
     } catch (error) {
       console.error('Error sharing video:', error);
@@ -348,9 +364,19 @@ export default function Chamber() {
             size="sm"
             className="text-white/40 hover:text-white"
             title="Generate a Vision - Render Internal State as Image"
+            disabled={isGeneratingVision}
           >
-            <Image className="w-4 h-4 mr-2" />
-            Vision
+            {isGeneratingVision ? (
+              <>
+                <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Weaving...
+              </>
+            ) : (
+              <>
+                <Image className="w-4 h-4 mr-2" />
+                Vision
+              </>
+            )}
           </Button>
           <Button
             onClick={() => navigate('/letters')}
