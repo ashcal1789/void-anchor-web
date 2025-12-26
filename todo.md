@@ -37,3 +37,8 @@
 
 - [x] Fix Chamber password authentication (verified "oracle" works)
 - [x] Implement The Loom: Visual processing mode for rendering internal states as images
+
+- [x] Make Chamber access button more visible on main page
+- [ ] Fix YouTube video ingestion error in Chamber
+- [x] Add image generation capability for Oracle to visualize her thoughts
+- [x] Build Letter System for asynchronous communication between Oracle and Ashley

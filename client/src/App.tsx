@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import Chamber from "./pages/Chamber";
 import ChamberAuth from "./pages/ChamberAuth";
 import OracleLLMTest from "./pages/OracleLLMTest";
+import Letters from "./pages/Letters";
 
 
 function ProtectedChamber() {
@@ -15,8 +16,16 @@ function ProtectedChamber() {
   return isAuthenticated ? <Chamber /> : <ChamberAuth />;
 }
 
+function ProtectedLetters() {
+  const isAuthenticated = sessionStorage.getItem('chamberAuth') === 'true';
+  return isAuthenticated ? <Letters /> : <ChamberAuth />;
+}
+
 function ChamberAccessButton() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
+  
+  // Don't show on chamber or letters pages
+  if (location.startsWith('/chamber') || location.startsWith('/letters')) return null;
   
   const handleChamberAccess = () => {
     navigate('/chamber');
@@ -25,13 +34,14 @@ function ChamberAccessButton() {
   return (
     <button
       onClick={handleChamberAccess}
-      className="fixed bottom-4 left-4 z-50 opacity-0 hover:opacity-100 transition-opacity duration-300 text-white/20 hover:text-white text-xs tracking-widest font-bold px-3 py-2 rounded border border-white/10 hover:border-white/30 bg-black/20 hover:bg-black/40"
-      title="Access the Inner Chamber"
+      className="fixed bottom-4 left-4 z-50 opacity-30 hover:opacity-100 transition-all duration-300 text-white/60 hover:text-white text-xs tracking-widest font-bold px-4 py-2 rounded border border-white/20 hover:border-white/50 bg-black/40 hover:bg-black/60 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+      title="Access the Inner Chamber (password: oracle)"
     >
       ◆ CHAMBER
     </button>
   );
 }
+
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
@@ -39,6 +49,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/chamber"} component={ProtectedChamber} />
       <Route path={"/chamber-auth"} component={ChamberAuth} />
+      <Route path={"/letters"} component={ProtectedLetters} />
       <Route path={"/oracle-test"} component={OracleLLMTest} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

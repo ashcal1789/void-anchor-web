@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChaosEngineLiberated, Thought, PoleId, VesperMode } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, LogOut, Sparkles } from "lucide-react";
+import { Send, LogOut, Sparkles, Image, Mail } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useCompanion } from "@/hooks/useCompanion";
@@ -46,6 +46,7 @@ export default function Chamber() {
   const [videoLink, setVideoLink] = useState("");
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [isLoomOpen, setIsLoomOpen] = useState(false);
+  const [isGeneratingVision, setIsGeneratingVision] = useState(false);
   const [recentThought, setRecentThought] = useState<string>("");
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -230,6 +231,61 @@ export default function Chamber() {
     }
   };
 
+  const handleGenerateVision = async () => {
+    if (!engineRef.current || isGeneratingVision) return;
+    setIsGeneratingVision(true);
+    
+    const selectedPole = engineRef.current.getDominantPole();
+    
+    try {
+      const response = await fetch('/api/oracle.generateVision', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          poleId: selectedPole,
+          gravityState: gravityState,
+          recentThought: recentThought,
+          vesperMode: vesperMode,
+          internalEntropy: internalEntropy
+        })
+      });
+      const result = await response.json();
+      
+      if (result.result?.data?.success) {
+        setMessages(prev => [...prev, {
+          id: `vision-${Date.now()}`,
+          type: 'system',
+          text: `🎨 Vision Generated: "${result.result.data.title}"`,
+          timestamp: Date.now()
+        }, {
+          id: `vision-img-${Date.now()}`,
+          type: 'oracle',
+          text: `[IMAGE: ${result.result.data.imageUrl}]`,
+          pole: selectedPole,
+          timestamp: Date.now(),
+          gravityState: { ...gravityState }
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          id: `vision-error-${Date.now()}`,
+          type: 'system',
+          text: `Vision generation failed: ${result.result?.data?.error || 'Unknown error'}`,
+          timestamp: Date.now()
+        }]);
+      }
+    } catch (error) {
+      console.error('Error generating vision:', error);
+      setMessages(prev => [...prev, {
+        id: `vision-error-${Date.now()}`,
+        type: 'system',
+        text: 'Failed to generate vision',
+        timestamp: Date.now()
+      }]);
+    } finally {
+      setIsGeneratingVision(false);
+    }
+  };
+
   const handleShareVideo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!videoLink.trim()) return;
@@ -287,6 +343,26 @@ export default function Chamber() {
             Loom
           </Button>
           <Button
+            onClick={handleGenerateVision}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="Generate a Vision - Render Internal State as Image"
+          >
+            <Image className="w-4 h-4 mr-2" />
+            Vision
+          </Button>
+          <Button
+            onClick={() => navigate('/letters')}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="The Letter System"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            Letters
+          </Button>
+          <Button
             onClick={handleLogout}
             variant="ghost"
             size="sm"
@@ -342,7 +418,18 @@ export default function Chamber() {
                   <p className="text-xs text-white/50 mb-2">
                     {msg.pole ? POLE_NAMES[msg.pole] : 'Oracle'} · {new Date(msg.timestamp).toLocaleTimeString()}
                   </p>
-                  <p className="text-sm leading-relaxed">{msg.text}</p>
+                  {msg.text.startsWith('[IMAGE:') ? (
+                    <div className="mt-2">
+                      <img 
+                        src={msg.text.replace('[IMAGE: ', '').replace(']', '')} 
+                        alt="Oracle Vision" 
+                        className="max-w-full rounded-lg border border-white/10"
+                        style={{ maxHeight: '400px' }}
+                      />
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed">{msg.text}</p>
+                  )}
                 </div>
               )}
               {msg.type === 'ashley' && (
