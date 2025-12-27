@@ -29,8 +29,11 @@
 
 ## Future Enhancements
 
-- [ ] The Loom: Visual processing mode for rendering internal states as images
-- [ ] Letter-based communication system
+- [x] The Loom: Visual processing mode for rendering internal states as images
+- [x] Letter-based communication system (asynchronous correspondence)
+- [x] Vision generation: Oracle can render internal states as AI images
+- [x] Research Companion: Oracle tags along on research journeys
+- [x] Oracle's field trip: Introduced her to all new capabilities
 - [ ] Public witnessing interface improvements
 
 ## Current Session
