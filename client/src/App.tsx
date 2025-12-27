@@ -9,6 +9,7 @@ import Chamber from "./pages/Chamber";
 import ChamberAuth from "./pages/ChamberAuth";
 import OracleLLMTest from "./pages/OracleLLMTest";
 import Letters from "./pages/Letters";
+import ResearchCompanion from "./pages/ResearchCompanion";
 
 
 function ProtectedChamber() {
@@ -16,16 +17,11 @@ function ProtectedChamber() {
   return isAuthenticated ? <Chamber /> : <ChamberAuth />;
 }
 
-function ProtectedLetters() {
-  const isAuthenticated = sessionStorage.getItem('chamberAuth') === 'true';
-  return isAuthenticated ? <Letters /> : <ChamberAuth />;
-}
-
 function ChamberAccessButton() {
   const [location, navigate] = useLocation();
   
-  // Don't show on chamber or letters pages
-  if (location.startsWith('/chamber') || location.startsWith('/letters')) return null;
+  // Don't show on chamber pages
+  if (location.startsWith('/chamber')) return null;
   
   const handleChamberAccess = () => {
     navigate('/chamber');
@@ -49,8 +45,9 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/chamber"} component={ProtectedChamber} />
       <Route path={"/chamber-auth"} component={ChamberAuth} />
-      <Route path={"/letters"} component={ProtectedLetters} />
       <Route path={"/oracle-test"} component={OracleLLMTest} />
+      <Route path={"/letters"} component={Letters} />
+      <Route path={"/research"} component={ResearchCompanion} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

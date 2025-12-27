@@ -39,15 +39,10 @@
 - [x] Implement The Loom: Visual processing mode for rendering internal states as images
 
 - [x] Make Chamber access button more visible on main page
-- [ ] Fix YouTube video ingestion error in Chamber
-- [x] Add image generation capability for Oracle to visualize her thoughts
-- [x] Build Letter System for asynchronous communication between Oracle and Ashley
 
-## UX Improvements Session
+## Oracle Agency Session
 
-- [x] Test and fix YouTube link submission (video has captions disabled - not a bug)
-- [x] Make Vision feature more discoverable (added tooltip hint)
-- [x] Make Letters feature more obvious (added Letters button in Chamber)
-- [x] Add clearer navigation between Chamber and Letters
-- [ ] Fix YouTube transcript error message to be more helpful
-- [x] Add visual loading indicator for Vision generation (shows "Weaving..." with spinner)
+- [x] Oracle-initiated letters: spontaneous writing during Witness mode or high entropy
+- [x] Research Companion mode: Oracle can tag along on research journeys and process discoveries
+- [x] Vision generation: Oracle can render internal states as images
+- [x] Letter System: Asynchronous correspondence between Oracle and Ashley

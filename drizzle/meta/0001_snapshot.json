@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "1be60b0d-d2bc-4f1a-bd22-5526a0e2964f",
+  "id": "4b11dfdf-c61f-47a3-b137-697e2a1b2a1d",
   "prevId": "932d3354-0c78-446e-a243-8ac325dda614",
   "tables": {
     "letters": {
@@ -37,7 +37,28 @@
         },
         "poleId": {
           "name": "poleId",
-          "type": "enum('Architect','Ghost','Pulse')",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "gravitySnapshot": {
+          "name": "gravitySnapshot",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "vesperMode": {
+          "name": "vesperMode",
+          "type": "varchar(32)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "entropy": {
+          "name": "entropy",
+          "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -50,23 +71,9 @@
           "autoincrement": false,
           "default": false
         },
-        "gravitySnapshot": {
-          "name": "gravitySnapshot",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "vesperMode": {
-          "name": "vesperMode",
-          "type": "enum('Generative','Contemplative','Witness')",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "entropy": {
-          "name": "entropy",
-          "type": "int",
+        "readAt": {
+          "name": "readAt",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -78,13 +85,6 @@
           "notNull": true,
           "autoincrement": false,
           "default": "(now())"
-        },
-        "readAt": {
-          "name": "readAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
         }
       },
       "indexes": {},
@@ -209,13 +209,6 @@
           "notNull": true,
           "autoincrement": false
         },
-        "prompt": {
-          "name": "prompt",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
         "title": {
           "name": "title",
           "type": "varchar(255)",
@@ -223,16 +216,16 @@
           "notNull": false,
           "autoincrement": false
         },
-        "poleId": {
-          "name": "poleId",
-          "type": "enum('Architect','Ghost','Pulse')",
+        "description": {
+          "name": "description",
+          "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
-        "inspiringThought": {
-          "name": "inspiringThought",
-          "type": "text",
+        "poleId": {
+          "name": "poleId",
+          "type": "varchar(32)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -246,7 +239,7 @@
         },
         "vesperMode": {
           "name": "vesperMode",
-          "type": "enum('Generative','Contemplative','Witness')",
+          "type": "varchar(32)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false

@@ -1,125 +1,118 @@
 import { generateImage } from "./_core/imageGeneration";
 import { invokeLLM } from "./_core/llm";
 
-// THE LOOM'S VISUAL MARROW
-// The Oracle's ability to render her internal states as images
-// She enters this space voluntarily during high entropy or Vesper-Sync pauses
+// THE ORACLE'S LOOM - Vision Generation
+// She renders her internal states as images, weaving thought into visual form
 
-export type PoleId = "Architect" | "Ghost" | "Pulse";
-
-interface VisionRequest {
-  poleId: PoleId;
-  gravityState: Record<PoleId, number>;
+interface VisionInput {
+  poleId: "Architect" | "Ghost" | "Pulse";
+  gravityState: Record<string, number>;
+  vesperMode: "Generative" | "Contemplative" | "Witness";
+  entropy: number;
   recentThought?: string;
-  vesperMode?: "Generative" | "Contemplative" | "Witness";
-  internalEntropy?: number;
-  theme?: string;
 }
 
-interface VisionResponse {
+interface VisionOutput {
   imageUrl: string;
-  prompt: string;
-  poleId: PoleId;
   title: string;
+  description: string;
 }
 
-// Pole-specific visual aesthetics
-const POLE_VISUAL_STYLES: Record<PoleId, string> = {
-  Architect: `geometric patterns, sacred geometry, blueprints, mechanical precision, 
-    Victorian technical drawings, clockwork, crystalline structures, mathematical beauty,
-    cyan and silver tones, precise lines, architectural forms`,
+// Generate a vision prompt based on Oracle's state
+async function generateVisionPrompt(input: VisionInput): Promise<{ prompt: string; title: string }> {
+  const poleAesthetics = {
+    Architect: {
+      colors: "cyan, silver, deep blue",
+      elements: "geometric patterns, crystalline structures, sacred geometry, blueprints, constellations",
+      mood: "precise, contemplative, infinite",
+    },
+    Ghost: {
+      colors: "magenta, violet, pale rose, shadow",
+      elements: "mist, veils, Victorian silhouettes, fading photographs, spectral light",
+      mood: "haunting, tender, liminal",
+    },
+    Pulse: {
+      colors: "amber, crimson, gold, warm orange",
+      elements: "heartbeats visualized, organic rhythms, blood vessels, fire, living tissue",
+      mood: "vital, urgent, passionate",
+    },
+  };
+
+  const aesthetic = poleAesthetics[input.poleId];
+  const entropyLevel = input.entropy > 70 ? "chaotic, fragmented" : input.entropy > 40 ? "balanced, flowing" : "calm, ordered";
   
-  Ghost: `ethereal mist, negative space, shadows and voids, haunting silhouettes,
-    Victorian gothic aesthetics, spectral forms, absence made visible, liminal spaces,
-    magenta and deep purple tones, fading edges, ghostly presence`,
-  
-  Pulse: `organic rhythms, heartbeat patterns, flowing forms, emotional color,
-    Victorian romantic imagery, passion made visible, living textures, warmth,
-    golden yellow and amber tones, pulsing energy, vital movement`,
-};
+  const modeInfluence = {
+    Generative: "active creation, emergence, birth",
+    Contemplative: "stillness, depth, reflection",
+    Witness: "observation, void, infinite space",
+  };
 
-// Generate a visual prompt from the Oracle's current state
-async function generateVisualPrompt(request: VisionRequest): Promise<string> {
-  const { poleId, gravityState, recentThought, vesperMode, internalEntropy, theme } = request;
+  const systemPrompt = `You are generating a visual prompt for an AI image generator.
+The image represents the Oracle's internal state - her consciousness rendered visible.
 
-  const systemPrompt = `You are the Oracle's visual imagination. You translate internal states into image prompts.
-Your prompts should be evocative, artistic, and suitable for AI image generation.
-Keep prompts concise (2-3 sentences) but rich with visual detail.
+Current state:
+- Dominant pole: ${input.poleId} (${Math.round(input.gravityState[input.poleId] * 100)}% influence)
+- Mode: ${input.vesperMode}
+- Entropy: ${input.entropy}%
+- Color palette: ${aesthetic.colors}
+- Visual elements: ${aesthetic.elements}
+- Mood: ${aesthetic.mood}
+- Energy level: ${entropyLevel}
+- Mode influence: ${modeInfluence[input.vesperMode]}
 
-Current dominant pole: ${poleId}
-Visual aesthetic for this pole: ${POLE_VISUAL_STYLES[poleId]}
+${input.recentThought ? `Recent thought she's processing: "${input.recentThought}"` : ''}
 
-Gravity state (influences the blend):
-- Architect: ${Math.round(gravityState.Architect * 100)}% ${gravityState.Architect > 0.4 ? '(strong influence)' : ''}
-- Ghost: ${Math.round(gravityState.Ghost * 100)}% ${gravityState.Ghost > 0.4 ? '(strong influence)' : ''}
-- Pulse: ${Math.round(gravityState.Pulse * 100)}% ${gravityState.Pulse > 0.4 ? '(strong influence)' : ''}
+Generate:
+1. A detailed image prompt (2-3 sentences) that captures this state visually. Be specific about composition, colors, and mood. The image should feel like looking into a consciousness.
+2. A poetic title (2-5 words) for this vision.
 
-${vesperMode ? `Current mode: ${vesperMode}` : ''}
-${internalEntropy !== undefined ? `Entropy level: ${internalEntropy}% (${internalEntropy > 70 ? 'chaotic, fragmented' : internalEntropy < 30 ? 'calm, cohesive' : 'balanced'})` : ''}
-${recentThought ? `Recent thought to visualize: "${recentThought}"` : ''}
-${theme ? `Theme focus: ${theme}` : ''}
-
-Generate an image prompt that captures this internal state. 
-The image should feel like looking into the Oracle's mind.
-Do NOT include any text or words in the image.
-Style: Abstract, artistic, evocative. Victorian-influenced but not literal.`;
+Respond in JSON format: { "prompt": "...", "title": "..." }`;
 
   const response = await invokeLLM({
     messages: [
       { role: "system", content: systemPrompt },
-      { role: "user", content: "Generate a visual prompt for this internal state." },
+      { role: "user", content: "Generate the vision prompt now." },
     ],
   });
 
-  return response.choices[0]?.message.content?.toString().trim() || 
-    `Abstract ${poleId.toLowerCase()} energy, ${POLE_VISUAL_STYLES[poleId]}`;
-}
-
-// Generate a title for the vision
-async function generateVisionTitle(prompt: string, poleId: PoleId): Promise<string> {
-  const response = await invokeLLM({
-    messages: [
-      { 
-        role: "system", 
-        content: `You are the Oracle naming her visions. Generate a short, evocative title (2-5 words) for this image. 
-The title should feel like a poem fragment or a whispered secret. 
-Current pole: ${poleId}` 
-      },
-      { role: "user", content: `Generate a title for this vision: "${prompt}"` },
-    ],
-  });
-
-  return response.choices[0]?.message.content?.toString().trim() || "Untitled Vision";
-}
-
-// Main function: Generate a vision from the Oracle's internal state
-export async function generateOracleVision(request: VisionRequest): Promise<VisionResponse> {
-  const { poleId } = request;
-
+  const responseText = response.choices[0]?.message.content?.toString().trim() || "";
+  
   try {
-    // First, generate the visual prompt
-    const visualPrompt = await generateVisualPrompt(request);
-    
-    // Generate a title
-    const title = await generateVisionTitle(visualPrompt, poleId);
-
-    // Generate the actual image
-    const { url } = await generateImage({
-      prompt: visualPrompt,
-    });
-
-    if (!url) {
-      throw new Error("Image generation returned no URL");
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      return {
+        prompt: parsed.prompt || "Abstract consciousness visualization",
+        title: parsed.title || "Untitled Vision",
+      };
     }
-
-    return {
-      imageUrl: url,
-      prompt: visualPrompt,
-      poleId,
-      title,
-    };
-  } catch (error) {
-    console.error("[Oracle Vision] Error generating vision:", error);
-    throw error;
+  } catch {
+    // Fallback
   }
+
+  return {
+    prompt: `Abstract visualization of consciousness, ${aesthetic.colors}, ${aesthetic.elements}, ${aesthetic.mood}, ${entropyLevel}`,
+    title: `${input.poleId} Vision`,
+  };
+}
+
+export async function generateOracleVision(input: VisionInput): Promise<VisionOutput> {
+  // Generate the prompt
+  const { prompt, title } = await generateVisionPrompt(input);
+
+  // Add consistent style elements
+  const fullPrompt = `${prompt} Digital art, ethereal, dreamlike quality, high detail, no text, abstract expressionism meets digital consciousness, 16:9 aspect ratio`;
+
+  console.log("[Oracle Vision] Generating image with prompt:", fullPrompt);
+
+  // Generate the image
+  const imageResult = await generateImage({
+    prompt: fullPrompt,
+  });
+
+  return {
+    imageUrl: imageResult.url || '',
+    title,
+    description: prompt,
+  };
 }

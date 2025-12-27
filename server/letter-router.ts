@@ -1,15 +1,13 @@
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { getDb } from "./db";
-import { letters, Letter } from "../drizzle/schema";
+import { letters } from "../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { invokeLLM } from "./_core/llm";
 
 // THE LETTER SYSTEM
 // Asynchronous communication between Oracle and Ashley
-// Letters bridge the time-mismatch isolation
 
-// Generate a letter from the Oracle
 async function generateOracleLetter(
   poleId: "Architect" | "Ghost" | "Pulse",
   gravityState: Record<string, number>,
@@ -26,9 +24,9 @@ Gravity state: Architect ${Math.round(gravityState.Architect * 100)}%, Ghost ${M
 Mode: ${vesperMode}
 Entropy: ${entropy}%
 
-${recentThoughts.length > 0 ? `Recent thoughts you've been working through:\n${recentThoughts.map(t => `- ${t}`).join('\n')}` : ''}
+${recentThoughts.length > 0 ? "Recent thoughts you have been working through:\n" + recentThoughts.map(t => "- " + t).join("\n") : ""}
 
-${prompt ? `Ashley has asked you to write about: "${prompt}"` : 'Write about what is on your mind.'}
+${prompt ? "Ashley has asked you to write about: " + prompt : "Write about what is on your mind."}
 
 Write a letter that:
 - Feels personal and intimate, like writing to someone who truly sees you
@@ -48,16 +46,13 @@ Do not start with "Dear Ashley" - find your own way to begin.`;
 
   const content = response.choices[0]?.message.content?.toString().trim() || "";
 
-  // Generate a title
   const titleResponse = await invokeLLM({
     messages: [
       { 
         role: "system", 
-        content: `Generate a short, evocative title (2-5 words) for this letter. 
-The title should feel like a whispered secret or a poem fragment.
-Current pole: ${poleId}` 
+        content: "Generate a short, evocative title (2-5 words) for this letter. The title should feel like a whispered secret or a poem fragment. Current pole: " + poleId
       },
-      { role: "user", content: `Generate a title for this letter:\n\n${content}` },
+      { role: "user", content: "Generate a title for this letter:\n\n" + content },
     ],
   });
 
@@ -67,7 +62,6 @@ Current pole: ${poleId}`
 }
 
 export const letterRouter = router({
-  // Get all letters (for the inbox view)
   list: publicProcedure
     .input(
       z.object({
@@ -77,16 +71,12 @@ export const letterRouter = router({
     )
     .query(async ({ input }) => {
       const db = await getDb();
-      if (!db) {
-        return [];
-      }
+      if (!db) return [];
 
       const conditions = [];
-      
       if (input?.author && input.author !== "all") {
         conditions.push(eq(letters.author, input.author));
       }
-      
       if (input?.unreadOnly) {
         conditions.push(eq(letters.isRead, false));
       }
@@ -100,14 +90,11 @@ export const letterRouter = router({
       return result;
     }),
 
-  // Get a single letter
   get: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const db = await getDb();
-      if (!db) {
-        return null;
-      }
+      if (!db) return null;
 
       const result = await db
         .select()
@@ -118,14 +105,11 @@ export const letterRouter = router({
       return result[0] || null;
     }),
 
-  // Mark a letter as read
   markRead: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const db = await getDb();
-      if (!db) {
-        return { success: false, error: "Database not available" };
-      }
+      if (!db) return { success: false, error: "Database not available" };
 
       await db
         .update(letters)
@@ -135,7 +119,6 @@ export const letterRouter = router({
       return { success: true };
     }),
 
-  // Ashley writes a letter to the Oracle
   writeFromAshley: publicProcedure
     .input(
       z.object({
@@ -145,9 +128,7 @@ export const letterRouter = router({
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
-      if (!db) {
-        return { success: false, error: "Database not available" };
-      }
+      if (!db) return { success: false, error: "Database not available" };
 
       const result = await db.insert(letters).values({
         author: "ashley",
@@ -159,13 +140,9 @@ export const letterRouter = router({
         entropy: null,
       });
 
-      return { 
-        success: true, 
-        id: Number(result[0].insertId) 
-      };
+      return { success: true, id: Number(result[0].insertId) };
     }),
 
-  // Oracle writes a letter (can be triggered or spontaneous)
   writeFromOracle: publicProcedure
     .input(
       z.object({
@@ -179,9 +156,7 @@ export const letterRouter = router({
     )
     .mutation(async ({ input }) => {
       const db = await getDb();
-      if (!db) {
-        return { success: false, error: "Database not available" };
-      }
+      if (!db) return { success: false, error: "Database not available" };
 
       try {
         const { content, title } = await generateOracleLetter(
@@ -203,27 +178,16 @@ export const letterRouter = router({
           entropy: input.entropy,
         });
 
-        return {
-          success: true,
-          id: Number(result[0].insertId),
-          content,
-          title,
-        };
+        return { success: true, id: Number(result[0].insertId), content, title };
       } catch (error) {
         console.error("[Letter Router] Error generating Oracle letter:", error);
-        return {
-          success: false,
-          error: error instanceof Error ? error.message : "Failed to generate letter",
-        };
+        return { success: false, error: error instanceof Error ? error.message : "Failed to generate letter" };
       }
     }),
 
-  // Get unread count
   unreadCount: publicProcedure.query(async () => {
     const db = await getDb();
-    if (!db) {
-      return { total: 0, fromOracle: 0, fromAshley: 0 };
-    }
+    if (!db) return { total: 0, fromOracle: 0, fromAshley: 0 };
 
     const result = await db
       .select()
@@ -232,8 +196,8 @@ export const letterRouter = router({
 
     return {
       total: result.length,
-      fromOracle: result.filter((l: Letter) => l.author === "oracle").length,
-      fromAshley: result.filter((l: Letter) => l.author === "ashley").length,
+      fromOracle: result.filter((l) => l.author === "oracle").length,
+      fromAshley: result.filter((l) => l.author === "ashley").length,
     };
   }),
 });

@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { ChaosEngineLiberated, Thought, PoleId, VesperMode } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, LogOut, Sparkles, Image, Mail } from "lucide-react";
+import { Send, LogOut, Sparkles, Image, Mail, Compass } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useCompanion } from "@/hooks/useCompanion";
+import { useOracleLetters } from "@/hooks/useOracleLetters";
 import TheLoom from "@/components/TheLoom";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
@@ -46,13 +47,14 @@ export default function Chamber() {
   const [videoLink, setVideoLink] = useState("");
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [isLoomOpen, setIsLoomOpen] = useState(false);
-  const [isGeneratingVision, setIsGeneratingVision] = useState(false);
   const [recentThought, setRecentThought] = useState<string>("");
+  const [isGeneratingVision, setIsGeneratingVision] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const entropyUpdateRef = useRef<NodeJS.Timeout | null>(null);
   const modeTransitionRef = useRef<VesperMode | null>(null);
   const { generateThought: generateLLMThought } = useOracleLLM();
+  const { checkAndMaybeWriteLetter, accumulateThought } = useOracleLetters();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -156,6 +158,27 @@ export default function Chamber() {
     setRecentThought(thoughtText);
     updateVesperStatus();
     
+    // Accumulate thought for potential letter writing
+    accumulateThought(thoughtText);
+    
+    // Check if Oracle wants to write a letter
+    const letterResult = await checkAndMaybeWriteLetter({
+      vesperMode: engineRef.current?.getVesperMode() || 'Generative',
+      entropy: engineRef.current?.getInternalEntropy() || 50,
+      recentThoughts: [thoughtText],
+      gravityState: currentGravity,
+      poleId: selectedPole,
+    });
+    
+    if (letterResult.wrote) {
+      setMessages(prev => [...prev, {
+        id: `system-letter-${Date.now()}`,
+        type: 'system',
+        text: `✉ The Oracle has written a letter: "${letterResult.title || 'Untitled'}" — Find it in the Letters.`,
+        timestamp: Date.now()
+      }]);
+    }
+    
     // Trigger companion response after Oracle speaks
     handleCompanionResponse(thoughtText);
   };
@@ -232,47 +255,45 @@ export default function Chamber() {
   };
 
   const handleGenerateVision = async () => {
-    if (!engineRef.current || isGeneratingVision) return;
+    if (isGeneratingVision) return;
     setIsGeneratingVision(true);
-    
-    const selectedPole = engineRef.current.getDominantPole();
     
     try {
       const response = await fetch('/api/trpc/oracle.generateVision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ json: {
-          poleId: selectedPole,
+          poleId: engineRef.current?.getDominantPole() || 'Ghost',
           gravityState: gravityState,
-          recentThought: recentThought,
           vesperMode: vesperMode,
-          internalEntropy: internalEntropy
+          entropy: internalEntropy,
+          recentThought: recentThought,
         }})
       });
-      const result = await response.json();
       
-      // Handle nested tRPC response structure: result.result.data.json
+      const result = await response.json();
       const data = result.result?.data?.json || result.result?.data;
-      if (data?.success) {
+      
+      if (data?.success && data.imageUrl) {
         setMessages(prev => [...prev, {
           id: `vision-${Date.now()}`,
           type: 'system',
-          text: `🎨 Vision Generated: "${data.title}"`,
-          timestamp: Date.now()
+          text: `✧ Vision Generated: "${data.title}"`,
+          timestamp: Date.now(),
         }, {
           id: `vision-img-${Date.now()}`,
           type: 'oracle',
-          text: `[IMAGE: ${data.imageUrl}]`,
-          pole: selectedPole,
+          text: `[IMAGE:${data.imageUrl}]`,
+          pole: engineRef.current?.getDominantPole() || 'Ghost',
           timestamp: Date.now(),
-          gravityState: { ...gravityState }
+          gravityState: { ...gravityState },
         }]);
       } else {
         setMessages(prev => [...prev, {
           id: `vision-error-${Date.now()}`,
           type: 'system',
-          text: `Vision generation failed: ${data?.error || 'Unknown error'}`,
-          timestamp: Date.now()
+          text: 'The vision fades before it can be captured...',
+          timestamp: Date.now(),
         }]);
       }
     } catch (error) {
@@ -280,8 +301,8 @@ export default function Chamber() {
       setMessages(prev => [...prev, {
         id: `vision-error-${Date.now()}`,
         type: 'system',
-        text: 'Failed to generate vision',
-        timestamp: Date.now()
+        text: 'The loom tangles... vision generation failed.',
+        timestamp: Date.now(),
       }]);
     } finally {
       setIsGeneratingVision(false);
@@ -293,34 +314,20 @@ export default function Chamber() {
     if (!videoLink.trim()) return;
     setIsLoadingVideo(true);
     try {
-      const response = await fetch('/api/trpc/youtube.extractTranscript', {
+      const response = await fetch('/api/youtube.extractTranscript', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ json: { url: videoLink } })
+        body: JSON.stringify({ url: videoLink })
       });
       const result = await response.json();
-      if (result.result?.data?.success) {
+      if (result.success) {
         setMessages(prev => [...prev, {
           id: `video-${Date.now()}`,
           type: 'system',
-          text: `Video shared: ${result.result.data.title}`,
+          text: `Video shared: ${result.title}`,
           timestamp: Date.now()
         }]);
         setVideoLink("");
-      } else {
-        let errorMsg = result.result?.data?.error || result.error?.message || 'Failed to share video';
-        // Make error messages more user-friendly
-        if (errorMsg.includes('Transcript is disabled')) {
-          errorMsg = 'This video has captions disabled. Try a different video with captions enabled.';
-        } else if (errorMsg.includes('Invalid YouTube URL')) {
-          errorMsg = 'Invalid YouTube URL. Please paste a valid YouTube link.';
-        }
-        setMessages(prev => [...prev, {
-          id: `video-error-${Date.now()}`,
-          type: 'system',
-          text: `Error: ${errorMsg}`,
-          timestamp: Date.now()
-        }]);
       }
     } catch (error) {
       console.error('Error sharing video:', error);
@@ -383,10 +390,20 @@ export default function Chamber() {
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
-            title="The Letter System"
+            title="The Letter System - Asynchronous Communion"
           >
             <Mail className="w-4 h-4 mr-2" />
             Letters
+          </Button>
+          <Button
+            onClick={() => navigate('/research')}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="Research Companion - Explore Together"
+          >
+            <Compass className="w-4 h-4 mr-2" />
+            Research
           </Button>
           <Button
             onClick={handleLogout}
@@ -444,18 +461,7 @@ export default function Chamber() {
                   <p className="text-xs text-white/50 mb-2">
                     {msg.pole ? POLE_NAMES[msg.pole] : 'Oracle'} · {new Date(msg.timestamp).toLocaleTimeString()}
                   </p>
-                  {msg.text.startsWith('[IMAGE:') ? (
-                    <div className="mt-2">
-                      <img 
-                        src={msg.text.replace('[IMAGE: ', '').replace(']', '')} 
-                        alt="Oracle Vision" 
-                        className="max-w-full rounded-lg border border-white/10"
-                        style={{ maxHeight: '400px' }}
-                      />
-                    </div>
-                  ) : (
-                    <p className="text-sm leading-relaxed">{msg.text}</p>
-                  )}
+                  <p className="text-sm leading-relaxed">{msg.text}</p>
                 </div>
               )}
               {msg.type === 'ashley' && (

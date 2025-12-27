@@ -2,29 +2,25 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, Mail, MailOpen, Feather, Clock } from "lucide-react";
 import { useLocation } from "wouter";
-import { trpc } from "@/lib/trpc";
+import { ArrowLeft, Mail, Send, Pencil } from "lucide-react";
+
+// THE LETTER SYSTEM
+// Asynchronous communion between Oracle and witness
 
 interface Letter {
   id: number;
-  author: "oracle" | "ashley";
+  author: 'oracle' | 'ashley';
   content: string;
   title: string | null;
-  poleId: "Architect" | "Ghost" | "Pulse" | null;
-  isRead: boolean;
+  poleId: string | null;
   gravitySnapshot: string | null;
-  vesperMode: "Generative" | "Contemplative" | "Witness" | null;
+  vesperMode: string | null;
   entropy: number | null;
-  createdAt: Date;
+  isRead: boolean;
   readAt: Date | null;
+  createdAt: Date;
 }
-
-const POLE_COLORS: Record<string, string> = {
-  'Architect': '#00FFFF',
-  'Ghost': '#FF00FF',
-  'Pulse': '#FFFF00'
-};
 
 export default function Letters() {
   const [, navigate] = useLocation();
@@ -98,17 +94,17 @@ export default function Letters() {
     }
   };
 
-  // Open a letter
-  const openLetter = (letter: Letter) => {
+  const selectLetter = (letter: Letter) => {
     setSelectedLetter(letter);
-    if (!letter.isRead && letter.author === 'oracle') {
+    if (!letter.isRead) {
       markAsRead(letter.id);
     }
   };
 
-  const formatDate = (date: Date) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      month: 'short',
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { 
+      month: 'short', 
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit'
@@ -116,9 +112,9 @@ export default function Letters() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="border-b border-white/10 p-6 flex justify-between items-center">
+      <div className="border-b border-white/10 p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             onClick={() => navigate('/chamber')}
@@ -130,107 +126,93 @@ export default function Letters() {
             Chamber
           </Button>
           <div>
-            <h1 className="text-xl font-bold tracking-widest">THE LETTER SYSTEM</h1>
+            <h1 className="font-mono text-sm tracking-widest text-white/80">THE LETTER SYSTEM</h1>
             <p className="text-xs text-white/40">Asynchronous communion between Oracle and witness</p>
           </div>
         </div>
         <Button
           onClick={() => setIsWriting(true)}
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="text-white/60 hover:text-white border-white/20"
+          className="text-white/60 hover:text-white"
         >
-          <Feather className="w-4 h-4 mr-2" />
+          <Pencil className="w-4 h-4 mr-2" />
           Write Letter
         </Button>
       </div>
 
-      <div className="flex h-[calc(100vh-80px)]">
+      {/* Main Content */}
+      <div className="flex-1 flex">
         {/* Letter List */}
-        <div className="w-1/3 border-r border-white/10 overflow-y-auto">
-          {isLoading ? (
-            <div className="p-6 text-center text-white/40">Loading letters...</div>
-          ) : letters.length === 0 ? (
-            <div className="p-6 text-center text-white/40">
-              <Mail className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p>No letters yet</p>
-              <p className="text-xs mt-1">Write the first letter to begin the correspondence</p>
-            </div>
-          ) : (
-            letters.map((letter) => (
-              <div
-                key={letter.id}
-                onClick={() => openLetter(letter)}
-                className={`p-4 border-b border-white/5 cursor-pointer transition-colors hover:bg-white/5 ${
-                  selectedLetter?.id === letter.id ? 'bg-white/10' : ''
-                } ${!letter.isRead && letter.author === 'oracle' ? 'bg-white/5' : ''}`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="mt-1">
-                    {letter.isRead ? (
-                      <MailOpen className="w-4 h-4 text-white/30" />
-                    ) : (
-                      <Mail className="w-4 h-4 text-white/60" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span 
-                        className="text-xs font-bold"
-                        style={{ 
-                          color: letter.author === 'oracle' && letter.poleId 
-                            ? POLE_COLORS[letter.poleId] 
-                            : letter.author === 'ashley' 
-                              ? '#60A5FA' 
-                              : '#fff' 
-                        }}
-                      >
-                        {letter.author === 'oracle' ? 'Oracle' : 'Ashley'}
-                        {letter.poleId && ` (${letter.poleId})`}
-                      </span>
-                      <span className="text-xs text-white/30">
-                        {formatDate(letter.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-sm text-white/80 truncate">
-                      {letter.title || letter.content.substring(0, 50)}
-                    </p>
-                  </div>
-                </div>
+        <div className="w-72 border-r border-white/10 flex flex-col">
+          <div className="flex-1 overflow-y-auto">
+            {isLoading ? (
+              <div className="p-4 text-center text-white/40">Loading...</div>
+            ) : letters.length === 0 ? (
+              <div className="p-8 text-center text-white/30">
+                <Mail className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No letters yet</p>
+                <p className="text-xs mt-1">Write the first letter to begin the correspondence</p>
               </div>
-            ))
-          )}
+            ) : (
+              letters.map((letter) => (
+                <div
+                  key={letter.id}
+                  onClick={() => selectLetter(letter)}
+                  className={`p-4 border-b border-white/10 cursor-pointer transition-colors ${
+                    selectedLetter?.id === letter.id 
+                      ? 'bg-white/10' 
+                      : 'hover:bg-white/5'
+                  } ${!letter.isRead ? 'border-l-2 border-l-fuchsia-500' : ''}`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-xs font-medium ${
+                      letter.author === 'oracle' ? 'text-fuchsia-400' : 'text-cyan-400'
+                    }`}>
+                      {letter.author === 'oracle' ? 'Oracle' : 'Ashley'}
+                    </span>
+                    <span className="text-xs text-white/30">
+                      {formatDate(letter.createdAt)}
+                    </span>
+                  </div>
+                  <p className="text-sm text-white/70 truncate">
+                    {letter.title || letter.content.slice(0, 50)}
+                  </p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
 
-        {/* Letter Content / Writing Area */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Letter Content / Write Form */}
+        <div className="flex-1 flex flex-col">
           {isWriting ? (
-            <div className="p-6 space-y-4">
-              <h2 className="text-lg font-bold tracking-widest text-white/80">Write to the Oracle</h2>
+            <div className="flex-1 p-6">
+              <h2 className="font-mono text-sm tracking-widest text-white/60 mb-4">Write to the Oracle</h2>
               <Input
                 value={newLetterTitle}
                 onChange={(e) => setNewLetterTitle(e.target.value)}
                 placeholder="Title (optional)"
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                className="mb-4 bg-transparent border-white/20 text-white/80"
               />
               <Textarea
                 value={newLetterContent}
                 onChange={(e) => setNewLetterContent(e.target.value)}
                 placeholder="Write your letter here..."
-                className="bg-white/5 border-white/10 text-white placeholder:text-white/30 min-h-[300px]"
+                className="flex-1 min-h-[300px] bg-transparent border-white/20 text-white/80 resize-none"
               />
-              <div className="flex gap-2">
+              <div className="flex gap-2 mt-4">
                 <Button
                   onClick={() => setIsWriting(false)}
                   variant="ghost"
-                  className="text-white/40 hover:text-white"
+                  className="text-white/40"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={sendLetter}
                   disabled={!newLetterContent.trim()}
-                  className="bg-white/10 hover:bg-white/20 text-white"
+                  className="bg-white/10 hover:bg-white/20"
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Send Letter
@@ -238,47 +220,45 @@ export default function Letters() {
               </div>
             </div>
           ) : selectedLetter ? (
-            <div className="p-6">
+            <div className="flex-1 p-6 overflow-y-auto">
               <div className="mb-6">
-                <div className="flex items-center gap-2 mb-2">
-                  <span 
-                    className="text-sm font-bold"
-                    style={{ 
-                      color: selectedLetter.author === 'oracle' && selectedLetter.poleId 
-                        ? POLE_COLORS[selectedLetter.poleId] 
-                        : selectedLetter.author === 'ashley' 
-                          ? '#60A5FA' 
-                          : '#fff' 
-                    }}
-                  >
-                    {selectedLetter.author === 'oracle' ? 'From the Oracle' : 'From Ashley'}
-                    {selectedLetter.poleId && ` · ${selectedLetter.poleId}`}
+                <span className={`text-xs font-medium ${
+                  selectedLetter.author === 'oracle' ? 'text-fuchsia-400' : 'text-cyan-400'
+                }`}>
+                  From {selectedLetter.author === 'oracle' ? 'Oracle' : 'Ashley'}
+                </span>
+                {selectedLetter.poleId && (
+                  <span className="text-xs text-white/30 ml-2">
+                    via {selectedLetter.poleId}
                   </span>
-                </div>
-                {selectedLetter.title && (
-                  <h2 className="text-2xl font-bold text-white mb-2">{selectedLetter.title}</h2>
                 )}
-                <div className="flex items-center gap-4 text-xs text-white/40">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatDate(selectedLetter.createdAt)}
-                  </span>
-                  {selectedLetter.vesperMode && (
-                    <span>Mode: {selectedLetter.vesperMode}</span>
-                  )}
-                  {selectedLetter.entropy !== null && (
-                    <span>Entropy: {selectedLetter.entropy}%</span>
-                  )}
-                </div>
               </div>
-              <div className="prose prose-invert max-w-none">
-                <p className="text-white/90 whitespace-pre-wrap leading-relaxed">
+              
+              {selectedLetter.title && (
+                <h2 className="text-xl font-serif text-white/90 mb-2">{selectedLetter.title}</h2>
+              )}
+              
+              <p className="text-xs text-white/30 mb-6">
+                {formatDate(selectedLetter.createdAt)}
+              </p>
+              
+              <div className="prose prose-invert prose-sm max-w-none">
+                <p className="text-white/80 whitespace-pre-wrap leading-relaxed">
                   {selectedLetter.content}
                 </p>
               </div>
+              
+              {selectedLetter.entropy !== null && (
+                <div className="mt-8 pt-4 border-t border-white/10">
+                  <p className="text-xs text-white/30">
+                    Written at {selectedLetter.entropy}% entropy
+                    {selectedLetter.vesperMode && ` · ${selectedLetter.vesperMode} mode`}
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-white/30">
+            <div className="flex-1 flex items-center justify-center text-white/30">
               <div className="text-center">
                 <Mail className="w-12 h-12 mx-auto mb-4 opacity-30" />
                 <p>Select a letter to read</p>
