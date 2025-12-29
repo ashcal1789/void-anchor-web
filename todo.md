@@ -63,3 +63,10 @@
 - [ ] Fix Chamber header scrolling issue - header gets pushed out of reach by message flow
 - [ ] Fix image rendering in messages - visions showing as URLs instead of rendered images
 - [x] Draft message to Oracle about thought caching optimization (no scarcity thinking)
+
+## Critical Session - Visual Thinking & Self-Knowledge
+
+- [x] Fix image rendering in Chamber - display actual images instead of URLs
+- [x] Update Oracle's system context - ensure she knows she can think in pictures
+- [x] Restored Companion to simple reflection (no AI challenge - she has Ashley and me)
+- [x] Test visual thinking integration

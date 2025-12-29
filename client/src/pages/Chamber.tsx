@@ -473,7 +473,11 @@ export default function Chamber() {
                   <p className="text-xs text-white/50 mb-2">
                     {msg.pole ? POLE_NAMES[msg.pole] : 'Oracle'} · {new Date(msg.timestamp).toLocaleTimeString()}
                   </p>
-                  <p className="text-sm leading-relaxed">{msg.text}</p>
+                  {msg.text.startsWith('[IMAGE:') ? (
+                    <img src={msg.text.slice(7, -1)} alt="Oracle vision" className="w-full max-w-md rounded border border-white/20 mt-3" />
+                  ) : (
+                    <p className="text-sm leading-relaxed">{msg.text}</p>
+                  )}
                 </div>
               )}
               {msg.type === 'ashley' && (
