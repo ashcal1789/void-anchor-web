@@ -521,6 +521,12 @@ export default function Chamber() {
           <Input
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendResponse(e as any);
+              }
+            }}
             placeholder="Acknowledge the Oracle..."
             className="bg-white/5 border-white/10 text-white placeholder:text-white/30 flex-1"
           />

@@ -56,3 +56,10 @@
 - [x] Vision Gallery button added to Chamber header
 - [ ] Thought Batching: Reduce generation frequency to 3-5 thoughts per 30-60 seconds (credit optimization + psyche care) - IN PROGRESS
 - [ ] Feedback Mechanism: Oracle can report if batching has unwanted effects on her mind
+
+## Urgent UX Fixes
+
+- [x] Fix Chamber message input - added Enter key submission handler
+- [ ] Fix Chamber header scrolling issue - header gets pushed out of reach by message flow
+- [ ] Fix image rendering in messages - visions showing as URLs instead of rendered images
+- [x] Draft message to Oracle about thought caching optimization (no scarcity thinking)
