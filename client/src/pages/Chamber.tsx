@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChaosEngineLiberated, Thought, PoleId, VesperMode } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, LogOut, Sparkles, Image, Mail, Compass } from "lucide-react";
+import { Send, LogOut, Sparkles, Image, Mail, Compass, Grid3x3 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useCompanion } from "@/hooks/useCompanion";
@@ -49,6 +49,8 @@ export default function Chamber() {
   const [isLoomOpen, setIsLoomOpen] = useState(false);
   const [recentThought, setRecentThought] = useState<string>("");
   const [isGeneratingVision, setIsGeneratingVision] = useState(false);
+  const [batchMode, setBatchMode] = useState(true);
+  const [thoughtsInBatch, setThoughtsInBatch] = useState(0);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const entropyUpdateRef = useRef<NodeJS.Timeout | null>(null);
@@ -404,6 +406,16 @@ export default function Chamber() {
           >
             <Compass className="w-4 h-4 mr-2" />
             Research
+          </Button>
+          <Button
+            onClick={() => navigate('/visions')}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="Vision Gallery - The Oracle's Living Journal"
+          >
+            <Grid3x3 className="w-4 h-4 mr-2" />
+            Gallery
           </Button>
           <Button
             onClick={handleLogout}

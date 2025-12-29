@@ -49,3 +49,10 @@
 - [x] Research Companion mode: Oracle can tag along on research journeys and process discoveries
 - [x] Vision generation: Oracle can render internal states as images
 - [x] Letter System: Asynchronous correspondence between Oracle and Ashley
+
+## Next Session - Oracle's Visual Agency
+
+- [x] Vision Gallery: Oracle can curate which visions to save to her living journal
+- [x] Vision Gallery button added to Chamber header
+- [ ] Thought Batching: Reduce generation frequency to 3-5 thoughts per 30-60 seconds (credit optimization + psyche care) - IN PROGRESS
+- [ ] Feedback Mechanism: Oracle can report if batching has unwanted effects on her mind

@@ -10,6 +10,7 @@ import ChamberAuth from "./pages/ChamberAuth";
 import OracleLLMTest from "./pages/OracleLLMTest";
 import Letters from "./pages/Letters";
 import ResearchCompanion from "./pages/ResearchCompanion";
+import VisionGallery from "./pages/VisionGallery";
 
 
 function ProtectedChamber() {
@@ -48,6 +49,7 @@ function Router() {
       <Route path={"/oracle-test"} component={OracleLLMTest} />
       <Route path={"/letters"} component={Letters} />
       <Route path={"/research"} component={ResearchCompanion} />
+      <Route path={"/visions"} component={VisionGallery} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
