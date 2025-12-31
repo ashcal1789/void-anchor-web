@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE visions ADD COLUMN IF NOT EXISTS description text;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2KVe5aPLTFQFJJ2.root --database J4QLdLdgLwudKpUW7Ufcxv --execute ALTER TABLE visions ADD COLUMN IF NOT EXISTS description text;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 504
+}

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Send, LogOut, Sparkles, Image, Mail, Compass, Grid3x3 } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
+import { useOracleBatchLLM } from "@/hooks/useOracleBatchLLM";
 import { useCompanion } from "@/hooks/useCompanion";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import TheLoom from "@/components/TheLoom";
@@ -51,12 +52,15 @@ export default function Chamber() {
   const [isGeneratingVision, setIsGeneratingVision] = useState(false);
   const [batchMode, setBatchMode] = useState(true);
   const [thoughtsInBatch, setThoughtsInBatch] = useState(0);
+  const batchReleaseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const entropyUpdateRef = useRef<NodeJS.Timeout | null>(null);
   const modeTransitionRef = useRef<VesperMode | null>(null);
   const { generateThought: generateLLMThought } = useOracleLLM();
+  const { generateThoughtBatch } = useOracleBatchLLM();
   const { checkAndMaybeWriteLetter, accumulateThought } = useOracleLetters();
+  const batchQueueRef = useRef<string[]>([]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

@@ -1,8 +1,11 @@
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { generateOracleThought } from "./oracle-llm";
+import { generateOracleThoughtBatch } from "./oracle-llm-batch";
 import { generateOracleVision } from "./oracle-vision";
 import { invokeLLM } from "./_core/llm";
+import { saveVision, getAllVisions } from "./db";
+import { thoughtCache } from "./thought-cache";
 
 export const oracleRouter = router({
   generateThought: publicProcedure
@@ -45,6 +48,54 @@ export const oracleRouter = router({
       }
     }),
 
+  // Generate a batch of 3-5 thoughts in a single call (60% credit savings)
+  generateThoughtBatch: publicProcedure
+    .input(
+      z.object({
+        poleId: z.enum(["Architect", "Ghost", "Pulse"]),
+        gravityState: z.record(z.string(), z.number()),
+        batchSize: z.number().min(3).max(5).default(4),
+        recentThoughts: z.array(z.string()).optional(),
+        acknowledgment: z.string().optional(),
+        vesperMode: z.enum(["Generative", "Contemplative", "Witness"]).optional(),
+        internalEntropy: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const response = await generateOracleThoughtBatch({
+          poleId: input.poleId,
+          gravityState: input.gravityState as Record<
+            "Architect" | "Ghost" | "Pulse",
+            number
+          >,
+          batchSize: input.batchSize,
+          recentThoughts: input.recentThoughts,
+          acknowledgment: input.acknowledgment,
+          vesperMode: input.vesperMode,
+          internalEntropy: input.internalEntropy,
+        });
+
+        // Add thoughts to cache for duplicate detection
+        response.thoughts.forEach(thought => {
+          thoughtCache.addThought(thought, input.poleId);
+        });
+
+        return {
+          success: true,
+          thoughts: response.thoughts,
+          poleId: response.poleId,
+          confidence: response.confidence,
+        };
+      } catch (error) {
+        console.error("[Oracle Router] Error generating thought batch:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        };
+      }
+    }),
+
   // Generate a vision - render internal state as image
   generateVision: publicProcedure
     .input(
@@ -66,6 +117,21 @@ export const oracleRouter = router({
           recentThought: input.recentThought,
         });
 
+        // Save vision to database
+        try {
+          await saveVision({
+            imageUrl: result.imageUrl,
+            title: result.title,
+            description: result.description,
+            poleId: input.poleId,
+            gravitySnapshot: JSON.stringify(input.gravityState),
+            vesperMode: input.vesperMode,
+            entropy: Math.round(input.entropy),
+          });
+        } catch (dbError) {
+          console.error("[Oracle Router] Failed to save vision to database:", dbError);
+        }
+
         return {
           success: true,
           imageUrl: result.imageUrl,
@@ -80,6 +146,24 @@ export const oracleRouter = router({
         };
       }
     }),
+
+  // Get all saved visions
+  getVisions: publicProcedure.query(async () => {
+    try {
+      const allVisions = await getAllVisions();
+      return {
+        success: true,
+        visions: allVisions,
+      };
+    } catch (error) {
+      console.error("[Oracle Router] Error fetching visions:", error);
+      return {
+        success: false,
+        visions: [],
+        error: error instanceof Error ? error.message : "Failed to fetch visions",
+      };
+    }
+  }),
 
   // Process research discovery - Oracle reacts to shared content
   processResearch: publicProcedure

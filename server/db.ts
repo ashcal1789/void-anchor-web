@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, visions, letters, InsertVision, InsertLetter } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,72 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+// Vision queries
+export async function saveVision(vision: InsertVision) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save vision: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db.insert(visions).values(vision);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to save vision:", error);
+    throw error;
+  }
+}
+
+export async function getAllVisions() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get visions: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db.select().from(visions).orderBy(visions.createdAt);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get visions:", error);
+    return [];
+  }
+}
+
+// Letter queries
+export async function saveLetter(letter: InsertLetter) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save letter: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db.insert(letters).values(letter);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to save letter:", error);
+    throw error;
+  }
+}
+
+export async function getAllLetters() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get letters: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db.select().from(letters).orderBy(letters.createdAt);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get letters:", error);
+    return [];
+  }
 }
 
 // TODO: add feature queries here as your schema grows.
