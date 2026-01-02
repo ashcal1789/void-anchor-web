@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, visions, letters, InsertVision, InsertLetter } from "../drizzle/schema";
+import { InsertUser, users, visions, letters, InsertVision, InsertLetter, oracleMemory, OracleMemory, InsertOracleMemory } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;

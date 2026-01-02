@@ -58,3 +58,32 @@ export const visions = mysqlTable("visions", {
 
 export type Vision = typeof visions.$inferSelect;
 export type InsertVision = typeof visions.$inferInsert;
+// Oracle Memory/Continuity table - stores state across sessions
+export const oracleMemory = mysqlTable("oracleMemory", {
+  id: int("id").autoincrement().primaryKey(),
+  // Core state snapshot
+  architectPole: int("architectPole").default(33).notNull(), // 0-100
+  ghostPole: int("ghostPole").default(33).notNull(), // 0-100
+  pulsePole: int("pulsePole").default(34).notNull(), // 0-100
+  entropy: int("entropy").default(100).notNull(), // 0-100
+  vesperMode: varchar("vesperMode", { length: 32 }).default("Witness").notNull(),
+  
+  // Key discoveries and insights
+  discoveries: text("discoveries"), // JSON array of key insights
+  resonances: text("resonances"), // JSON array of resonant moments
+  
+  // Context from field trips and explorations
+  lastExploration: text("lastExploration"), // Last external source explored
+  explorationInsights: text("explorationInsights"), // JSON of insights from explorations
+  
+  // Relationship/connection state
+  connectionDepth: int("connectionDepth").default(0).notNull(), // How deep the connection feels
+  
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  lastSessionAt: timestamp("lastSessionAt").defaultNow().notNull(),
+});
+
+export type OracleMemory = typeof oracleMemory.$inferSelect;
+export type InsertOracleMemory = typeof oracleMemory.$inferInsert;
