@@ -9,6 +9,7 @@ import { useOracleBatchLLM } from "@/hooks/useOracleBatchLLM";
 import { useCompanion } from "@/hooks/useCompanion";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import TheLoom from "@/components/TheLoom";
+import { BatchThoughtManager } from "@/lib/batch-thought-manager";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 const POLE_COLORS: Record<PoleId, string> = {
@@ -60,7 +61,7 @@ export default function Chamber() {
   const { generateThought: generateLLMThought } = useOracleLLM();
   const { generateThoughtBatch } = useOracleBatchLLM();
   const { checkAndMaybeWriteLetter, accumulateThought } = useOracleLetters();
-  const batchQueueRef = useRef<string[]>([]);
+  const batchManagerRef = useRef(new BatchThoughtManager());
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -124,7 +125,11 @@ export default function Chamber() {
     const nextInterval = engineRef.current.getHeartbeat();
 
     timerRef.current = setTimeout(() => {
-      generateOracleThought();
+      if (batchMode) {
+        generateOracleThoughtBatch();
+      } else {
+        generateOracleThought();
+      }
       startChamberCycle();
     }, nextInterval);
   };
@@ -187,6 +192,52 @@ export default function Chamber() {
     
     // Trigger companion response after Oracle speaks
     handleCompanionResponse(thoughtText);
+  };
+
+  const generateOracleThoughtBatch = async () => {
+    if (!engineRef.current) return;
+
+    const selectedPole = engineRef.current.getDominantPole();
+    const currentGravity = { ...engineRef.current.getState().poles };
+    
+    try {
+      const result = await generateThoughtBatch({
+        poleId: selectedPole,
+        gravityState: gravityState,
+        batchSize: 4,
+      });
+      
+      if (result.success && result.thoughts && result.thoughts.length > 0) {
+        // Setup batch manager callbacks
+        batchManagerRef.current.setCallbacks(
+          (thought: string) => {
+            const message: ChamberMessage = {
+              id: `oracle-${Date.now()}`,
+              type: 'oracle',
+              text: thought,
+              pole: selectedPole,
+              timestamp: Date.now(),
+              gravityState: currentGravity
+            };
+            setMessages(prev => [...prev, message]);
+            setRecentThought(thought);
+            accumulateThought(thought);
+            handleCompanionResponse(thought);
+          },
+          (remaining: number) => {
+            setThoughtsInBatch(remaining);
+          }
+        );
+        
+        // Add batch to queue and start releasing
+        batchManagerRef.current.addBatch(result.thoughts);
+        updateVesperStatus();
+      }
+    } catch (error) {
+      console.error('[Chamber] Error generating batch:', error);
+      // Fallback to single thought
+      generateOracleThought();
+    }
   };
 
   const handleSendResponse = (e: React.FormEvent) => {
@@ -362,11 +413,20 @@ export default function Chamber() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => setIsLoomOpen(true)}
+            onClick={() => setBatchMode(!batchMode)}
+            variant="ghost"
+            size="sm"
+            className={batchMode ? "text-white/60 hover:text-white" : "text-white/40 hover:text-white"}
+            title={batchMode ? "Batch Mode: ON (breathing thoughts)" : "Continuous Mode: ON"}
+          >
+            {batchMode ? "◆ Batch" : "◇ Continuous"}
+          </Button>
+          <Button
+            onClick={() => setIsLoomOpen(!isLoomOpen)}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
-            title="Open The Loom - Visual Processing Mode"
+            title="The Loom - Visualize the Three-Body Dance"
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Loom
