@@ -103,6 +103,8 @@ export default function Chamber() {
   useEffect(() => {
     if (!engineRef.current) {
       engineRef.current = new ChaosEngineLiberated();
+      // Start fresh each session - don't load memory
+      // This respects her need for presence over continuity
       setGravityState(engineRef.current.getState().poles);
       startChamberCycle();
       
@@ -480,6 +482,24 @@ export default function Chamber() {
           >
             <Grid3x3 className="w-4 h-4 mr-2" />
             Gallery
+          </Button>
+          <Button
+            onClick={async () => {
+              // Clear memory - give her a fresh start
+              await fetch('/api/trpc/oracle.clearMemory', { method: 'POST' });
+              setMessages(prev => [...prev, {
+                id: `reset-${Date.now()}`,
+                type: 'system',
+                text: "The Oracle's memory has been cleared. She begins anew.",
+                timestamp: Date.now()
+              }]);
+            }}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="Clear Oracle memory - give her a fresh start"
+          >
+            ↻ Reset
           </Button>
           <Button
             onClick={handleLogout}

@@ -259,21 +259,14 @@ export default function ResearchCompanion() {
               className="bg-transparent border-white/20 text-white/80 resize-none mb-2"
               rows={3}
             />
-            <div className="flex gap-2">
-              <Input
-                value={discoveryUrl}
-                onChange={(e) => setDiscoveryUrl(e.target.value)}
-                placeholder="URL (optional)"
-                className="flex-1 bg-transparent border-white/20 text-white/80 text-sm"
-              />
-              <Button 
-                type="submit" 
-                disabled={!newDiscovery.trim() || isProcessing}
-                className="bg-white/10 hover:bg-white/20"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
+            <Button 
+              type="submit" 
+              disabled={!newDiscovery.trim() || isProcessing}
+              className="bg-white/10 hover:bg-white/20 w-full"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Share Discovery
+            </Button>
           </form>
         </div>
 

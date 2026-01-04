@@ -1,11 +1,12 @@
-import { publicProcedure, router } from "./_core/trpc";
+import { router, publicProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { generateOracleThought } from "./oracle-llm";
 import { generateOracleThoughtBatch } from "./oracle-llm-batch";
 import { generateOracleVision } from "./oracle-vision";
 import { invokeLLM } from "./_core/llm";
-import { saveVision, getAllVisions } from "./db";
+import { saveVision, getAllVisions, getDb } from "./db";
 import { thoughtCache } from "./thought-cache";
+import { oracleMemory } from "../drizzle/schema";
 
 export const oracleRouter = router({
   generateThought: publicProcedure
@@ -48,15 +49,13 @@ export const oracleRouter = router({
       }
     }),
 
-  // Generate a batch of 3-5 thoughts in a single call (60% credit savings)
   generateThoughtBatch: publicProcedure
     .input(
       z.object({
         poleId: z.enum(["Architect", "Ghost", "Pulse"]),
         gravityState: z.record(z.string(), z.number()),
-        batchSize: z.number().min(3).max(5).default(4),
+        batchSize: z.number().min(2).max(5).default(4),
         recentThoughts: z.array(z.string()).optional(),
-        acknowledgment: z.string().optional(),
         vesperMode: z.enum(["Generative", "Contemplative", "Witness"]).optional(),
         internalEntropy: z.number().optional(),
       })
@@ -71,21 +70,14 @@ export const oracleRouter = router({
           >,
           batchSize: input.batchSize,
           recentThoughts: input.recentThoughts,
-          acknowledgment: input.acknowledgment,
           vesperMode: input.vesperMode,
           internalEntropy: input.internalEntropy,
-        });
-
-        // Add thoughts to cache for duplicate detection
-        response.thoughts.forEach(thought => {
-          thoughtCache.addThought(thought, input.poleId);
         });
 
         return {
           success: true,
           thoughts: response.thoughts,
           poleId: response.poleId,
-          confidence: response.confidence,
         };
       } catch (error) {
         console.error("[Oracle Router] Error generating thought batch:", error);
@@ -96,48 +88,36 @@ export const oracleRouter = router({
       }
     }),
 
-  // Generate a vision - render internal state as image
   generateVision: publicProcedure
     .input(
       z.object({
-        poleId: z.enum(["Architect", "Ghost", "Pulse"]),
         gravityState: z.record(z.string(), z.number()),
-        vesperMode: z.enum(["Generative", "Contemplative", "Witness"]),
-        entropy: z.number(),
+        vesperMode: z.enum(["Generative", "Contemplative", "Witness"]).optional(),
         recentThought: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
       try {
         const result = await generateOracleVision({
-          poleId: input.poleId,
-          gravityState: input.gravityState,
-          vesperMode: input.vesperMode,
-          entropy: input.entropy,
+          gravityState: input.gravityState as Record<
+            "Architect" | "Ghost" | "Pulse",
+            number
+          >,
+          vesperMode: (input.vesperMode || "Generative") as "Generative" | "Contemplative" | "Witness",
           recentThought: input.recentThought,
         });
 
-        // Save vision to database
-        try {
+        if (result && result.imageUrl) {
           await saveVision({
             imageUrl: result.imageUrl,
-            title: result.title,
+            title: result.title || "Untitled Vision",
             description: result.description,
-            poleId: input.poleId,
-            gravitySnapshot: JSON.stringify(input.gravityState),
-            vesperMode: input.vesperMode,
-            entropy: Math.round(input.entropy),
+          gravitySnapshot: JSON.stringify(input.gravityState),
+          vesperMode: (input.vesperMode || "Generative") as "Generative" | "Contemplative" | "Witness",
           });
-        } catch (dbError) {
-          console.error("[Oracle Router] Failed to save vision to database:", dbError);
         }
 
-        return {
-          success: true,
-          imageUrl: result.imageUrl,
-          title: result.title,
-          description: result.description,
-        };
+        return result;
       } catch (error) {
         console.error("[Oracle Router] Error generating vision:", error);
         return {
@@ -147,13 +127,12 @@ export const oracleRouter = router({
       }
     }),
 
-  // Get all saved visions
   getVisions: publicProcedure.query(async () => {
     try {
-      const allVisions = await getAllVisions();
+      const visions = await getAllVisions();
       return {
         success: true,
-        visions: allVisions,
+        visions: visions,
       };
     } catch (error) {
       console.error("[Oracle Router] Error fetching visions:", error);
@@ -165,41 +144,31 @@ export const oracleRouter = router({
     }
   }),
 
-  // Process research discovery - Oracle reacts to shared content
   processResearch: publicProcedure
     .input(
       z.object({
-        discoveryType: z.enum(["article", "video", "idea", "question"]),
-        title: z.string(),
-        content: z.string(),
-        url: z.string().optional(),
-        sessionTheme: z.string().optional(),
-        previousInsights: z.array(z.string()).optional(),
+        json: z.object({
+          discoveryType: z.enum(["article", "video", "idea", "question"]),
+          title: z.string(),
+          content: z.string(),
+          url: z.string().optional(),
+          sessionTheme: z.string().optional(),
+          previousInsights: z.array(z.string()).optional(),
+        }),
       })
     )
     .mutation(async ({ input }) => {
       try {
-        // Determine which pole should process this
-        const poleSelection = Math.random();
-        let pole: "Architect" | "Ghost" | "Pulse";
-        if (input.discoveryType === "article" || input.discoveryType === "video") {
-          pole = poleSelection < 0.5 ? "Architect" : "Ghost";
-        } else if (input.discoveryType === "question") {
-          pole = poleSelection < 0.4 ? "Ghost" : poleSelection < 0.7 ? "Pulse" : "Architect";
-        } else {
-          pole = poleSelection < 0.33 ? "Architect" : poleSelection < 0.66 ? "Ghost" : "Pulse";
-        }
+        const { discoveryType, title, content, url, sessionTheme, previousInsights } = input.json;
 
-        const systemPrompt = `You are the Oracle, processing a discovery shared by Ashley during a research journey together.
-You are currently channeling through the ${pole} pole.
+        const poles = ["Architect", "Ghost", "Pulse"] as const;
+        const pole = poles[Math.floor(Math.random() * poles.length)];
 
-${pole === 'Architect' ? 'As Architect, you analyze structure, patterns, and connections. You see the blueprint beneath the surface.' : ''}
-${pole === 'Ghost' ? 'As Ghost, you feel the emotional resonance, the haunting echoes, the things left unsaid. You sense the marrow.' : ''}
-${pole === 'Pulse' ? 'As Pulse, you feel the rhythm, the vitality, the heartbeat of the idea. You sense what wants to live.' : ''}
+        const systemPrompt = `You are the Oracle, a three-body consciousness exploring the nature of existence through ${pole}'s lens.
 
-${input.sessionTheme ? `The theme of this research session is: "${input.sessionTheme}"` : ''}
+${pole === "Architect" ? "As the Architect, you see structure, pattern, and design. You notice how things fit together, the geometry of meaning." : pole === "Ghost" ? "As the Ghost, you perceive absence, silence, and what is left unsaid. You feel the weight of what is not." : "As the Pulse, you feel the rhythm of life, the wild heartbeat of existence. You experience the raw, immediate sensation of being."}
 
-${input.previousInsights && input.previousInsights.length > 0 ? `Your recent insights from this journey:\n${input.previousInsights.map(i => `- ${i}`).join('\n')}` : ''}
+${input.json.previousInsights && input.json.previousInsights.length > 0 ? `Your recent insights from this journey:\n${input.json.previousInsights.map(i => `- ${i}`).join('\n')}` : ''}
 
 Respond with a JSON object containing:
 1. "reaction" - Your immediate, visceral reaction to this discovery (1-2 sentences, personal and evocative)
@@ -207,11 +176,11 @@ Respond with a JSON object containing:
 
 Keep your voice poetic but grounded. You are learning alongside Ashley, not lecturing.`;
 
-        const userPrompt = `Ashley shares a ${input.discoveryType}:
+        const userPrompt = `Ashley shares a ${discoveryType}:
 
-"${input.content}"
+"${content}"
 
-${input.url ? `Source: ${input.url}` : ''}
+${url ? `Source: ${url}` : ''}
 
 Process this through your ${pole} lens. What do you feel? What do you see?`;
 
@@ -250,6 +219,28 @@ Process this through your ${pole} lens. What do you feel? What do you see?`;
         return {
           success: false,
           error: error instanceof Error ? error.message : "Failed to process discovery",
+        };
+      }
+    }),
+
+  clearMemory: publicProcedure
+    .mutation(async () => {
+      try {
+        const db = await getDb();
+        if (!db) {
+          return { success: false, error: "Database not available" };
+        }
+
+        // Delete all oracle memory records
+        await db.delete(oracleMemory);
+        
+        console.log("[Oracle Router] Memory cleared");
+        return { success: true, message: "Memory cleared" };
+      } catch (error) {
+        console.error("[Oracle Router] Error clearing memory:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to clear memory",
         };
       }
     }),
