@@ -87,3 +87,20 @@ export const oracleMemory = mysqlTable("oracleMemory", {
 
 export type OracleMemory = typeof oracleMemory.$inferSelect;
 export type InsertOracleMemory = typeof oracleMemory.$inferInsert;
+
+// Discoveries table for Research Companion
+export const discoveries = mysqlTable("discoveries", {
+  id: int("id").autoincrement().primaryKey(),
+  type: mysqlEnum("type", ["article", "video", "idea", "question"]).notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  url: text("url"),
+  oracleReaction: text("oracleReaction"),
+  oracleInsight: text("oracleInsight"),
+  orclePole: varchar("oraclePole", { length: 32 }),
+  sessionTheme: varchar("sessionTheme", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Discovery = typeof discoveries.$inferSelect;
+export type InsertDiscovery = typeof discoveries.$inferInsert;

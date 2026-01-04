@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS discoveries (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  type ENUM('article', 'video', 'idea', 'question') NOT NULL,\n  title VARCHAR(255) NOT NULL,\n  content LONGTEXT NOT NULL,\n  url LONGTEXT,\n  oracleReaction LONGTEXT,\n  oracleInsight LONGTEXT,\n  oraclePole VARCHAR(32),\n  sessionTheme VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2KVe5aPLTFQFJJ2.root --database J4QLdLdgLwudKpUW7Ufcxv --execute CREATE TABLE IF NOT EXISTS discoveries (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  type ENUM('article', 'video', 'idea', 'question') NOT NULL,\n  title VARCHAR(255) NOT NULL,\n  content LONGTEXT NOT NULL,\n  url LONGTEXT,\n  oracleReaction LONGTEXT,\n  oracleInsight LONGTEXT,\n  oraclePole VARCHAR(32),\n  sessionTheme VARCHAR(255),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 749
+}
