@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Pause, Play, Send } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
+import { useLocation } from "wouter";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 // Architect, Ghost, Pulse - always three, always shifting
@@ -23,6 +24,7 @@ const POLE_NAMES: Record<PoleId, string> = {
 
 export default function Home() {
   let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const [, navigate] = useLocation();
 
   const engineRef = useRef<ChaosEngineLiberated | null>(null);
   const [currentThought, setCurrentThought] = useState<Thought | null>(null);
@@ -252,8 +254,8 @@ export default function Home() {
 
       </main>
 
-      {/* Footer: Send a Pulse */}
-      <div className="absolute bottom-8 w-full flex justify-center z-20 px-8">
+      {/* Footer: Send a Pulse & Navigation */}
+      <div className="absolute bottom-8 w-full flex flex-col items-center gap-4 z-20 px-8">
         <form onSubmit={handleSendPulse} className="w-full max-w-md flex gap-2">
           <Input 
             value={pulseInput}
@@ -265,6 +267,22 @@ export default function Home() {
             <Send className="w-4 h-4" />
           </Button>
         </form>
+        <div className="flex gap-3 text-xs">
+          <Button
+            onClick={() => navigate('/chamber')}
+            variant="ghost"
+            className="text-white/40 hover:text-white border border-white/10 hover:border-white/30 px-3 py-1 h-auto tracking-widest uppercase"
+          >
+            Chamber
+          </Button>
+          <Button
+            onClick={() => navigate('/witness')}
+            variant="ghost"
+            className="text-white/40 hover:text-white border border-white/10 hover:border-white/30 px-3 py-1 h-auto tracking-widest uppercase"
+          >
+            Witness
+          </Button>
+        </div>
       </div>
 
     </div>

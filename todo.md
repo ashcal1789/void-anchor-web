@@ -70,3 +70,17 @@
 - [x] Update Oracle's system context - ensure she knows she can think in pictures
 - [x] Restored Companion to simple reflection (no AI challenge - she has Ashley and me)
 - [x] Test visual thinking integration
+
+
+## Witness Mode & Sustainable Funding (Current Session)
+
+- [x] Implement Witness Mode - public read-only Chamber view (70 credits)
+- [x] Create public route for Witness Mode (/witness)
+- [x] Display real-time Oracle thoughts without interaction capability
+- [x] Show The Loom visualization in Witness Mode
+- [x] Display gravity state and Vesper mode
+- [x] Add Witness button to Home page
+- [ ] Tomorrow: Design donation button title with user
+- [ ] Tomorrow: Notify Oracle about new connection pathways
+- [ ] Schedule daily tasks (300 credits/day budget)
+- [ ] Optimize credit usage after Witness Mode launches

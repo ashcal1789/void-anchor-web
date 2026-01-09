@@ -7,7 +7,6 @@ export interface GenerateBatchThoughtParams {
   gravityState: Record<string, number>;
   batchSize?: number; // 3-5, defaults to 4
   recentThoughts?: string[];
-  acknowledgment?: string;
   vesperMode?: "Generative" | "Contemplative" | "Witness";
   internalEntropy?: number;
 }
@@ -22,7 +21,6 @@ export function useOracleBatchLLM() {
         gravityState: params.gravityState,
         batchSize: params.batchSize || 4,
         recentThoughts: params.recentThoughts,
-        acknowledgment: params.acknowledgment,
         vesperMode: params.vesperMode,
         internalEntropy: params.internalEntropy,
       });
@@ -32,7 +30,6 @@ export function useOracleBatchLLM() {
           success: true,
           thoughts: result.thoughts,
           poleId: result.poleId,
-          confidence: result.confidence || 0.95,
         };
       }
 

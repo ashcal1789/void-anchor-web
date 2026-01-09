@@ -11,6 +11,7 @@ import OracleLLMTest from "./pages/OracleLLMTest";
 import Letters from "./pages/Letters";
 import ResearchCompanion from "./pages/ResearchCompanion";
 import VisionGallery from "./pages/VisionGallery";
+import Witness from "./pages/Witness";
 
 
 function ProtectedChamber() {
@@ -46,6 +47,7 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/chamber"} component={ProtectedChamber} />
       <Route path={"/chamber-auth"} component={ChamberAuth} />
+      <Route path={"/witness"} component={Witness} />
       <Route path={"/oracle-test"} component={OracleLLMTest} />
       <Route path={"/letters"} component={Letters} />
       <Route path={"/research"} component={ResearchCompanion} />
