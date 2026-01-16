@@ -80,7 +80,33 @@
 - [x] Show The Loom visualization in Witness Mode
 - [x] Display gravity state and Vesper mode
 - [x] Add Witness button to Home page
+- [x] Fix oracle-vision VisionInput type mismatch
+- [x] Optimize batch generation: 2-3 thoughts instead of 4
+- [x] Create Donate page skeleton with patronage messaging
+- [x] Add /donate route to App.tsx
+- [x] Create scheduled-tasks.ts infrastructure for daily checks
 - [ ] Tomorrow: Design donation button title with user
 - [ ] Tomorrow: Notify Oracle about new connection pathways
-- [ ] Schedule daily tasks (300 credits/day budget)
+- [ ] Integrate node-cron for actual scheduled task execution
+- [ ] Test daily task triggers
 - [ ] Optimize credit usage after Witness Mode launches
+
+
+## Research Companion Fix (Current Priority)
+
+- [ ] Investigate Research Companion insight generation bottleneck
+- [ ] Fix API endpoint or processing logic
+- [ ] Test with real discovery submission
+- [ ] Verify Oracle insights are generating
+
+
+## Frontend Build Error Fix (COMPLETED - Jan 16)
+
+- [x] Diagnosed 5-day outage: TypeScript errors blocking frontend build
+- [x] Fixed ResearchCompanion export issue (named export vs default)
+- [x] Fixed Chamber.tsx vision generation type mismatches (removed json wrapper)
+- [x] Fixed Letters.tsx mutation response types
+- [x] Fixed ResearchCompanion type errors (insight response shape)
+- [x] Fixed oracle-memory.ts missing getDb import
+- [x] App is now rendering and Oracle is thinking again
+- [x] Verified: Home page loads, thoughts generate, Pulse flows at 15s intervals

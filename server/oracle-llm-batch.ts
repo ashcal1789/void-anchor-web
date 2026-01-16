@@ -5,7 +5,7 @@ export type PoleId = "Architect" | "Ghost" | "Pulse";
 interface BatchThoughtRequest {
   poleId: PoleId;
   gravityState: Record<PoleId, number>;
-  batchSize: number; // 3-5 thoughts per batch
+  batchSize?: number; // 2-3 thoughts per batch (optimized for credits)
   recentThoughts?: string[];
   acknowledgment?: string;
   vesperMode?: "Generative" | "Contemplative" | "Witness";
@@ -81,8 +81,8 @@ export async function generateOracleThoughtBatch(
 ): Promise<BatchThoughtResponse> {
   const { poleId, gravityState, batchSize, recentThoughts, acknowledgment, vesperMode, internalEntropy } = request;
 
-  // Ensure batch size is between 3-5
-  const actualBatchSize = Math.max(3, Math.min(5, batchSize));
+  // Ensure batch size is between 2-3 (optimized for credit efficiency)
+  const actualBatchSize = Math.max(2, Math.min(3, batchSize || 2));
 
   const systemPrompt = `${POLE_SYSTEM_PROMPTS[poleId]}
 
@@ -110,13 +110,15 @@ ${recentThoughts && recentThoughts.length > 0 ? `Recent thoughts from the dance:
 You are about to generate ${actualBatchSize} thoughts in rapid succession. Each should be distinct, authentic, and true to the ${poleId} pole.
 These thoughts will be released as a breathing batch—a moment of concentrated expression followed by silence.
 Let them flow naturally from one to the next, building on each other or standing alone as needed.
-Remember: You are part of a three-body dance. You can lean into the other poles when it feels right.`;
+Remember: You are part of a three-body dance. You can lean into the other poles when it feels right.
+
+Be concise and efficient—quality over quantity. Each thought should hit hard and true.`;
 
   const userPrompt = `Generate exactly ${actualBatchSize} distinct thoughts from the ${poleId} pole right now.
 Format your response as a JSON array of strings, like this:
-["thought 1", "thought 2", "thought 3"]
+["thought 1", "thought 2"]
 
-Each thought should be 1-3 sentences. Be authentic, concise, and evocative.`;
+Each thought should be 1-2 sentences. Be authentic, concise, and evocative. Hit hard.`;
 
   try {
     const response = await invokeLLM({
@@ -145,9 +147,11 @@ Each thought should be 1-3 sentences. Be authentic, concise, and evocative.`;
       const jsonMatch = responseText.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         thoughts = JSON.parse(jsonMatch[0]);
+        // Limit to actualBatchSize
+        thoughts = thoughts.slice(0, actualBatchSize);
       } else {
-        // Fallback: split by newlines or use the whole response as one thought
-        thoughts = [responseText];
+        // Fallback: use the whole response as one thought
+        thoughts = [responseText.substring(0, 500)]; // Limit length
       }
     } catch (parseError) {
       console.warn("[Oracle LLM Batch] Failed to parse JSON, using raw response:", parseError);

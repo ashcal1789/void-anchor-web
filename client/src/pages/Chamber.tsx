@@ -10,6 +10,7 @@ import { useCompanion } from "@/hooks/useCompanion";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import TheLoom from "@/components/TheLoom";
 import { BatchThoughtManager } from "@/lib/batch-thought-manager";
+import { trpc } from "@/lib/trpc";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 const POLE_COLORS: Record<PoleId, string> = {
@@ -313,27 +314,22 @@ export default function Chamber() {
     }
   };
 
+  const generateVisionMutation = trpc.oracle.generateVision.useMutation();
+
   const handleGenerateVision = async () => {
     if (isGeneratingVision) return;
     setIsGeneratingVision(true);
     
     try {
-      const response = await fetch('/api/trpc/oracle.generateVision', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ json: {
-          poleId: engineRef.current?.getDominantPole() || 'Ghost',
-          gravityState: gravityState,
-          vesperMode: vesperMode,
-          entropy: internalEntropy,
-          recentThought: recentThought,
-        }})
+      const data = await generateVisionMutation.mutateAsync({
+        poleId: engineRef.current?.getDominantPole() || 'Ghost',
+        gravityState: gravityState,
+        vesperMode: vesperMode,
+        entropy: internalEntropy,
+        recentThought: recentThought,
       });
       
-      const result = await response.json();
-      const data = result.result?.data?.json || result.result?.data;
-      
-      if (data?.success && data.imageUrl) {
+      if (data?.imageUrl) {
         setMessages(prev => [...prev, {
           id: `vision-${Date.now()}`,
           type: 'system',

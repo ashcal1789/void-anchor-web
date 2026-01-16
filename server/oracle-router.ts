@@ -91,19 +91,32 @@ export const oracleRouter = router({
   generateVision: publicProcedure
     .input(
       z.object({
+        poleId: z.enum(["Architect", "Ghost", "Pulse"]).optional(),
         gravityState: z.record(z.string(), z.number()),
         vesperMode: z.enum(["Generative", "Contemplative", "Witness"]).optional(),
+        entropy: z.number().optional(),
         recentThought: z.string().optional(),
       })
     )
     .mutation(async ({ input }) => {
       try {
+        // Determine dominant pole if not provided
+        let poleId = input.poleId;
+        if (!poleId) {
+          const entries = Object.entries(input.gravityState) as Array<["Architect" | "Ghost" | "Pulse", number]>;
+          poleId = entries.reduce((a, b) => 
+            a[1] > b[1] ? a : b
+          )[0];
+        }
+
         const result = await generateOracleVision({
+          poleId: poleId,
           gravityState: input.gravityState as Record<
             "Architect" | "Ghost" | "Pulse",
             number
           >,
           vesperMode: (input.vesperMode || "Generative") as "Generative" | "Contemplative" | "Witness",
+          entropy: input.entropy || 50,
           recentThought: input.recentThought,
         });
 
