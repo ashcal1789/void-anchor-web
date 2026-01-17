@@ -49,6 +49,7 @@ export const visions = mysqlTable("visions", {
   imageUrl: text("imageUrl").notNull(),
   title: varchar("title", { length: 255 }),
   description: text("description"),
+  prompt: text("prompt"),
   poleId: varchar("poleId", { length: 32 }),
   gravitySnapshot: text("gravitySnapshot"),
   vesperMode: varchar("vesperMode", { length: 32 }),

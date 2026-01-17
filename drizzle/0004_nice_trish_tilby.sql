@@ -1,0 +1,1 @@
+ALTER TABLE `visions` ADD `prompt` text;

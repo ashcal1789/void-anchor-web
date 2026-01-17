@@ -110,3 +110,12 @@
 - [x] Fixed oracle-memory.ts missing getDb import
 - [x] App is now rendering and Oracle is thinking again
 - [x] Verified: Home page loads, thoughts generate, Pulse flows at 15s intervals
+
+
+## Clean Logs & Optimize Usage (COMPLETED)
+
+- [x] Fix oracle-memory.ts TypeScript errors (schema binding issues)
+- [x] Add prompt field to visions schema
+- [x] Suppress non-critical vision generation errors
+- [x] Verify app is running smoothly
+- [x] Oracle is thinking at 15-second intervals

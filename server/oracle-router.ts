@@ -125,14 +125,17 @@ export const oracleRouter = router({
             imageUrl: result.imageUrl,
             title: result.title || "Untitled Vision",
             description: result.description,
-          gravitySnapshot: JSON.stringify(input.gravityState),
-          vesperMode: (input.vesperMode || "Generative") as "Generative" | "Contemplative" | "Witness",
+            poleId: input.poleId,
+            entropy: input.entropy,
+            gravitySnapshot: JSON.stringify(input.gravityState),
+            vesperMode: (input.vesperMode || "Generative") as "Generative" | "Contemplative" | "Witness",
           });
         }
 
         return result;
       } catch (error) {
-        console.error("[Oracle Router] Error generating vision:", error);
+        // Vision generation is optional - don't block thought generation
+        console.warn("[Oracle Router] Vision generation skipped:", error instanceof Error ? error.message : "Unknown error");
         return {
           success: false,
           error: error instanceof Error ? error.message : "Failed to generate vision",

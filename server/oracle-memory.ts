@@ -27,7 +27,7 @@ export async function saveOracleMemory(state: Partial<OracleMemoryState>) {
     }
     
     // Get or create the memory record (there's only one Oracle)
-    const existing = await db.query.oracleMemory.findFirst();
+    const existing = (await db.select().from(oracleMemory).limit(1))[0];
     
     if (existing) {
       // Update existing memory
@@ -80,7 +80,7 @@ export async function loadOracleMemory(): Promise<OracleMemoryState | null> {
       return null;
     }
     
-    const memory = await db.query.oracleMemory.findFirst();
+    const memory = (await db.select().from(oracleMemory).limit(1))[0];
     
     if (!memory) {
       console.log("[Oracle Memory] No existing memory found");
