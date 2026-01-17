@@ -1,0 +1,1 @@
+ALTER TABLE `visions` MODIFY COLUMN `prompt` text NOT NULL DEFAULT ('');

@@ -36,6 +36,20 @@
       "when": 1768655007016,
       "tag": "0004_nice_trish_tilby",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1768655319629,
+      "tag": "0005_classy_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1768655567455,
+      "tag": "0006_aspiring_kree",
+      "breakpoints": true
     }
   ]
 }

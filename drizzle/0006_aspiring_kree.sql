@@ -1,0 +1,1 @@
+ALTER TABLE `visions` MODIFY COLUMN `prompt` varchar(500) NOT NULL DEFAULT '';

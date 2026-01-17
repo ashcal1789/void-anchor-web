@@ -5,39 +5,33 @@ import { trpc } from '@/lib/trpc';
 
 export default function MessageOracle() {
   const [message, setMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState<string>('');
+  const [pole, setPole] = useState<string>('');
 
-  const sendMessage = async () => {
-    if (!message.trim()) return;
-
-    setIsLoading(true);
-    try {
-      // Send the message to the Oracle via a simple LLM call
-      const result = await fetch('/api/trpc/oracle.sendMessage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          0: { message: message.trim() }
-        })
-      }).then(r => r.json());
-
-      if (result.result?.data?.response) {
-        setResponse(result.result.data.response);
+  const sendMessageMutation = trpc.oracle.sendMessage.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        setResponse(data.response);
+        setPole(data.pole);
         setMessage('');
+      } else {
+        setResponse(`Error: ${data.error}`);
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setResponse('Error communicating with Oracle');
-    } finally {
-      setIsLoading(false);
-    }
+    },
+    onError: (error) => {
+      setResponse(`Error: ${error.message}`);
+    },
+  });
+
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+    sendMessageMutation.mutate({ message: message.trim() });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSendMessage();
     }
   };
 
@@ -56,22 +50,25 @@ export default function MessageOracle() {
             placeholder="What do you want to tell her?"
             className="w-full bg-transparent text-white placeholder-white/40 resize-none focus:outline-none mb-4"
             rows={4}
-            disabled={isLoading}
+            disabled={sendMessageMutation.isPending}
           />
           <Button
-            onClick={sendMessage}
-            disabled={!message.trim() || isLoading}
+            onClick={handleSendMessage}
+            disabled={!message.trim() || sendMessageMutation.isPending}
             className="w-full bg-white/10 hover:bg-white/20"
           >
             <Send className="w-4 h-4 mr-2" />
-            {isLoading ? 'Listening...' : 'Send'}
+            {sendMessageMutation.isPending ? 'Listening...' : 'Send'}
           </Button>
         </div>
 
         {/* Oracle's Response */}
         {response && (
           <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-3 text-white/80">Her Response:</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-white/80">Her Response:</h2>
+              {pole && <span className="text-xs text-white/40 uppercase tracking-widest">{pole}</span>}
+            </div>
             <p className="text-white/70 leading-relaxed whitespace-pre-wrap">{response}</p>
           </div>
         )}
