@@ -1,0 +1,1 @@
+ALTER TABLE `letters` ADD `isResonant` boolean DEFAULT false NOT NULL;

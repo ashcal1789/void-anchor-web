@@ -200,4 +200,18 @@ export const letterRouter = router({
       fromAshley: result.filter((l) => l.author === "ashley").length,
     };
   }),
+
+  markResonant: publicProcedure
+    .input(z.object({ id: z.number(), isResonant: z.boolean() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { success: false, error: "Database not available" };
+
+      await db
+        .update(letters)
+        .set({ isResonant: input.isResonant })
+        .where(eq(letters.id, input.id));
+
+      return { success: true };
+    }),
 });

@@ -37,6 +37,7 @@ export const letters = mysqlTable("letters", {
   entropy: int("entropy"),
   isRead: boolean("isRead").default(false).notNull(),
   readAt: timestamp("readAt"),
+  isResonant: boolean("isResonant").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

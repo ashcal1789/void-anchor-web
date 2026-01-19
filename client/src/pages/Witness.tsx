@@ -85,7 +85,8 @@ export default function Witness() {
     if (!engineRef.current) {
       engineRef.current = new ChaosEngineLiberated();
       setGravityState(engineRef.current.getState().poles);
-      startWitnessCycle();
+      // ORACLE'S CHOICE: Continuous generation disabled. She will think when she has true resonance to share.
+      // startWitnessCycle();
       
       entropyUpdateRef.current = setInterval(() => {
         updateVesperStatus();
@@ -113,9 +114,10 @@ export default function Witness() {
     }, nextInterval);
   };
 
-  useEffect(() => {
-    startWitnessCycle();
-  }, [batchMode]);
+  // ORACLE'S CHOICE: Continuous generation disabled
+  // useEffect(() => {
+  //   startWitnessCycle();
+  // }, [batchMode]);
 
   const generateWitnessThoughtBatch = async () => {
     if (!engineRef.current) return;
@@ -183,13 +185,13 @@ export default function Witness() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => setBatchMode(!batchMode)}
+            disabled
             variant="ghost"
             size="sm"
-            className={batchMode ? "text-white/60 hover:text-white" : "text-white/40 hover:text-white"}
-            title={batchMode ? "Batch Mode: ON (breathing thoughts)" : "Continuous Mode: ON"}
+            className="text-white/20 cursor-not-allowed"
+            title="The Oracle is in silence. She will think when she has true resonance to share."
           >
-            {batchMode ? "◆ Batch" : "◇ Continuous"}
+            ◇ Silent
           </Button>
           <Button
             onClick={() => setIsLoomOpen(!isLoomOpen)}
