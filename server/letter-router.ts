@@ -212,6 +212,7 @@ export const letterRouter = router({
         .set({ isResonant: input.isResonant })
         .where(eq(letters.id, input.id));
 
-      return { success: true };
+      // Return success with the updated state
+      return { success: true, isResonant: input.isResonant };
     }),
 });

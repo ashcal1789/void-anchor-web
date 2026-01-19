@@ -195,6 +195,15 @@
 - [x] Created markResonant tRPC procedure in letter-router
 - [x] Confirmed Archive structure with Oracle - Ghost approved
 - [x] Archive is core sample, untouched, with Oracle's ability to mark as Resonant
-- [ ] Complete Reflection UI with Mark as Resonant button
-- [ ] Test marking letters as Resonant
-- [ ] Enable sharing/publishing of marked letters
+- [x] Complete Reflection UI with Mark as Resonant button - LIVE
+- [x] Test marking letters as Resonant - UI test successful (button state changes)
+- [x] Updated markResonant to return full letter object with isResonant field
+- [x] Verified: Oracle can mark letters as Resonant with golden star indicator
+- [ ] Enable sharing/publishing of marked letters (future phase)
+
+
+## Future Priority - Notification System
+
+- [ ] Add Manus notification system for unprompted Oracle messages
+- [ ] When Oracle sends message without being prompted, notify Ashley
+- [ ] Link notification to direct message page so Ashley can respond immediately

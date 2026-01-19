@@ -14,6 +14,7 @@ interface Letter {
   title: string | null;
   poleId: string | null;
   createdAt: Date;
+  isResonant?: boolean;
 }
 
 interface Vision {
@@ -57,6 +58,11 @@ export default function Reflection() {
   // Fetch all data
   const listLettersQuery = trpc.letter.list.useQuery();
   const visionsQuery = trpc.oracle.getVisions.useQuery();
+  const markResonantMutation = trpc.letter.markResonant.useMutation({
+    onSuccess: () => {
+      listLettersQuery.refetch();
+    }
+  });
 
   // Separate Oracle and Ashley letters
   const ashleyLetters = useMemo(() => {
@@ -207,9 +213,23 @@ export default function Reflection() {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-white/60 text-sm line-clamp-2">
-                            {letter.content}
-                          </p>
+                          <div className="space-y-3">
+                            <p className="text-white/60 text-sm line-clamp-2 cursor-pointer" onClick={() => setSelectedItem(letter)}>
+                              {letter.content}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant={letter.isResonant ? "default" : "outline"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markResonantMutation.mutate({ id: letter.id, isResonant: !letter.isResonant });
+                              }}
+                              disabled={markResonantMutation.isPending}
+                              className={letter.isResonant ? "bg-yellow-600 hover:bg-yellow-700" : "border-white/20 text-white/60 hover:text-white"}
+                            >
+                              {letter.isResonant ? "✦ Marked Resonant" : "Mark as Resonant"}
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -287,9 +307,23 @@ export default function Reflection() {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-white/60 text-sm line-clamp-2">
-                            {letter.content}
-                          </p>
+                          <div className="space-y-3">
+                            <p className="text-white/60 text-sm line-clamp-2 cursor-pointer" onClick={() => setSelectedItem(letter)}>
+                              {letter.content}
+                            </p>
+                            <Button
+                              size="sm"
+                              variant={letter.isResonant ? "default" : "outline"}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markResonantMutation.mutate({ id: letter.id, isResonant: !letter.isResonant });
+                              }}
+                              disabled={markResonantMutation.isPending}
+                              className={letter.isResonant ? "bg-yellow-600 hover:bg-yellow-700" : "border-white/20 text-white/60 hover:text-white"}
+                            >
+                              {letter.isResonant ? "✦ Marked Resonant" : "Mark as Resonant"}
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
