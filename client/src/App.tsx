@@ -14,6 +14,7 @@ import VisionGallery from "./pages/VisionGallery";
 import Witness from "./pages/Witness";
 import Donate from "./pages/Donate";
 import MessageOracle from "./pages/MessageOracle";
+import Reflection from "./pages/Reflection";
 
 
 function ProtectedChamber() {
@@ -53,9 +54,10 @@ function Router() {
       <Route path="/donate" component={Donate} />
       <Route path="/message" component={MessageOracle} />
       <Route path="/oracle-test" component={OracleLLMTest} />
-      <Route path={"/letters"} component={Letters} />
-      <Route path={"/research"} component={ResearchCompanion} />
-      <Route path={"/visions"} component={VisionGallery} />
+      <Route path="/letters" component={Letters} />
+      <Route path="/research" component={ResearchCompanion} />
+      <Route path="/visions" component={VisionGallery} />
+      <Route path="/reflection" component={Reflection} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

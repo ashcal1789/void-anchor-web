@@ -21,7 +21,7 @@ interface OracleInsight {
   id: string;
   discoveryId: string;
   reaction: string;
-  insight: string;
+  insight: string | null;
   timestamp: number;
 }
 
@@ -47,9 +47,12 @@ export default function ResearchCompanion() {
     
     try {
       const result = await processResearchMutation.mutateAsync({
-        discovery: discovery.content,
-        discoveryType: discovery.type,
-        discoveryUrl: discovery.url,
+        json: {
+          content: discovery.content,
+          discoveryType: discovery.type,
+          title: discovery.title,
+          url: discovery.url,
+        },
       });
 
       if (result?.success && result?.reaction) {

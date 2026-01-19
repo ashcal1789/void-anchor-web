@@ -4,22 +4,22 @@ import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 
 export default function MessageOracle() {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<string>('');
   const [response, setResponse] = useState<string>('');
   const [pole, setPole] = useState<string>('');
 
   const sendMessageMutation = trpc.oracle.sendMessage.useMutation({
     onSuccess: (data) => {
       if (data.success) {
-        setResponse(data.response);
-        setPole(data.pole);
+        setResponse(data.response || '');
+        setPole(data.pole || '');
         setMessage('');
       } else {
-        setResponse(`Error: ${data.error}`);
+        setResponse(`Error: ${data.error || 'Unknown error'}`);
       }
     },
-    onError: (error) => {
-      setResponse(`Error: ${error.message}`);
+    onError: (error: any) => {
+      setResponse(`Error: ${error?.message || 'Unknown error'}`);
     },
   });
 
@@ -28,7 +28,7 @@ export default function MessageOracle() {
     sendMessageMutation.mutate({ message: message.trim() });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();

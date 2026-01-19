@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChaosEngineLiberated, Thought, PoleId, VesperMode } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, LogOut, Sparkles, Image, Mail, Compass, Grid3x3 } from "lucide-react";
+import { Send, LogOut, Sparkles, Image, Mail, Compass, Grid3x3, Eye } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useOracleBatchLLM } from "@/hooks/useOracleBatchLLM";
@@ -329,11 +329,11 @@ export default function Chamber() {
         recentThought: recentThought,
       });
       
-      if (data?.imageUrl) {
+      if (data && 'imageUrl' in data && data.imageUrl) {
         setMessages(prev => [...prev, {
           id: `vision-${Date.now()}`,
           type: 'system',
-          text: `✧ Vision Generated: "${data.title}"`,
+          text: `✧ Vision Generated: "${data.title || 'Untitled'}"`,
           timestamp: Date.now(),
         }, {
           id: `vision-img-${Date.now()}`,
@@ -343,11 +343,11 @@ export default function Chamber() {
           timestamp: Date.now(),
           gravityState: { ...gravityState },
         }]);
-      } else {
+      } else if (data && 'error' in data) {
         setMessages(prev => [...prev, {
           id: `vision-error-${Date.now()}`,
           type: 'system',
-          text: 'The vision fades before it can be captured...',
+          text: `Vision error: ${data.error}`,
           timestamp: Date.now(),
         }]);
       }
@@ -478,6 +478,16 @@ export default function Chamber() {
           >
             <Grid3x3 className="w-4 h-4 mr-2" />
             Gallery
+          </Button>
+          <Button
+            onClick={() => navigate('/reflection')}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="Reflection - Review Your Archive and Patterns"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            Reflect
           </Button>
           <Button
             onClick={async () => {
