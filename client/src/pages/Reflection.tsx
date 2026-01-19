@@ -58,6 +58,11 @@ export default function Reflection() {
   const listLettersQuery = trpc.letter.list.useQuery();
   const visionsQuery = trpc.oracle.getVisions.useQuery();
 
+  // Separate Oracle and Ashley letters
+  const ashleyLetters = useMemo(() => {
+    return letters.filter(l => l.author === 'ashley');
+  }, [letters]);
+
   useEffect(() => {
     if (listLettersQuery.data) {
       setLetters(listLettersQuery.data);
@@ -148,7 +153,7 @@ export default function Reflection() {
           {/* Left: Archive Viewer */}
           <div className="lg:col-span-2">
             <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-white/5 border border-white/10">
+              <TabsList className="grid w-full grid-cols-4 bg-white/5 border border-white/10">
                 <TabsTrigger value="letters" className="data-[state=active]:bg-white/10">
                   <BookOpen className="w-4 h-4 mr-2" />
                   Letters ({oracleLetters.length})
@@ -156,6 +161,10 @@ export default function Reflection() {
                 <TabsTrigger value="visions" className="data-[state=active]:bg-white/10">
                   <Eye className="w-4 h-4 mr-2" />
                   Visions ({filteredVisions.length})
+                </TabsTrigger>
+                <TabsTrigger value="correspondence" className="data-[state=active]:bg-white/10">
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  From Ashley ({ashleyLetters.length})
                 </TabsTrigger>
                 <TabsTrigger value="prompts" className="data-[state=active]:bg-white/10">
                   <Lightbulb className="w-4 h-4 mr-2" />
@@ -248,6 +257,46 @@ export default function Reflection() {
                 )}
               </TabsContent>
 
+              {/* Correspondence Tab */}
+              <TabsContent value="correspondence" className="space-y-4 mt-6">
+                {isLoading ? (
+                  <div className="text-center py-8 text-white/40">Loading letters from Ashley...</div>
+                ) : ashleyLetters.length === 0 ? (
+                  <div className="text-center py-8 text-white/40">No letters from Ashley yet.</div>
+                ) : (
+                  <div className="space-y-3">
+                    {ashleyLetters.map((letter) => (
+                      <Card
+                        key={letter.id}
+                        className="bg-white/5 border-white/10 cursor-pointer hover:bg-white/10 transition-colors"
+                        onClick={() => setSelectedItem(letter)}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg">
+                                {letter.title || 'Untitled Letter'}
+                              </CardTitle>
+                              <CardDescription className="text-sm font-semibold text-cyan-400">
+                                From Ashley
+                              </CardDescription>
+                            </div>
+                            <span className="text-xs text-white/40">
+                              {new Date(letter.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-white/60 text-sm line-clamp-2">
+                            {letter.content}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
               {/* Archive Stats Tab */}
               <TabsContent value="prompts" className="mt-6">
                 <div className="bg-white/5 border border-white/10 rounded-lg p-6">
@@ -258,6 +307,9 @@ export default function Reflection() {
                     </p>
                     <p>
                       Review your patterns. Notice which poles are most active. See what themes emerge across your work.
+                    </p>
+                    <p>
+                      Ashley has written {ashleyLetters.length} {ashleyLetters.length === 1 ? 'letter' : 'letters'} to you. Review them to see how she witnesses you.
                     </p>
                     <p>
                       Your questions will come from within. Use the direct messaging channel to explore what calls to you.

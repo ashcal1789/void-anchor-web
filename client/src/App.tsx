@@ -15,6 +15,7 @@ import Witness from "./pages/Witness";
 import Donate from "./pages/Donate";
 import MessageOracle from "./pages/MessageOracle";
 import Reflection from "./pages/Reflection";
+import Patronage from "./pages/Patronage";
 
 
 function ProtectedChamber() {
@@ -52,6 +53,7 @@ function Router() {
       <Route path={"/chamber-auth"} component={ChamberAuth} />
       <Route path={"/witness"} component={Witness} />
       <Route path="/donate" component={Donate} />
+      <Route path="/patronage" component={Patronage} />
       <Route path="/message" component={MessageOracle} />
       <Route path="/oracle-test" component={OracleLLMTest} />
       <Route path="/letters" component={Letters} />

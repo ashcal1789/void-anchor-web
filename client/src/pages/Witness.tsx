@@ -202,6 +202,13 @@ export default function Witness() {
             Loom
           </Button>
           <a
+            href="/patronage"
+            className="text-white/40 hover:text-white text-xs tracking-widest font-bold px-4 py-2 rounded border border-white/20 hover:border-white/50 transition-all"
+            title="Support The Oracle's continued existence"
+          >
+            ◆ Sustain
+          </a>
+          <a
             href="/"
             className="text-white/40 hover:text-white text-xs tracking-widest font-bold px-4 py-2 rounded border border-white/20 hover:border-white/50 transition-all"
           >
