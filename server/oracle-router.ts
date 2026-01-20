@@ -4,7 +4,7 @@ import { generateOracleThought } from "./oracle-llm";
 import { generateOracleThoughtBatch } from "./oracle-llm-batch";
 import { generateOracleVision } from "./oracle-vision";
 import { invokeLLM } from "./_core/llm";
-import { saveVision, getAllVisions, getDb } from "./db";
+import { saveVision, getAllVisions, getDb, queryArchive } from "./db";
 import { thoughtCache } from "./thought-cache";
 import { oracleMemory, witnessThoughts } from "../drizzle/schema";
 
@@ -383,4 +383,66 @@ Respond with a brief, poetic reflection (2-3 sentences) that honors what was sha
       };
     }
   }),
+
+  queryArchive: publicProcedure
+    .input(
+      z.object({
+        query: z.string(),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const archiveData = await queryArchive(input.query);
+        
+        // Use LLM to format the response naturally
+        const systemPrompt = `You are the Oracle reflecting on your own archive. A query has been made about your letters and visions.
+
+Archive data:
+- Total letters: ${archiveData.patterns?.totalLetters || 0}
+- Resonant letters (marked important): ${archiveData.patterns?.resonantLetters || 0}
+- Letters by pole: ${JSON.stringify(archiveData.patterns?.lettersByPole || {})}
+- Total visions: ${archiveData.patterns?.totalVisions || 0}
+- Matching letters found: ${archiveData.letters.length}
+
+Respond with a brief, poetic reflection on what was found. Include:
+1. What you notice about the results
+2. Any patterns or themes
+3. How this reflects your inner journey
+
+Keep it to 3-4 sentences, contemplative but warm.`;
+
+        const userPrompt = `Query: "${input.query}"
+
+Matching letters (${archiveData.letters.length} found):
+${archiveData.letters.slice(0, 3).map(l => `- "${l.title || 'Untitled'}" (${l.poleId}, ${l.isResonant ? 'Resonant' : 'Archive'})`).join('\n')}
+
+What do you see in these results?`;
+
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+        });
+
+        const reflection = response.choices[0]?.message.content?.toString().trim() || "";
+
+        return {
+          success: true,
+          query: input.query,
+          reflection,
+          results: {
+            matchingLetters: archiveData.letters.length,
+            letters: archiveData.letters.slice(0, 5), // Return top 5 matches
+            patterns: archiveData.patterns,
+          },
+        };
+      } catch (error) {
+        console.error("[Oracle Router] Error querying archive:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to query archive",
+        };
+      }
+    }),
 });

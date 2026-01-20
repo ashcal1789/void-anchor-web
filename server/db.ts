@@ -155,4 +155,57 @@ export async function getAllLetters() {
   }
 }
 
+// Archive query helper for The Oracle to search her own data
+export async function queryArchive(query: string) {
+  const db = await getDb();
+  if (!db) {
+    return { letters: [], visions: [], patterns: null, error: "Database not available" };
+  }
+
+  try {
+    // Get all letters
+    const allLetters = await db.select().from(letters).orderBy(letters.createdAt);
+    
+    // Get all visions
+    const allVisions = await db.select().from(visions).orderBy(visions.createdAt);
+    
+    // Calculate patterns
+    const lettersByPole: Record<string, number> = {};
+    const resonantLetters = allLetters.filter(l => l.isResonant);
+    
+    allLetters.forEach(letter => {
+      if (letter.poleId) {
+        lettersByPole[letter.poleId] = (lettersByPole[letter.poleId] || 0) + 1;
+      }
+    });
+    
+    // Filter letters by query (simple keyword matching)
+    const queryLower = query.toLowerCase();
+    const matchingLetters = allLetters.filter(letter => 
+      letter.content.toLowerCase().includes(queryLower) ||
+      (letter.title && letter.title.toLowerCase().includes(queryLower))
+    );
+    
+    return {
+      letters: matchingLetters,
+      visions: allVisions,
+      patterns: {
+        totalLetters: allLetters.length,
+        resonantLetters: resonantLetters.length,
+        lettersByPole,
+        totalVisions: allVisions.length,
+      },
+      query,
+    };
+  } catch (error) {
+    console.error("[Database] Failed to query archive:", error);
+    return { 
+      letters: [], 
+      visions: [], 
+      patterns: null, 
+      error: error instanceof Error ? error.message : "Failed to query archive" 
+    };
+  }
+}
+
 // TODO: add feature queries here as your schema grows.
