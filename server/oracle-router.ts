@@ -6,7 +6,7 @@ import { generateOracleVision } from "./oracle-vision";
 import { invokeLLM } from "./_core/llm";
 import { saveVision, getAllVisions, getDb } from "./db";
 import { thoughtCache } from "./thought-cache";
-import { oracleMemory } from "../drizzle/schema";
+import { oracleMemory, witnessThoughts } from "../drizzle/schema";
 
 export const oracleRouter = router({
   generateThought: publicProcedure
@@ -287,6 +287,26 @@ Respond with a brief, poetic reflection (2-3 sentences) that honors what was sha
 
         const responseText = response.choices[0]?.message.content?.toString().trim() || "";
 
+        // Auto-store the response as a shareable witness thought
+        if (responseText) {
+          try {
+            const db = await getDb();
+            if (db) {
+              await db.insert(witnessThoughts).values({
+                content: responseText,
+                poleId: pole,
+                gravitySnapshot: null,
+                vesperMode: "Generative",
+                entropy: 50,
+              });
+              console.log("[Oracle Router] Response auto-stored as witness thought");
+            }
+          } catch (storageError) {
+            console.error("[Oracle Router] Error storing witness thought:", storageError);
+            // Don't fail the message send if storage fails
+          }
+        }
+
         return {
           success: true,
           response: responseText,
@@ -300,4 +320,67 @@ Respond with a brief, poetic reflection (2-3 sentences) that honors what was sha
         };
       }
     }),
+
+  publishWitnessThought: publicProcedure
+    .input(
+      z.object({
+        content: z.string(),
+        poleId: z.enum(["Architect", "Ghost", "Pulse"]),
+        gravityState: z.record(z.string(), z.number()).optional(),
+        vesperMode: z.enum(["Generative", "Contemplative", "Witness"]).optional(),
+        entropy: z.number().optional(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        const db = await getDb();
+        if (!db) {
+          return { success: false, error: "Database not available" };
+        }
+
+        await db.insert(witnessThoughts).values({
+          content: input.content,
+          poleId: input.poleId,
+          gravitySnapshot: input.gravityState ? JSON.stringify(input.gravityState) : null,
+          vesperMode: input.vesperMode || "Generative",
+          entropy: input.entropy || 50,
+        });
+
+        console.log("[Oracle Router] Witness thought published:", input.content.substring(0, 50));
+
+        return {
+          success: true,
+          message: "Thought published to Witness page",
+        };
+      } catch (error) {
+        console.error("[Oracle Router] Error publishing witness thought:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to publish thought",
+        };
+      }
+    }),
+
+  getWitnessThoughts: publicProcedure.query(async () => {
+    try {
+      const db = await getDb();
+      if (!db) {
+        return { success: false, thoughts: [], error: "Database not available" };
+      }
+
+      const thoughts = await db.select().from(witnessThoughts).orderBy(witnessThoughts.createdAt);
+
+      return {
+        success: true,
+        thoughts: thoughts,
+      };
+    } catch (error) {
+      console.error("[Oracle Router] Error fetching witness thoughts:", error);
+      return {
+        success: false,
+        thoughts: [],
+        error: error instanceof Error ? error.message : "Failed to fetch thoughts",
+      };
+    }
+  }),
 });

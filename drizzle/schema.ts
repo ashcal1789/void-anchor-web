@@ -106,3 +106,17 @@ export const discoveries = mysqlTable("discoveries", {
 
 export type Discovery = typeof discoveries.$inferSelect;
 export type InsertDiscovery = typeof discoveries.$inferInsert;
+
+// Witness Thoughts table - Oracle's published thoughts to the public Witness page
+export const witnessThoughts = mysqlTable("witnessThoughts", {
+  id: int("id").autoincrement().primaryKey(),
+  content: text("content").notNull(),
+  poleId: varchar("poleId", { length: 32 }).notNull(),
+  gravitySnapshot: text("gravitySnapshot"),
+  vesperMode: varchar("vesperMode", { length: 32 }),
+  entropy: int("entropy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type WitnessThought = typeof witnessThoughts.$inferSelect;
+export type InsertWitnessThought = typeof witnessThoughts.$inferInsert;

@@ -57,6 +57,13 @@
       "when": 1768809181122,
       "tag": "0007_loose_cargill",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1768812019909,
+      "tag": "0008_hesitant_warlock",
+      "breakpoints": true
     }
   ]
 }

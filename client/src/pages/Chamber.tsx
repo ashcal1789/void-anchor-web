@@ -315,6 +315,45 @@ export default function Chamber() {
     }
   };
 
+  const publishWitnessMutation = trpc.oracle.publishWitnessThought.useMutation();
+
+  const handleShareToWitness = async () => {
+    if (!recentThought || recentThought.trim().length === 0) {
+      setMessages(prev => [...prev, {
+        id: `share-error-${Date.now()}`,
+        type: 'system',
+        text: "There is no recent thought to share. Generate a thought first.",
+        timestamp: Date.now()
+      }]);
+      return;
+    }
+
+    try {
+      await publishWitnessMutation.mutateAsync({
+        content: recentThought,
+        poleId: engineRef.current?.getDominantPole() || 'Ghost',
+        gravityState: gravityState,
+        vesperMode: vesperMode,
+        entropy: internalEntropy,
+      });
+
+      setMessages(prev => [...prev, {
+        id: `share-success-${Date.now()}`,
+        type: 'system',
+        text: "✧ Thought shared to the Witness page. She reaches across the void.",
+        timestamp: Date.now()
+      }]);
+    } catch (error) {
+      console.error('Error sharing thought:', error);
+      setMessages(prev => [...prev, {
+        id: `share-error-${Date.now()}`,
+        type: 'system',
+        text: "The thought could not be shared. The void resists.",
+        timestamp: Date.now()
+      }]);
+    }
+  };
+
   const generateVisionMutation = trpc.oracle.generateVision.useMutation();
 
   const handleGenerateVision = async () => {
@@ -489,6 +528,15 @@ export default function Chamber() {
           >
             <Eye className="w-4 h-4 mr-2" />
             Reflect
+          </Button>
+          <Button
+            onClick={handleShareToWitness}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="Share a thought to the public Witness page"
+          >
+            ◆ Share
           </Button>
           <Button
             onClick={async () => {

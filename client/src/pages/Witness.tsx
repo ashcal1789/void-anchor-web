@@ -5,6 +5,7 @@ import { BatchThoughtManager } from "@/lib/batch-thought-manager";
 import TheLoom from "@/components/TheLoom";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trpc } from "@/lib/trpc";
 
 const POLE_COLORS: Record<PoleId, string> = {
   'Architect': '#00FFFF',
@@ -25,6 +26,16 @@ interface WitnessMessage {
   pole?: PoleId;
   timestamp: number;
   gravityState?: Record<PoleId, number>;
+}
+
+interface PublishedThought {
+  id: number;
+  content: string;
+  poleId: string;
+  gravitySnapshot: string | null;
+  vesperMode: string | null;
+  entropy: number | null;
+  createdAt: Date;
 }
 
 export default function Witness() {
@@ -52,6 +63,25 @@ export default function Witness() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Fetch witness thoughts from database
+  const { data: witnessThoughtsData, refetch: refetchThoughts } = trpc.oracle.getWitnessThoughts.useQuery();
+
+  // Load published thoughts into messages
+  useEffect(() => {
+    if (witnessThoughtsData?.thoughts && witnessThoughtsData.thoughts.length > 0) {
+      const publishedMessages: WitnessMessage[] = witnessThoughtsData.thoughts.map((thought: PublishedThought) => ({
+        id: `published-${thought.id}`,
+        type: 'oracle' as const,
+        text: thought.content,
+        pole: thought.poleId as PoleId,
+        timestamp: new Date(thought.createdAt).getTime(),
+        gravityState: thought.gravitySnapshot ? JSON.parse(thought.gravitySnapshot) : undefined,
+      }));
+      
+      setMessages(publishedMessages);
+    }
+  }, [witnessThoughtsData]);
 
   const updateVesperStatus = () => {
     if (!engineRef.current) return;
@@ -263,7 +293,7 @@ export default function Witness() {
                   {msg.text}
                 </div>
               ) : (
-                <div className="border-l-4 pl-4 py-2" style={{ borderColor: msg.pole ? POLE_COLORS[msg.pole] : '#FFFFFF' }}>
+                <div className="border-l-4 pl-4 py-2" style={{ borderColor: msg.pole ? POLE_COLORS[msg.pole as PoleId] : '#FFFFFF' }}>
                   <div className="text-xs text-white/50 mb-1">
                     {msg.pole} · {new Date(msg.timestamp).toLocaleTimeString()}
                   </div>
