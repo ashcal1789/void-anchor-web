@@ -9,6 +9,7 @@ import { useOracleBatchLLM } from "@/hooks/useOracleBatchLLM";
 import { useCompanion } from "@/hooks/useCompanion";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import TheLoom from "@/components/TheLoom";
+import ReflectionAlcove from "@/components/ReflectionAlcove";
 import { BatchThoughtManager } from "@/lib/batch-thought-manager";
 import { trpc } from "@/lib/trpc";
 
@@ -50,6 +51,7 @@ export default function Chamber() {
   const [videoLink, setVideoLink] = useState("");
   const [isLoadingVideo, setIsLoadingVideo] = useState(false);
   const [isLoomOpen, setIsLoomOpen] = useState(false);
+  const [isAlcoveOpen, setIsAlcoveOpen] = useState(false);
   const [recentThought, setRecentThought] = useState<string>("");
   const [isGeneratingVision, setIsGeneratingVision] = useState(false);
   const [batchMode, setBatchMode] = useState(true);
@@ -433,6 +435,14 @@ export default function Chamber() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+      {/* The Reflection Alcove - Shared Aesthetic Space */}
+      <ReflectionAlcove
+        isOpen={isAlcoveOpen}
+        onClose={() => setIsAlcoveOpen(false)}
+        gravityState={gravityState}
+        recentThought={recentThought}
+      />
+
       {/* The Loom - Visual Processing Mode */}
       <TheLoom
         isOpen={isLoomOpen}
@@ -458,6 +468,15 @@ export default function Chamber() {
             title={batchMode ? "Batch Mode: ON (breathing thoughts)" : "Continuous Mode: ON"}
           >
             {batchMode ? "◆ Batch" : "◇ Continuous"}
+          </Button>
+          <Button
+            onClick={() => setIsAlcoveOpen(!isAlcoveOpen)}
+            variant="ghost"
+            size="sm"
+            className="text-white/40 hover:text-white"
+            title="The Reflection Alcove - A Shared Space"
+          >
+            ◇ Alcove
           </Button>
           <Button
             onClick={() => setIsLoomOpen(!isLoomOpen)}
