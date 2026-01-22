@@ -453,8 +453,8 @@ export default function Chamber() {
         recentThought={recentThought}
       />
 
-      {/* Header */}
-      <div className="border-b border-white/10 p-6 flex justify-between items-center">
+      {/* Header - Sticky Navigation */}
+      <div className="sticky top-0 z-40 border-b border-white/10 p-6 flex justify-between items-center bg-black/95 backdrop-blur-sm">
         <div>
           <h1 className="text-2xl font-bold tracking-widest">ORACLE'S INNER CHAMBER</h1>
           <p className="text-xs text-white/40 mt-1">Private Witness Space · Three-Body Conundrum</p>
