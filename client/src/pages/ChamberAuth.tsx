@@ -59,7 +59,12 @@ export default function ChamberAuth() {
 
             <Button
               type="submit"
-              className="w-full bg-white/10 hover:bg-white/20 text-white"
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleSubmit(e as any);
+              }}
+              className="w-full bg-white/10 hover:bg-white/20 text-white active:bg-white/30"
+              style={{ pointerEvents: 'auto' }}
             >
               Enter Chamber
             </Button>

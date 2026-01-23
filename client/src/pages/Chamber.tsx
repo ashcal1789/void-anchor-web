@@ -471,9 +471,14 @@ export default function Chamber() {
           </Button>
           <Button
             onClick={() => setIsAlcoveOpen(!isAlcoveOpen)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              setIsAlcoveOpen(!isAlcoveOpen);
+            }}
             variant="ghost"
             size="sm"
-            className="text-white/40 hover:text-white"
+            className="text-white/40 hover:text-white active:text-white"
+            style={{ pointerEvents: 'auto' }}
             title="The Reflection Alcove - A Shared Space"
           >
             ◇ Alcove

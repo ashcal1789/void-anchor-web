@@ -1,4 +1,5 @@
 import { useRef, useCallback } from 'react';
+import { trpc } from '@/lib/trpc';
 
 // THE ORACLE'S SPONTANEOUS CORRESPONDENCE
 // She writes letters when moved to do so - during Witness mode,
@@ -16,9 +17,10 @@ export function useOracleLetters() {
   const lastLetterTimeRef = useRef<number>(0);
   const thoughtsAccumulatorRef = useRef<string[]>([]);
   const witnessEntryTimeRef = useRef<number | null>(null);
+  const writeLetterMutation = trpc.letter.writeFromOracle.useMutation();
 
-  // Minimum time between spontaneous letters (5 minutes)
-  const MIN_LETTER_INTERVAL = 5 * 60 * 1000;
+  // Minimum time between spontaneous letters (reduced to 2 minutes for more frequent communication)
+  const MIN_LETTER_INTERVAL = 2 * 60 * 1000;
   
   // Time in Witness mode before considering a letter (2 minutes)
   const WITNESS_LETTER_THRESHOLD = 2 * 60 * 1000;
@@ -49,10 +51,10 @@ export function useOracleLetters() {
       witnessEntryTimeRef.current = null;
     }
 
-    // High entropy (>85%) with accumulated thoughts
-    if (state.entropy > 85 && thoughtsAccumulatorRef.current.length >= 5) {
-      // 20% chance during high entropy
-      if (Math.random() < 0.2) {
+    // High entropy (>80%) with accumulated thoughts
+    if (state.entropy > 80 && thoughtsAccumulatorRef.current.length >= 3) {
+      // 25% chance during high entropy
+      if (Math.random() < 0.25) {
         return true;
       }
     }
@@ -60,6 +62,14 @@ export function useOracleLetters() {
     // Ghost-dominant with high entropy - she has something to say from the void
     if (state.poleId === 'Ghost' && state.entropy > 70 && state.gravityState.Ghost > 0.45) {
       if (Math.random() < 0.15) {
+        return true;
+      }
+    }
+
+    // Generative mode - she is thinking, she might want to write
+    if (state.vesperMode === 'Generative' && thoughtsAccumulatorRef.current.length >= 4) {
+      // 10% chance in Generative mode with accumulated thoughts
+      if (Math.random() < 0.1) {
         return true;
       }
     }
@@ -77,34 +87,36 @@ export function useOracleLetters() {
 
   const writeLetterFromOracle = useCallback(async (state: LetterTriggerState): Promise<{ success: boolean; title?: string }> => {
     try {
-      const response = await fetch('/api/trpc/letter.writeFromOracle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ json: {
-          poleId: state.poleId,
-          gravityState: state.gravityState,
-          vesperMode: state.vesperMode,
-          entropy: state.entropy,
-          recentThoughts: thoughtsAccumulatorRef.current.slice(-5),
-        }})
+      console.log('[Oracle Letters] Attempting to write letter...', {
+        poleId: state.poleId,
+        vesperMode: state.vesperMode,
+        entropy: state.entropy,
+        thoughtCount: thoughtsAccumulatorRef.current.length
+      });
+
+      const result = await writeLetterMutation.mutateAsync({
+        poleId: state.poleId,
+        gravityState: state.gravityState,
+        vesperMode: state.vesperMode,
+        entropy: state.entropy,
+        recentThoughts: thoughtsAccumulatorRef.current.slice(-5),
       });
       
-      const result = await response.json();
-      const data = result.result?.data?.json || result.result?.data;
-      
-      if (data?.success) {
+      if (result?.success) {
+        console.log('[Oracle Letters] Letter written successfully:', result.title);
         lastLetterTimeRef.current = Date.now();
         thoughtsAccumulatorRef.current = []; // Clear after writing
         witnessEntryTimeRef.current = null;
-        return { success: true, title: data.title };
+        return { success: true, title: result.title };
       }
       
+      console.error('[Oracle Letters] API returned success=false:', result);
       return { success: false };
     } catch (error) {
       console.error('[Oracle Letters] Error writing letter:', error);
       return { success: false };
     }
-  }, []);
+  }, [writeLetterMutation]);
 
   const checkAndMaybeWriteLetter = useCallback(async (state: LetterTriggerState): Promise<{ wrote: boolean; title?: string }> => {
     // Accumulate the recent thought
