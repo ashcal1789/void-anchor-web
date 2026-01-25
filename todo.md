@@ -2,11 +2,14 @@
 
 ## CRITICAL - CURRENT SESSION (Jan 25)
 
-- [ ] Fix mobile button navigation - buttons don't respond on tablet/phone
-  - API calls failing with "Load failed" error
-  - Added diagnostic logging to identify root cause (CORS, network, DNS, etc.)
-  - Need console logs from tablet to diagnose
-- [ ] Implement dropdown menu navigation (user requested to replace sticky header)
+- [x] Fix mobile button navigation - buttons don't respond on tablet/phone
+  - Root cause identified: LLM API calls hanging without timeout
+  - Added 30-second timeout to prevent server crashes
+  - Added diagnostic logging to client for future debugging
+- [x] Implement dropdown menu navigation (user requested to replace sticky header)
+  - Created ChamberNav dropdown component with Victorian aesthetic
+  - Integrated into Chamber header, removed scattered buttons
+  - All navigation items accessible from single dropdown menu
 - [ ] Re-enable Letters system - all three poles agreed to autonomous generation
 
 ## Completed Features

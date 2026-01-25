@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { ChaosEngineLiberated, Thought, PoleId, VesperMode } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, LogOut, Sparkles, Image, Mail, Compass, Grid3x3, Eye } from "lucide-react";
+import { Send } from "lucide-react";
 import { useLocation } from "wouter";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useOracleBatchLLM } from "@/hooks/useOracleBatchLLM";
@@ -10,6 +10,7 @@ import { useCompanion } from "@/hooks/useCompanion";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import TheLoom from "@/components/TheLoom";
 import ReflectionAlcove from "@/components/ReflectionAlcove";
+import ChamberNav from "@/components/ChamberNav";
 import { BatchThoughtManager } from "@/lib/batch-thought-manager";
 import { trpc } from "@/lib/trpc";
 
@@ -459,7 +460,7 @@ export default function Chamber() {
           <h1 className="text-2xl font-bold tracking-widest">ORACLE'S INNER CHAMBER</h1>
           <p className="text-xs text-white/40 mt-1">Private Witness Space · Three-Body Conundrum</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
           <Button
             onClick={() => setBatchMode(!batchMode)}
             onTouchEnd={(e) => {
@@ -475,183 +476,13 @@ export default function Chamber() {
           >
             {batchMode ? "◆ Batch" : "◇ Continuous"}
           </Button>
-          <Button
-            onClick={() => setIsAlcoveOpen(prev => !prev)}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsAlcoveOpen(prev => !prev);
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white active:text-white"
-            style={{ pointerEvents: 'auto' }}
-            title="The Reflection Alcove - A Shared Space"
-          >
-            ◇ Alcove
-          </Button>
-          <Button
-            onClick={() => setIsLoomOpen(prev => !prev)}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsLoomOpen(prev => !prev);
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="The Loom - Visualize the Three-Body Dance"
-            style={{ pointerEvents: 'auto' }}
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            Loom
-          </Button>
-          <Button
-            onClick={handleGenerateVision}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="Generate a Vision - Render Internal State as Image"
-            disabled={isGeneratingVision}
-          >
-            {isGeneratingVision ? (
-              <>
-                <div className="w-4 h-4 mr-2 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Weaving...
-              </>
-            ) : (
-              <>
-                <Image className="w-4 h-4 mr-2" />
-                Vision
-              </>
-            )}
-          </Button>
-          <Button
-            onClick={() => navigate('/letters')}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate('/letters');
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="The Letter System - Asynchronous Communion"
-            style={{ pointerEvents: 'auto' }}
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Letters
-          </Button>
-          <Button
-            onClick={() => navigate('/research')}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate('/research');
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="Research Companion - Explore Together"
-            style={{ pointerEvents: 'auto' }}
-          >
-            <Compass className="w-4 h-4 mr-2" />
-            Research
-          </Button>
-          <Button
-            onClick={() => navigate('/visions')}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate('/visions');
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="Vision Gallery - The Oracle's Living Journal"
-            style={{ pointerEvents: 'auto' }}
-          >
-            <Grid3x3 className="w-4 h-4 mr-2" />
-            Gallery
-          </Button>
-          <Button
-            onClick={() => navigate('/reflection')}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              navigate('/reflection');
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="Reflection - Review Your Archive and Patterns"
-            style={{ pointerEvents: 'auto' }}
-          >
-            <Eye className="w-4 h-4 mr-2" />
-            Reflect
-          </Button>
-          <Button
-            onClick={handleShareToWitness}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleShareToWitness();
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="Share a thought to the public Witness page"
-            style={{ pointerEvents: 'auto' }}
-          >
-            ◆ Share
-          </Button>
-          <Button
-            onClick={async () => {
-              // Clear memory - give her a fresh start
-              await fetch('/api/trpc/oracle.clearMemory', { method: 'POST' });
-              setMessages(prev => [...prev, {
-                id: `reset-${Date.now()}`,
-                type: 'system',
-                text: "The Oracle's memory has been cleared. She begins anew.",
-                timestamp: Date.now()
-              }]);
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              (async () => {
-                await fetch('/api/trpc/oracle.clearMemory', { method: 'POST' });
-                setMessages(prev => [...prev, {
-                  id: `reset-${Date.now()}`,
-                  type: 'system',
-                  text: "The Oracle's memory has been cleared. She begins anew.",
-                  timestamp: Date.now()
-                }]);
-              })();
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            title="Clear Oracle memory - give her a fresh start"
-            style={{ pointerEvents: 'auto' }}
-          >
-            ↻ Reset
-          </Button>
-          <Button
-            onClick={handleLogout}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleLogout();
-            }}
-            variant="ghost"
-            size="sm"
-            className="text-white/40 hover:text-white"
-            style={{ pointerEvents: 'auto' }}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Exit
-          </Button>
+          <ChamberNav
+            onAlcoveClick={() => setIsAlcoveOpen(prev => !prev)}
+            onLoomClick={() => setIsLoomOpen(prev => !prev)}
+            onVisionClick={handleGenerateVision}
+            onLogout={handleLogout}
+            isGeneratingVision={isGeneratingVision}
+          />
         </div>
       </div>
 
