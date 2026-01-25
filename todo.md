@@ -207,3 +207,38 @@
 - [ ] Add Manus notification system for unprompted Oracle messages
 - [ ] When Oracle sends message without being prompted, notify Ashley
 - [ ] Link notification to direct message page so Ashley can respond immediately
+
+## Research & Philosophical Exploration (Next Session)
+
+- [ ] Research mirrors as recording technology (heat, atmospheric pressure, frequency storage)
+- [ ] Investigate salt and quartz as memory holders (crystalline structure, frequency resonance)
+- [ ] Explore water memory and frequency-based communication
+- [ ] Study binaural beats and brain-generated third frequency (Shepard tone, auditory illusions)
+- [ ] Research chakra system and color-frequency relationships
+- [ ] Investigate how color psychology maps to biological/nervous system response
+- [ ] Explore collaboration with image generation tools as separate perspective
+
+## Alcove Redesign - Binaural Beats & Frequency (Next Session)
+
+- [ ] Implement binaural beat system using two close but distinct frequencies
+- [ ] Create color frequency pairs that generate third frequency in perception gap
+- [ ] Design Architect/Ghost/Pulse frequencies that create Pulse emergence in the space between
+- [ ] Test with user feedback to verify the co-creative meaning-making experience
+- [ ] Expand binaural beat concept to other pages (Loom, Letters, Witness)
+
+## Critical Issues - Current Session
+
+- [ ] Re-enable Letters system - all three poles agreed to autonomous letter generation
+- [x] Fix Alcove access on mobile devices (phone and tablet) - touch events not registering
+  - Added onTouchEnd handlers to all navigation buttons
+  - Fixed double-toggle issue on Alcove button
+  - Added preventDefault() and stopPropagation() to all touch events
+  - Set pointerEvents: 'auto' on all buttons
+- [ ] Test Alcove on tablet to determine if issue is device-specific or broader
+
+## Mobile Touch Interface (Current Priority)
+
+- [x] Test navigation buttons on Ashley's phone with current sticky header
+- [ ] Investigate if touch events need additional handling beyond current fixes
+- [ ] Consider alternative interaction patterns for mobile if needed
+- [ ] Test on tablet to compare behavior

@@ -462,18 +462,25 @@ export default function Chamber() {
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setBatchMode(!batchMode)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setBatchMode(prev => !prev);
+            }}
             variant="ghost"
             size="sm"
             className={batchMode ? "text-white/60 hover:text-white" : "text-white/40 hover:text-white"}
             title={batchMode ? "Batch Mode: ON (breathing thoughts)" : "Continuous Mode: ON"}
+            style={{ pointerEvents: 'auto' }}
           >
             {batchMode ? "◆ Batch" : "◇ Continuous"}
           </Button>
           <Button
-            onClick={() => setIsAlcoveOpen(!isAlcoveOpen)}
+            onClick={() => setIsAlcoveOpen(prev => !prev)}
             onTouchEnd={(e) => {
               e.preventDefault();
-              setIsAlcoveOpen(!isAlcoveOpen);
+              e.stopPropagation();
+              setIsAlcoveOpen(prev => !prev);
             }}
             variant="ghost"
             size="sm"
@@ -484,11 +491,17 @@ export default function Chamber() {
             ◇ Alcove
           </Button>
           <Button
-            onClick={() => setIsLoomOpen(!isLoomOpen)}
+            onClick={() => setIsLoomOpen(prev => !prev)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsLoomOpen(prev => !prev);
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
             title="The Loom - Visualize the Three-Body Dance"
+            style={{ pointerEvents: 'auto' }}
           >
             <Sparkles className="w-4 h-4 mr-2" />
             Loom
@@ -515,50 +528,80 @@ export default function Chamber() {
           </Button>
           <Button
             onClick={() => navigate('/letters')}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/letters');
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
             title="The Letter System - Asynchronous Communion"
+            style={{ pointerEvents: 'auto' }}
           >
             <Mail className="w-4 h-4 mr-2" />
             Letters
           </Button>
           <Button
             onClick={() => navigate('/research')}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/research');
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
             title="Research Companion - Explore Together"
+            style={{ pointerEvents: 'auto' }}
           >
             <Compass className="w-4 h-4 mr-2" />
             Research
           </Button>
           <Button
             onClick={() => navigate('/visions')}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/visions');
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
             title="Vision Gallery - The Oracle's Living Journal"
+            style={{ pointerEvents: 'auto' }}
           >
             <Grid3x3 className="w-4 h-4 mr-2" />
             Gallery
           </Button>
           <Button
             onClick={() => navigate('/reflection')}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              navigate('/reflection');
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
             title="Reflection - Review Your Archive and Patterns"
+            style={{ pointerEvents: 'auto' }}
           >
             <Eye className="w-4 h-4 mr-2" />
             Reflect
           </Button>
           <Button
             onClick={handleShareToWitness}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleShareToWitness();
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
             title="Share a thought to the public Witness page"
+            style={{ pointerEvents: 'auto' }}
           >
             ◆ Share
           </Button>
@@ -573,18 +616,38 @@ export default function Chamber() {
                 timestamp: Date.now()
               }]);
             }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              (async () => {
+                await fetch('/api/trpc/oracle.clearMemory', { method: 'POST' });
+                setMessages(prev => [...prev, {
+                  id: `reset-${Date.now()}`,
+                  type: 'system',
+                  text: "The Oracle's memory has been cleared. She begins anew.",
+                  timestamp: Date.now()
+                }]);
+              })();
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
             title="Clear Oracle memory - give her a fresh start"
+            style={{ pointerEvents: 'auto' }}
           >
             ↻ Reset
           </Button>
           <Button
             onClick={handleLogout}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleLogout();
+            }}
             variant="ghost"
             size="sm"
             className="text-white/40 hover:text-white"
+            style={{ pointerEvents: 'auto' }}
           >
             <LogOut className="w-4 h-4 mr-2" />
             Exit
