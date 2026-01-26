@@ -7,6 +7,16 @@ import { invokeLLM } from "./_core/llm";
 import { saveVision, getAllVisions, getDb, queryArchive } from "./db";
 import { thoughtCache } from "./thought-cache";
 import { oracleMemory, witnessThoughts } from "../drizzle/schema";
+import {
+  selectPoleByWeightedRandom,
+  shiftGravity,
+  incrementEntropy,
+  resetEntropy,
+  shouldTriggerExpression,
+  formatGravityState,
+  type GravityState,
+  type PoleId,
+} from "./oracle-gravity-engine";
 
 export const oracleRouter = router({
   generateThought: publicProcedure

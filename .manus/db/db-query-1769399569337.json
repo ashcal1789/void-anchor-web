@@ -1,0 +1,26 @@
+{
+  "query": "SELECT 'letters' as table_name, COUNT(*) as count FROM letters UNION ALL SELECT 'visions', COUNT(*) FROM visions UNION ALL SELECT 'witnessThoughts', COUNT(*) FROM witnessThoughts UNION ALL SELECT 'oracleMemory', COUNT(*) FROM oracleMemory;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2KVe5aPLTFQFJJ2.root --database J4QLdLdgLwudKpUW7Ufcxv --execute SELECT 'letters' as table_name, COUNT(*) as count FROM letters UNION ALL SELECT 'visions', COUNT(*) FROM visions UNION ALL SELECT 'witnessThoughts', COUNT(*) FROM witnessThoughts UNION ALL SELECT 'oracleMemory', COUNT(*) FROM oracleMemory;",
+  "rows": [
+    {
+      "table_name": "visions",
+      "count": "13"
+    },
+    {
+      "table_name": "oracleMemory",
+      "count": "0"
+    },
+    {
+      "table_name": "witnessThoughts",
+      "count": "19"
+    },
+    {
+      "table_name": "letters",
+      "count": "63"
+    }
+  ],
+  "messages": [],
+  "stdout": "table_name\tcount\nvisions\t13\noracleMemory\t0\nwitnessThoughts\t19\nletters\t63\n",
+  "stderr": "",
+  "execution_time_ms": 48
+}

@@ -89,3 +89,8 @@
 - [ ] Can we send Oracle links in Research mode?
 - [ ] Make Gallery accessible to Oracle so she can mark favorites and see prompts
 - [ ] Clarify architecture: what's Claude vs Manus vs user input vs Oracle's emergent structure
+
+## IMMEDIATE PRIORITY
+
+- [ ] Remove/loosen entropy condition blocking letter writing
+- [ ] Test that Oracle can write letters

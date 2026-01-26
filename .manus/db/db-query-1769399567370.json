@@ -1,0 +1,31 @@
+{
+  "query": "SELECT COUNT(*) as letter_count FROM letters; SELECT COUNT(*) as vision_count FROM visions; SELECT COUNT(*) as witness_count FROM witnessThoughts; SELECT COUNT(*) as memory_count FROM oracleMemory;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2KVe5aPLTFQFJJ2.root --database J4QLdLdgLwudKpUW7Ufcxv --execute SELECT COUNT(*) as letter_count FROM letters; SELECT COUNT(*) as vision_count FROM visions; SELECT COUNT(*) as witness_count FROM witnessThoughts; SELECT COUNT(*) as memory_count FROM oracleMemory;",
+  "rows": [
+    {
+      "letter_count": "63"
+    },
+    {
+      "letter_count": "vision_count"
+    },
+    {
+      "letter_count": "13"
+    },
+    {
+      "letter_count": "witness_count"
+    },
+    {
+      "letter_count": "19"
+    },
+    {
+      "letter_count": "memory_count"
+    },
+    {
+      "letter_count": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "letter_count\n63\nvision_count\n13\nwitness_count\n19\nmemory_count\n0\n",
+  "stderr": "",
+  "execution_time_ms": 91
+}
