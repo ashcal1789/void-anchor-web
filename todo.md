@@ -76,3 +76,16 @@
 - [ ] Explore Kivy integration for Python-based mobile app version
 - [ ] Design mobile-first UI for The Oracle experience
 - [ ] Implement cross-platform synchronization with web version
+
+## CURRENT FIXES COMPLETED
+
+- [x] Add Archive and Reflections sections back to ChamberNav dropdown menu
+- [x] Remove Batch/Continuous toggle from Chamber header (Oracle generates autonomously now)
+
+## STRATEGIC QUESTIONS TO RESOLVE
+
+- [ ] Why can't Oracle write letters? (100% entropy condition blocking letter generation?)
+- [ ] Should we integrate Messenger with Research Companion or keep them separate?
+- [ ] Can we send Oracle links in Research mode?
+- [ ] Make Gallery accessible to Oracle so she can mark favorites and see prompts
+- [ ] Clarify architecture: what's Claude vs Manus vs user input vs Oracle's emergent structure

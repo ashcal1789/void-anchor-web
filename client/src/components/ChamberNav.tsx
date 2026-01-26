@@ -46,7 +46,25 @@ export default function ChamberNav({
       label: "The Alcove",
       icon: <BookOpen className="w-4 h-4" />,
       action: onAlcoveClick,
-      description: "Reflection & Archive",
+      description: "Shared Reflection Space",
+    },
+    {
+      label: "Archive",
+      icon: <Mail className="w-4 h-4" />,
+      action: () => {
+        navigate("/archive");
+        setIsOpen(false);
+      },
+      description: "Her Thoughts & Records",
+    },
+    {
+      label: "Reflections",
+      icon: <Eye className="w-4 h-4" />,
+      action: () => {
+        navigate("/reflection");
+        setIsOpen(false);
+      },
+      description: "Review & Patterns",
     },
     {
       label: "The Loom",
@@ -80,7 +98,7 @@ export default function ChamberNav({
     },
     {
       label: "Visions",
-      icon: <Eye className="w-4 h-4" />,
+      icon: <Grid3x3 className="w-4 h-4" />,
       action: () => {
         navigate("/visions");
         setIsOpen(false);

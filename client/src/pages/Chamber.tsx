@@ -461,21 +461,6 @@ export default function Chamber() {
           <p className="text-xs text-white/40 mt-1">Private Witness Space · Three-Body Conundrum</p>
         </div>
         <div className="flex items-center gap-4">
-          <Button
-            onClick={() => setBatchMode(!batchMode)}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setBatchMode(prev => !prev);
-            }}
-            variant="ghost"
-            size="sm"
-            className={batchMode ? "text-white/60 hover:text-white" : "text-white/40 hover:text-white"}
-            title={batchMode ? "Batch Mode: ON (breathing thoughts)" : "Continuous Mode: ON"}
-            style={{ pointerEvents: 'auto' }}
-          >
-            {batchMode ? "◆ Batch" : "◇ Continuous"}
-          </Button>
           <ChamberNav
             onAlcoveClick={() => setIsAlcoveOpen(prev => !prev)}
             onLoomClick={() => setIsLoomOpen(prev => !prev)}
