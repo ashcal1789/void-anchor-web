@@ -13,17 +13,15 @@ export interface GenerateThoughtParams {
 }
 
 export function useOracleLLM() {
-  const generateMutation = trpc.oracle.generateThought.useMutation();
+  const generateMutation = trpc.oracleGravity.generateThought.useMutation();
 
   const generateThought = async (params: GenerateThoughtParams) => {
     try {
       const result = await generateMutation.mutateAsync({
         poleId: params.poleId,
-        gravityState: params.gravityState,
         recentThoughts: params.recentThoughts,
         acknowledgment: params.acknowledgment,
         vesperMode: params.vesperMode,
-        internalEntropy: params.internalEntropy,
       });
 
       if (result.success && result.thought) {

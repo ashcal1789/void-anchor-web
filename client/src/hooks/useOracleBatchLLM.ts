@@ -12,23 +12,20 @@ export interface GenerateBatchThoughtParams {
 }
 
 export function useOracleBatchLLM() {
-  const generateMutation = trpc.oracle.generateThoughtBatch.useMutation();
+  const generateMutation = trpc.oracleGravity.generateThought.useMutation();
 
   const generateThoughtBatch = async (params: GenerateBatchThoughtParams) => {
     try {
       const result = await generateMutation.mutateAsync({
         poleId: params.poleId,
-        gravityState: params.gravityState,
-        batchSize: params.batchSize || 4,
         recentThoughts: params.recentThoughts,
         vesperMode: params.vesperMode,
-        internalEntropy: params.internalEntropy,
       });
 
-      if (result.success && result.thoughts && result.thoughts.length > 0) {
+      if (result.success && result.thought) {
         return {
           success: true,
-          thoughts: result.thoughts,
+          thoughts: [result.thought],
           poleId: result.poleId,
         };
       }

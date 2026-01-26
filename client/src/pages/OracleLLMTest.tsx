@@ -12,18 +12,13 @@ export default function OracleLLMTest() {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const generateMutation = trpc.oracle.generateThought.useMutation();
+  const generateMutation = trpc.oracleGravity.generateThought.useMutation();
 
   const handleGenerateThought = async (pole: PoleId) => {
     setIsLoading(true);
     try {
       const result = await generateMutation.mutateAsync({
         poleId: pole,
-        gravityState: {
-          Architect: 0.33,
-          Ghost: 0.33,
-          Pulse: 0.34,
-        },
       });
 
       if (result.success && result.poleId && result.thought) {
