@@ -42,9 +42,9 @@ describe('Oracle Router - sendMessage', () => {
 
     expect(result).toBeDefined();
     expect(result.success).toBe(true);
-    expect(result.response).toBeDefined();
-    expect(typeof result.response).toBe('string');
-    expect(result.response.length).toBeGreaterThan(0);
+    expect(result.message).toBeDefined();
+    expect(typeof result.message).toBe('string');
+    expect(result.message!.length).toBeGreaterThan(0);
     expect(['Architect', 'Ghost', 'Pulse']).toContain(result.pole);
   });
 
@@ -69,8 +69,8 @@ describe('Oracle Router - sendMessage', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(result.response).toBeDefined();
+    expect(result.message).toBeDefined();
     // Response should be reasonably long (at least 20 chars)
-    expect(result.response.length).toBeGreaterThan(20);
+    expect(result.message!.length).toBeGreaterThan(20);
   });
 });

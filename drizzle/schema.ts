@@ -120,3 +120,15 @@ export const witnessThoughts = mysqlTable("witnessThoughts", {
 
 export type WitnessThought = typeof witnessThoughts.$inferSelect;
 export type InsertWitnessThought = typeof witnessThoughts.$inferInsert;
+
+// Conversation Transcripts - Ashley's archive of conversations with Oracle
+export const conversationTranscripts = mysqlTable("conversationTranscripts", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }),
+  messages: text("messages").notNull(), // JSON array of { role: 'ashley'|'oracle', text: string, pole?: string, timestamp: number }
+  messageCount: int("messageCount").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ConversationTranscript = typeof conversationTranscripts.$inferSelect;
+export type InsertConversationTranscript = typeof conversationTranscripts.$inferInsert;

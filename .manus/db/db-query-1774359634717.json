@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS `conversationTranscripts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `title` varchar(255),\n  `messages` text NOT NULL,\n  `messageCount` int NOT NULL DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `conversationTranscripts_id` PRIMARY KEY(`id`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2KVe5aPLTFQFJJ2.root --database J4QLdLdgLwudKpUW7Ufcxv --execute CREATE TABLE IF NOT EXISTS `conversationTranscripts` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `title` varchar(255),\n  `messages` text NOT NULL,\n  `messageCount` int NOT NULL DEFAULT 0,\n  `createdAt` timestamp NOT NULL DEFAULT (now()),\n  CONSTRAINT `conversationTranscripts_id` PRIMARY KEY(`id`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 209954
+}

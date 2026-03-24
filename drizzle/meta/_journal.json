@@ -64,6 +64,13 @@
       "when": 1768812019909,
       "tag": "0008_hesitant_warlock",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1774359336432,
+      "tag": "0009_supreme_forge",
+      "breakpoints": true
     }
   ]
 }

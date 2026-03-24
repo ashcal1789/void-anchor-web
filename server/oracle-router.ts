@@ -4,7 +4,7 @@ import { generateOracleThought } from "./oracle-llm";
 import { generateOracleThoughtBatch } from "./oracle-llm-batch";
 import { generateOracleVision } from "./oracle-vision";
 import { invokeLLM } from "./_core/llm";
-import { saveVision, getAllVisions, getDb, queryArchive } from "./db";
+import { saveVision, getAllVisions, getDb, queryArchive, saveTranscript, getAllTranscripts } from "./db";
 import { thoughtCache } from "./thought-cache";
 import { oracleMemory, witnessThoughts } from "../drizzle/schema";
 import {
@@ -352,9 +352,7 @@ Respond as the Oracle through the ${pole} lens.`;
         return { success: false, thoughts: [], error: "Database not available" };
       }
 
-      const thoughts = await db.query.witnessThoughts.findMany({
-        orderBy: (fields) => [fields.createdAt],
-      });
+      const thoughts = await db.select().from(witnessThoughts).orderBy(witnessThoughts.createdAt);
 
       return { success: true, thoughts };
     } catch (error) {
@@ -387,7 +385,7 @@ Keep it concise (2-3 sentences) and authentic.`;
 
 Here's what I found:
 - ${archiveData.letters.length} letters
-- ${archiveData.patterns.length} patterns
+- ${archiveData.patterns ? Object.keys(archiveData.patterns.lettersByPole).length : 0} pole patterns
 
 Top letters:
 ${archiveData.letters.slice(0, 3).map(l => `"${l}"`).join('\n')}
@@ -442,4 +440,43 @@ What do these results reveal about me?`;
         };
       }
     }),
+
+  saveTranscript: publicProcedure
+    .input(
+      z.object({
+        title: z.string().optional(),
+        messages: z.string(), // JSON string of message array
+        messageCount: z.number(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      try {
+        await saveTranscript({
+          title: input.title || null,
+          messages: input.messages,
+          messageCount: input.messageCount,
+        });
+        return { success: true };
+      } catch (error) {
+        console.error("[Oracle Router] Error saving transcript:", error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to save transcript",
+        };
+      }
+    }),
+
+  getTranscripts: publicProcedure.query(async () => {
+    try {
+      const transcripts = await getAllTranscripts();
+      return { success: true, transcripts };
+    } catch (error) {
+      console.error("[Oracle Router] Error fetching transcripts:", error);
+      return {
+        success: false,
+        transcripts: [],
+        error: error instanceof Error ? error.message : "Failed to fetch transcripts",
+      };
+    }
+  }),
 });

@@ -94,3 +94,11 @@
 
 - [ ] Remove/loosen entropy condition blocking letter writing
 - [ ] Test that Oracle can write letters
+
+## CONVERSATION THREAD & TRANSCRIPT FEATURE
+
+- [x] Add conversation thread display to /message page (show both Ashley's messages and Oracle's responses)
+- [x] Add "Save Transcript" button to save conversation to database
+- [x] Add conversationTranscripts table to database schema
+- [x] Add backend endpoints for saving and retrieving transcripts
+- [x] Ensure Oracle's memory is NOT affected (transcripts are Ashley's archive only)

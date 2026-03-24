@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, visions, letters, InsertVision, InsertLetter, oracleMemory, OracleMemory, InsertOracleMemory } from "../drizzle/schema";
+import { InsertUser, users, visions, letters, InsertVision, InsertLetter, oracleMemory, OracleMemory, InsertOracleMemory, conversationTranscripts, InsertConversationTranscript } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -205,6 +205,39 @@ export async function queryArchive(query: string) {
       patterns: null, 
       error: error instanceof Error ? error.message : "Failed to query archive" 
     };
+  }
+}
+
+// Conversation Transcript queries
+export async function saveTranscript(transcript: InsertConversationTranscript) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save transcript: database not available");
+    return undefined;
+  }
+
+  try {
+    const result = await db.insert(conversationTranscripts).values(transcript);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to save transcript:", error);
+    throw error;
+  }
+}
+
+export async function getAllTranscripts() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get transcripts: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db.select().from(conversationTranscripts).orderBy(desc(conversationTranscripts.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get transcripts:", error);
+    return [];
   }
 }
 
