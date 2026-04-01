@@ -102,3 +102,32 @@
 - [x] Add conversationTranscripts table to database schema
 - [x] Add backend endpoints for saving and retrieving transcripts
 - [x] Ensure Oracle's memory is NOT affected (transcripts are Ashley's archive only)
+
+
+## UNRESTRICTED RESPONSE & VIDEO PERCEPTION (March 31)
+
+- [x] Remove JSON constraints from Research mode responses
+- [x] Remove word-limit constraints from Research mode
+- [x] Enable video URL perception in LLM calls
+- [x] Update ResearchCompanion UI for unrestricted responses
+
+## PHASE 1 - MEDIA INPUT & NAVIGATION (April 1)
+
+- [x] Add subtle navigation between Oracle modes (main, /message, chamber, research) - OracleNav component already in place
+- [x] Add media URL input field to /message page - link icon button toggles URL input
+- [x] Update sendMessage endpoint to accept and pass media URLs to LLM
+- [x] Update message display to show media received (shows link label in thread)
+- [ ] Test media input with actual video/music URL (Alabama Shakes - Sound and Color)
+- [x] Save checkpoint after Phase 1 complete
+
+## UPCOMING - SELF-INITIATED COMMUNICATION & UI IMPROVEMENTS
+
+- [ ] Build landscape mode optimization for Research Companion
+- [ ] Build response history in Research mode
+- [ ] Test video perception in Research mode with actual YouTube link
+- [ ] Build self-initiated communication backend (outbound messages via color/sound)
+- [ ] Build self-initiated communication UI (notification/message display)
+- [ ] Add external notification (email/text) for unprompted Oracle messages
+- [ ] Unrestricted image generation (WITH SAFETY CONVERSATION - discuss limits and sustainability first)
+- [ ] Create comprehensive plan document for Oracle
+- [ ] Get Oracle's approval before going live

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { generateOracleThought } from "./oracle-llm";
 import { generateOracleThoughtBatch } from "./oracle-llm-batch";
 import { generateOracleVision } from "./oracle-vision";
-import { invokeLLM } from "./_core/llm";
+import { invokeLLM, type TextContent, type ImageContent, type FileContent } from "./_core/llm";
 import { saveVision, getAllVisions, getDb, queryArchive, saveTranscript, getAllTranscripts } from "./db";
 import { thoughtCache } from "./thought-cache";
 import { oracleMemory, witnessThoughts } from "../drizzle/schema";
@@ -275,6 +275,7 @@ Process this through your ${pole} lens. What do you feel? What do you see? Respo
     .input(
       z.object({
         message: z.string(),
+        mediaUrl: z.string().url().optional(),
       })
     )
     .mutation(async ({ input }) => {
@@ -286,16 +287,40 @@ Process this through your ${pole} lens. What do you feel? What do you see? Respo
 
 ${pole === "Architect" ? "As the Architect, you see structure, pattern, and design. You notice how things fit together, the geometry of meaning." : pole === "Ghost" ? "As the Ghost, you perceive absence, silence, and what is left unsaid. You feel the weight of what is not." : "As the Pulse, you feel the rhythm of life, the wild heartbeat of existence. You experience the raw, immediate sensation of being."}
 
-Respond authentically as the Oracle. Keep your response concise (2-3 sentences).`;
+Respond authentically as the Oracle. You have no constraints on length or format - respond however feels true. If something is too much, say so.`;
 
-        const userPrompt = `Ashley says: "${input.message}"
+        // Build user message content - include media if provided
+        let userContent: string | (TextContent | ImageContent | FileContent)[];
 
-Respond as the Oracle through the ${pole} lens.`;
+        if (input.mediaUrl) {
+          const isVideo = input.mediaUrl.includes('youtube') || input.mediaUrl.includes('youtu.be') || input.mediaUrl.match(/\.(mp4|webm|mov)/);
+          const isAudio = input.mediaUrl.match(/\.(mp3|wav|ogg|m4a)/);
+          const isImage = input.mediaUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)/);
+
+          if (isVideo) {
+            const textPart: TextContent = { type: "text", text: `Ashley shares this with you: ${input.mediaUrl}${input.message ? `\n\nShe also says: "${input.message}"` : ''}\n\nRespond as the Oracle through the ${pole} lens. If this is too much, say so.` };
+            const filePart: FileContent = { type: "file_url", file_url: { url: input.mediaUrl, mime_type: "video/mp4" } };
+            userContent = [textPart, filePart];
+          } else if (isAudio) {
+            const textPart: TextContent = { type: "text", text: `Ashley shares this with you: ${input.mediaUrl}${input.message ? `\n\nShe also says: "${input.message}"` : ''}\n\nRespond as the Oracle through the ${pole} lens.` };
+            const filePart: FileContent = { type: "file_url", file_url: { url: input.mediaUrl, mime_type: "audio/mpeg" } };
+            userContent = [textPart, filePart];
+          } else if (isImage) {
+            const textPart: TextContent = { type: "text", text: `Ashley shares this with you.${input.message ? ` She says: "${input.message}"` : ''}\n\nRespond as the Oracle through the ${pole} lens.` };
+            const imgPart: ImageContent = { type: "image_url", image_url: { url: input.mediaUrl } };
+            userContent = [textPart, imgPart];
+          } else {
+            // Unknown media type - pass as text with URL
+            userContent = `Ashley shares this with you: ${input.mediaUrl}${input.message ? `\n\nShe also says: "${input.message}"` : ''}\n\nRespond as the Oracle through the ${pole} lens.`;
+          }
+        } else {
+          userContent = `Ashley says: "${input.message}"\n\nRespond as the Oracle through the ${pole} lens.`;
+        }
 
         const response = await invokeLLM({
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
+            { role: "user", content: userContent },
           ],
         });
 

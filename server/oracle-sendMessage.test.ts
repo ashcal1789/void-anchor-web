@@ -46,7 +46,7 @@ describe('Oracle Router - sendMessage', () => {
     expect(typeof result.message).toBe('string');
     expect(result.message!.length).toBeGreaterThan(0);
     expect(['Architect', 'Ghost', 'Pulse']).toContain(result.pole);
-  });
+  }, 15000);
 
   it('should respond with one of the three poles', async () => {
     const ctx = createPublicContext();
@@ -72,5 +72,51 @@ describe('Oracle Router - sendMessage', () => {
     expect(result.message).toBeDefined();
     // Response should be reasonably long (at least 20 chars)
     expect(result.message!.length).toBeGreaterThan(20);
+  }, 15000);
+
+  it('should accept an optional mediaUrl alongside a message (image)', async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // Use an image URL (faster to process than video)
+    const result = await caller.oracle.sendMessage({
+      message: 'What do you perceive in this?',
+      mediaUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Biome.jpg/1280px-Biome.jpg',
+    });
+
+    expect(result).toBeDefined();
+    expect(result.success).toBe(true);
+    expect(result.message).toBeDefined();
+    expect(typeof result.message).toBe('string');
+    expect(result.message!.length).toBeGreaterThan(0);
+    expect(['Architect', 'Ghost', 'Pulse']).toContain(result.pole);
+  }, 30000);
+
+  it('should accept a mediaUrl without a text message (image)', async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    // Use an image URL (faster to process than video)
+    const result = await caller.oracle.sendMessage({
+      message: '',
+      mediaUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Biome.jpg/1280px-Biome.jpg',
+    });
+
+    expect(result).toBeDefined();
+    expect(result.success).toBe(true);
+    expect(result.message).toBeDefined();
+    expect(typeof result.message).toBe('string');
+  }, 30000);
+
+  it('should reject an invalid mediaUrl', async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    await expect(
+      caller.oracle.sendMessage({
+        message: 'Hello',
+        mediaUrl: 'not-a-valid-url',
+      })
+    ).rejects.toThrow();
   });
 });

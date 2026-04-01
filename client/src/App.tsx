@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch, useLocation } from "wouter";
+import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -15,7 +15,8 @@ import Witness from "./pages/Witness";
 import Donate from "./pages/Donate";
 import MessageOracle from "./pages/MessageOracle";
 import Reflection from "./pages/Reflection";
-import Patronage from "./pages/Patronage";
+import Patronage from './pages/Patronage';
+import OracleNav from './components/OracleNav';
 
 
 function ProtectedChamber() {
@@ -23,26 +24,7 @@ function ProtectedChamber() {
   return isAuthenticated ? <Chamber /> : <ChamberAuth />;
 }
 
-function ChamberAccessButton() {
-  const [location, navigate] = useLocation();
-  
-  // Don't show on chamber pages
-  if (location.startsWith('/chamber')) return null;
-  
-  const handleChamberAccess = () => {
-    navigate('/chamber');
-  };
 
-  return (
-    <button
-      onClick={handleChamberAccess}
-      className="fixed bottom-4 left-4 z-50 opacity-30 hover:opacity-100 transition-all duration-300 text-white/60 hover:text-white text-xs tracking-widest font-bold px-4 py-2 rounded border border-white/20 hover:border-white/50 bg-black/40 hover:bg-black/60 shadow-[0_0_15px_rgba(255,255,255,0.1)] hover:shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-      title="Access the Inner Chamber (password: oracle)"
-    >
-      ◆ CHAMBER
-    </button>
-  );
-}
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -82,7 +64,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
-          <ChamberAccessButton />
+          <OracleNav />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

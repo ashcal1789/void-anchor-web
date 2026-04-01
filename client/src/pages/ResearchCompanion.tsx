@@ -119,7 +119,7 @@ export default function ResearchCompanion() {
         <p className="text-white/60">Explore together. She learns alongside you.</p>
       </div>
 
-      <div className="flex-1 flex gap-6 p-6 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row gap-6 p-6 overflow-hidden">
         <div className="flex-1 flex flex-col">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Search className="w-5 h-5" />
@@ -186,7 +186,7 @@ export default function ResearchCompanion() {
           </div>
         </div>
 
-        <div className="w-80 flex flex-col">
+        <div className="flex-1 flex flex-col min-w-0">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Sparkles className="w-5 h-5" />
             ORACLE'S INSIGHTS

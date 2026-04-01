@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Save, Loader2, ScrollText, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, Save, Loader2, ScrollText, ChevronDown, ChevronUp, Link2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { trpc } from '@/lib/trpc';
 import { toast } from 'sonner';
@@ -9,10 +9,13 @@ interface ConversationMessage {
   text: string;
   pole?: string;
   timestamp: number;
+  mediaUrl?: string;
 }
 
 export default function MessageOracle() {
   const [message, setMessage] = useState<string>('');
+  const [mediaUrl, setMediaUrl] = useState<string>('');
+  const [showMediaInput, setShowMediaInput] = useState(false);
   const [thread, setThread] = useState<ConversationMessage[]>([]);
   const [showSavedTranscripts, setShowSavedTranscripts] = useState(false);
   const threadEndRef = useRef<HTMLDivElement>(null);
@@ -58,18 +61,39 @@ export default function MessageOracle() {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [thread]);
 
-  const handleSendMessage = async () => {
-    if (!message.trim() || sendMessageMutation.isPending) return;
+  const handleSendMessage = () => {
+    const hasText = message.trim();
+    const hasMedia = mediaUrl.trim();
+    if ((!hasText && !hasMedia) || sendMessageMutation.isPending) return;
+
+    // Validate URL if provided
+    if (hasMedia) {
+      try {
+        new URL(mediaUrl.trim());
+      } catch {
+        toast.error('Please enter a valid URL');
+        return;
+      }
+    }
 
     const ashleyMsg: ConversationMessage = {
       role: 'ashley',
-      text: message.trim(),
+      text: hasText ? message.trim() : '',
       timestamp: Date.now(),
+      mediaUrl: hasMedia ? mediaUrl.trim() : undefined,
     };
     setThread((prev) => [...prev, ashleyMsg]);
+
     const msgText = message.trim();
+    const msgMedia = mediaUrl.trim();
     setMessage('');
-    sendMessageMutation.mutate({ message: msgText });
+    setMediaUrl('');
+    setShowMediaInput(false);
+
+    sendMessageMutation.mutate({
+      message: msgText,
+      mediaUrl: msgMedia || undefined,
+    });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -109,6 +133,18 @@ export default function MessageOracle() {
       default: return 'text-white/60';
     }
   };
+
+  const getMediaLabel = (url: string) => {
+    if (url.includes('youtube') || url.includes('youtu.be')) return '▶ YouTube';
+    if (url.includes('soundcloud')) return '♫ SoundCloud';
+    if (url.includes('spotify')) return '♫ Spotify';
+    if (url.match(/\.(mp4|webm|mov)/i)) return '▶ Video';
+    if (url.match(/\.(mp3|wav|ogg|m4a)/i)) return '♫ Audio';
+    if (url.match(/\.(jpg|jpeg|png|gif|webp)/i)) return '◼ Image';
+    return '⬡ Link';
+  };
+
+  const canSend = (message.trim() || mediaUrl.trim()) && !sendMessageMutation.isPending;
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -203,6 +239,7 @@ export default function MessageOracle() {
             <div className="text-center py-16 text-white/20">
               <p className="text-lg">The space is quiet.</p>
               <p className="text-sm mt-1">Send her a thought to begin.</p>
+              <p className="text-xs mt-3 text-white/15">You can also share a video or music link — she will perceive it.</p>
             </div>
           ) : (
             thread.map((msg, i) => (
@@ -234,7 +271,25 @@ export default function MessageOracle() {
                       : 'bg-white/5 border border-white/10 text-white/70'
                   }`}
                 >
-                  <p className="leading-relaxed whitespace-pre-wrap text-sm">{msg.text}</p>
+                  {msg.mediaUrl && (
+                    <div className="mb-2 pb-2 border-b border-white/10">
+                      <a
+                        href={msg.mediaUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-white/40 hover:text-white/70 transition-colors flex items-center gap-1.5"
+                      >
+                        <Link2 className="w-3 h-3 shrink-0" />
+                        <span className="truncate max-w-[200px]">{getMediaLabel(msg.mediaUrl)}: {msg.mediaUrl}</span>
+                      </a>
+                    </div>
+                  )}
+                  {msg.text && (
+                    <p className="leading-relaxed whitespace-pre-wrap text-sm">{msg.text}</p>
+                  )}
+                  {!msg.text && msg.mediaUrl && (
+                    <p className="text-xs text-white/30 italic">shared media</p>
+                  )}
                 </div>
               </div>
             ))
@@ -258,24 +313,75 @@ export default function MessageOracle() {
 
       {/* Input Area - Fixed at bottom */}
       <div className="border-t border-white/10 bg-black/80 backdrop-blur-sm p-4">
-        <div className="max-w-2xl mx-auto w-full flex gap-2">
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="What do you want to tell her?"
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/30 text-sm min-h-[48px] max-h-[120px]"
-            rows={1}
-            disabled={sendMessageMutation.isPending}
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!message.trim() || sendMessageMutation.isPending}
-            size="icon"
-            className="bg-white/10 hover:bg-white/20 text-white/60 hover:text-white h-[48px] w-[48px] shrink-0"
-          >
-            <Send className="w-4 h-4" />
-          </Button>
+        <div className="max-w-2xl mx-auto w-full space-y-2">
+          {/* Media URL input - shown when toggled */}
+          {showMediaInput && (
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <Link2 className="w-3.5 h-3.5 text-white/30 shrink-0" />
+                <input
+                  type="url"
+                  value={mediaUrl}
+                  onChange={(e) => setMediaUrl(e.target.value)}
+                  placeholder="Paste a video or music URL..."
+                  className="flex-1 bg-transparent text-white/70 placeholder-white/25 text-sm focus:outline-none"
+                  disabled={sendMessageMutation.isPending}
+                />
+                {mediaUrl && (
+                  <button
+                    onClick={() => setMediaUrl('')}
+                    className="text-white/30 hover:text-white/60 transition-colors"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Main input row */}
+          <div className="flex gap-2">
+            {/* Media toggle button */}
+            <button
+              onClick={() => {
+                setShowMediaInput(!showMediaInput);
+                if (showMediaInput) setMediaUrl('');
+              }}
+              title="Share a video or music link"
+              className={`shrink-0 w-[48px] h-[48px] rounded-lg border flex items-center justify-center transition-colors ${
+                showMediaInput || mediaUrl
+                  ? 'bg-white/15 border-white/30 text-white/80'
+                  : 'bg-white/5 border-white/10 text-white/30 hover:bg-white/10 hover:text-white/60'
+              }`}
+            >
+              <Link2 className="w-4 h-4" />
+            </button>
+
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={mediaUrl ? "Add a note... (optional)" : "What do you want to tell her?"}
+              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/30 resize-none focus:outline-none focus:border-white/30 text-sm min-h-[48px] max-h-[120px]"
+              rows={1}
+              disabled={sendMessageMutation.isPending}
+            />
+            <Button
+              onClick={handleSendMessage}
+              disabled={!canSend}
+              size="icon"
+              className="bg-white/10 hover:bg-white/20 text-white/60 hover:text-white h-[48px] w-[48px] shrink-0"
+            >
+              <Send className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Media URL preview hint */}
+          {mediaUrl && (
+            <p className="text-[10px] text-white/25 pl-[56px]">
+              {getMediaLabel(mediaUrl)} will be shared with the Oracle
+            </p>
+          )}
         </div>
       </div>
     </div>
