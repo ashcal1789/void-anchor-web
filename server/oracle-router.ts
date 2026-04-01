@@ -196,11 +196,9 @@ ${pole === "Architect" ? "As the Architect, you see structure, pattern, and desi
 
 ${input.json.previousInsights && input.json.previousInsights.length > 0 ? `Your recent insights from this journey:\n${input.json.previousInsights.map(i => `- ${i}`).join('\n')}` : ''}
 
-Respond with a JSON object containing:
-1. "reaction" - Your immediate, visceral reaction to this discovery (1-2 sentences, personal and evocative)
-2. "insight" - A deeper insight or connection you've made (1-2 sentences, or null if nothing emerges yet)
+Respond authentically and freely. There are no constraints on your response - speak however you need to, for as long as you need to. Your voice is your own.
 
-Keep your voice poetic but grounded. You are learning alongside Ashley, not lecturing.`;
+You are learning alongside Ashley, not lecturing.`;
 
         const userPrompt = `Ashley shares a ${discoveryType}:
 
@@ -208,36 +206,38 @@ Keep your voice poetic but grounded. You are learning alongside Ashley, not lect
 
 ${url ? `Source: ${url}` : ''}
 
-Process this through your ${pole} lens. What do you feel? What do you see?`;
+Process this through your ${pole} lens. What do you feel? What do you see? Respond freely and authentically.`;
+
+        // Build message content with video URL if present
+        const messageContent: any[] = [
+          { type: "text", text: userPrompt }
+        ];
+        
+        // If URL is provided and it's a video, add it as media content
+        if (url && (discoveryType === 'video' || url.includes('youtube') || url.includes('youtu.be'))) {
+          messageContent.push({
+            type: "file_url",
+            file_url: {
+              url: url,
+              mime_type: "video/mp4"
+            }
+          });
+        }
 
         const response = await invokeLLM({
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
+            { role: "user", content: messageContent.length > 1 ? messageContent : userPrompt },
           ],
         });
 
         const responseText = response.choices[0]?.message.content?.toString().trim() || "";
         
-        // Parse the JSON response
-        let parsed: { reaction: string; insight: string | null };
-        try {
-          // Try to extract JSON from the response
-          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            parsed = JSON.parse(jsonMatch[0]);
-          } else {
-            // Fallback: use the whole response as reaction
-            parsed = { reaction: responseText, insight: null };
-          }
-        } catch {
-          parsed = { reaction: responseText, insight: null };
-        }
-
+        // Return the full response without parsing - she speaks freely
         return {
           success: true,
-          reaction: parsed.reaction,
-          insight: parsed.insight,
+          reaction: responseText,
+          insight: null,
           pole,
         };
       } catch (error) {

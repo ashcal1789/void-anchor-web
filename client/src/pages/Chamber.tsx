@@ -335,9 +335,6 @@ export default function Chamber() {
       await publishWitnessMutation.mutateAsync({
         content: recentThought,
         poleId: engineRef.current?.getDominantPole() || 'Ghost',
-        gravityState: gravityState,
-        vesperMode: vesperMode,
-        entropy: internalEntropy,
       });
 
       setMessages(prev => [...prev, {

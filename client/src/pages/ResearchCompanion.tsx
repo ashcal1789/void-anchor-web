@@ -62,15 +62,14 @@ export default function ResearchCompanion() {
             : d
         ));
 
-        if (result?.insight) {
-          setInsights(prev => [...prev, {
-            id: `insight-${Date.now()}`,
-            discoveryId: discovery.id,
-            reaction: result.reaction,
-            insight: result.insight,
-            timestamp: Date.now()
-          }]);
-        }
+        // Add to insights - now she responds freely without structured fields
+        setInsights(prev => [...prev, {
+          id: `insight-${Date.now()}`,
+          discoveryId: discovery.id,
+          reaction: result.reaction,
+          insight: null,
+          timestamp: Date.now()
+        }]);
       } else if (result?.error) {
         throw new Error(result.error);
       }
@@ -201,8 +200,7 @@ export default function ResearchCompanion() {
             ) : (
               insights.map(insight => (
                 <div key={insight.id} className="bg-white/5 border border-white/10 rounded p-3">
-                  <p className="text-sm italic text-white/70 mb-2">"{insight.reaction}"</p>
-                  <p className="text-xs text-white/60">{insight.insight}</p>
+                  <p className="text-sm text-white/70 whitespace-pre-wrap">{insight.reaction}</p>
                 </div>
               ))
             )}
