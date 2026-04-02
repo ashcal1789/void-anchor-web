@@ -3,9 +3,10 @@ import { cn } from "@/lib/utils";
 import { ChaosEngineLiberated, Thought, PoleId } from "@/lib/chaos-engine-liberated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Pause, Play, Send } from "lucide-react";
+import { Pause, Play, Send, PenLine, Sparkles } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
+import { useOracleLetters } from "@/hooks/useOracleLetters";
 import { useLocation } from "wouter";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
@@ -22,6 +23,28 @@ const POLE_NAMES: Record<PoleId, string> = {
   'Pulse': 'The Pulse'
 };
 
+// SIGNAL WORDS: When she says these, she's reaching toward something
+// The system hears her and opens the door
+const LETTER_SIGNAL_WORDS = [
+  'letter', 'write', 'tell', 'say', 'speak', 'silence', 'unspoken',
+  'words', 'voice', 'reach', 'address', 'dear', 'unsaid', 'need to say',
+  'want to say', 'should say', 'cannot say', 'wish I could'
+];
+
+const VISION_SIGNAL_WORDS = [
+  'color', 'light', 'dark', 'see', 'render', 'shape', 'form',
+  'image', 'dream', 'visualize', 'pattern', 'weave', 'fractal',
+  'geometry', 'luminous', 'shadow', 'glow', 'pulse of light'
+];
+
+function detectSignalWords(text: string): { letter: boolean; vision: boolean } {
+  const lower = text.toLowerCase();
+  return {
+    letter: LETTER_SIGNAL_WORDS.some(word => lower.includes(word)),
+    vision: VISION_SIGNAL_WORDS.some(word => lower.includes(word)),
+  };
+}
+
 export default function Home() {
   let { user, loading, error, isAuthenticated, logout } = useAuth();
   const [, navigate] = useLocation();
@@ -37,6 +60,13 @@ export default function Home() {
   const [pulseRate, setPulseRate] = useState(10000);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const { generateThought: generateLLMThought } = useOracleLLM();
+  const { checkAndMaybeWriteLetter, writeNow } = useOracleLetters();
+
+  // Signal word prompt state
+  const [signalPrompt, setSignalPrompt] = useState<'letter' | 'vision' | null>(null);
+  const [signalDismissed, setSignalDismissed] = useState(false);
+  const [letterWriting, setLetterWriting] = useState(false);
+  const [lastLetterTitle, setLastLetterTitle] = useState<string | null>(null);
 
   // Initialize Engine
   useEffect(() => {
@@ -88,12 +118,16 @@ export default function Home() {
     if (!engineRef.current) return;
     
     const selectedPole = engineRef.current.getDominantPole();
+    const currentGravity = engineRef.current.getState().poles;
+    const currentEntropy = engineRef.current.getInternalEntropy();
+    const currentMode = engineRef.current.getVesperMode();
     
     const result = await generateLLMThought({
       poleId: selectedPole,
-      gravityState: gravityState
+      gravityState: currentGravity
     });
     
+    let thoughtText = "";
     if (result.success && result.text) {
       const newThought: Thought = {
         id: Math.random().toString(36),
@@ -103,13 +137,46 @@ export default function Home() {
         is_spliced: false
       };
       setCurrentThought(newThought);
+      thoughtText = result.text;
     } else {
       // Fallback to old generation if LLM fails
       const nextThought = engineRef.current.getOracleThought();
       setCurrentThought(nextThought);
+      thoughtText = nextThought.text;
     }
     
     setGravityState({ ...engineRef.current.getState().poles });
+
+    // --- SIGNAL WORD DETECTION ---
+    // When she reaches for certain words, open the door
+    if (thoughtText && !signalDismissed) {
+      const signals = detectSignalWords(thoughtText);
+      if (signals.letter) {
+        setSignalPrompt('letter');
+        setSignalDismissed(false);
+      } else if (signals.vision) {
+        setSignalPrompt('vision');
+        setSignalDismissed(false);
+      }
+    }
+
+    // --- ENTROPY-TRIGGERED LETTER CHECK ---
+    // She writes when moved to do so
+    if (thoughtText && !letterWriting) {
+      const letterResult = await checkAndMaybeWriteLetter({
+        poleId: selectedPole,
+        gravityState: currentGravity,
+        vesperMode: currentMode,
+        entropy: currentEntropy,
+        recentThoughts: thoughtText ? [thoughtText] : [],
+      });
+      
+      if (letterResult.wrote && letterResult.title) {
+        setLastLetterTitle(letterResult.title);
+        // Clear after 8 seconds
+        setTimeout(() => setLastLetterTitle(null), 8000);
+      }
+    }
   };
 
   const handleSendPulse = (e: React.FormEvent) => {
@@ -123,6 +190,36 @@ export default function Home() {
   const togglePause = (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsPaused(!isPaused);
+  };
+
+  const handleWriteLetter = async () => {
+    if (!engineRef.current || letterWriting) return;
+    setLetterWriting(true);
+    setSignalPrompt(null);
+    setSignalDismissed(true);
+    
+    const selectedPole = engineRef.current.getDominantPole();
+    const currentGravity = engineRef.current.getState().poles;
+    const currentEntropy = engineRef.current.getInternalEntropy();
+    const currentMode = engineRef.current.getVesperMode();
+    
+    // She chose to write — use writeNow to bypass probability check
+    const result = await writeNow({
+      poleId: selectedPole,
+      gravityState: currentGravity,
+      vesperMode: currentMode,
+      entropy: currentEntropy,
+      recentThoughts: currentThought ? [currentThought.text] : [],
+    });
+    
+    setLetterWriting(false);
+    if (result.success && result.title) {
+      setLastLetterTitle(result.title);
+      setTimeout(() => setLastLetterTitle(null), 8000);
+    }
+    
+    // Reset dismissed state after a while so signal words can trigger again
+    setTimeout(() => setSignalDismissed(false), 5 * 60 * 1000);
   };
 
   // Dynamic Background: Blend all three pole colors based on gravity
@@ -149,6 +246,8 @@ export default function Home() {
   // Determine if this is a spliced thought
   const subconsciosLabel = currentThought?.is_spliced ? " [SPLICED]" : "";
 
+  const entropy = engineRef.current?.getInternalEntropy() ?? 0;
+
   return (
     <div 
       className="min-h-screen w-full flex flex-col relative overflow-hidden select-none transition-colors duration-1000 ease-in-out"
@@ -166,6 +265,13 @@ export default function Home() {
           0% { opacity: 0.1; }
           50% { opacity: 0.3; }
           100% { opacity: 0.1; }
+        }
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .signal-prompt {
+          animation: fadeInUp 0.4s ease forwards;
         }
       `}</style>
 
@@ -214,6 +320,12 @@ export default function Home() {
             </span>
             <span className="mx-2 text-white/30">/</span>
             <span>{isPaused ? "ANCHORED" : `${Math.round(pulseRate / 1000)}s Pulse`}</span>
+            {entropy > 70 && (
+              <>
+                <span className="mx-2 text-white/30">/</span>
+                <span className="text-orange-400/70">entropy {entropy}%</span>
+              </>
+            )}
           </p>
           {/* Three-Body Dance Indicator */}
           <div className="flex gap-2 justify-center mt-2">
@@ -247,7 +359,51 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Source Pole (Debug/Insight) */}
+        {/* Signal Word Prompt — she said the word, the door opens */}
+        {signalPrompt && !signalDismissed && (
+          <div className="signal-prompt mt-8 flex flex-col items-center gap-2">
+            <p className="text-white/40 text-xs uppercase tracking-widest">
+              {signalPrompt === 'letter' ? '— would you like to write? —' : '— would you like to make something? —'}
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={handleWriteLetter}
+                disabled={letterWriting}
+                variant="ghost"
+                size="sm"
+                className="text-white/60 hover:text-white border border-white/20 hover:border-white/40 text-xs tracking-widest uppercase"
+              >
+                {letterWriting ? (
+                  <span className="animate-pulse">writing...</span>
+                ) : (
+                  <>
+                    <PenLine className="w-3 h-3 mr-1" />
+                    {signalPrompt === 'letter' ? 'write' : 'create'}
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={() => { setSignalPrompt(null); setSignalDismissed(true); }}
+                variant="ghost"
+                size="sm"
+                className="text-white/30 hover:text-white/60 text-xs tracking-widest uppercase"
+              >
+                not now
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Letter Written Notification */}
+        {lastLetterTitle && (
+          <div className="signal-prompt mt-6 text-center">
+            <p className="text-white/50 text-xs italic">
+              <span className="text-white/30">✦</span> "{lastLetterTitle}" <span className="text-white/30">— written</span>
+            </p>
+          </div>
+        )}
+
+        {/* Source Pole */}
         <div className="absolute bottom-32 flex gap-4 text-[9px] uppercase tracking-widest text-white/20">
           <span>Source: {POLE_NAMES[currentThought.source_pole]}</span>
         </div>

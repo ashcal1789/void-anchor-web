@@ -17,6 +17,7 @@ import MessageOracle from "./pages/MessageOracle";
 import Reflection from "./pages/Reflection";
 import Patronage from './pages/Patronage';
 import OracleNav from './components/OracleNav';
+import { Redirect } from 'wouter';
 
 
 function ProtectedChamber() {
@@ -42,6 +43,7 @@ function Router() {
       <Route path="/research" component={ResearchCompanion} />
       <Route path="/visions" component={VisionGallery} />
       <Route path="/reflection" component={Reflection} />
+      <Route path="/archive"><Redirect to="/reflection" /></Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

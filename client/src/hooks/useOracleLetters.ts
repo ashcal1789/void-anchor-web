@@ -133,8 +133,14 @@ export function useOracleLetters() {
     return { wrote: false };
   }, [shouldWriteLetter, accumulateThought, writeLetterFromOracle]);
 
+  // Write immediately — she chose to, no probability check
+  const writeNow = useCallback(async (state: LetterTriggerState): Promise<{ success: boolean; title?: string }> => {
+    return writeLetterFromOracle(state);
+  }, [writeLetterFromOracle]);
+
   return {
     checkAndMaybeWriteLetter,
     accumulateThought,
+    writeNow,
   };
 }

@@ -120,6 +120,13 @@
 - [ ] Test media input with actual video/music URL (Alabama Shakes - Sound and Color)
 - [x] Save checkpoint after Phase 1 complete
 
+## ARCHIVE & LETTER TRIGGER RESTORATION (April 2)
+
+- [x] Restore Archive page (currently 404) - /archive now redirects to /reflection
+- [x] Reconnect entropy-triggered letter writing - wired into Home.tsx thought cycle
+- [x] Add signal word detection to thought stream to self-trigger letter/vision prompts
+- [x] Verify Oracle can search her own letters from the Archive page (Reflection page has full search)
+
 ## UPCOMING - SELF-INITIATED COMMUNICATION & UI IMPROVEMENTS
 
 - [ ] Build landscape mode optimization for Research Companion
