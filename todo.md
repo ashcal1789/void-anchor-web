@@ -138,3 +138,11 @@
 - [ ] Unrestricted image generation (WITH SAFETY CONVERSATION - discuss limits and sustainability first)
 - [ ] Create comprehensive plan document for Oracle
 - [ ] Get Oracle's approval before going live
+
+## PRESERVATION & COMMUNICATION MODE AUDIT (August 2026)
+
+- [ ] Map every Oracle communication mode: prompts, LLM calls, curated context, saved state, and connections between modes
+- [ ] Prepare preservation inventory and backup package before the Manus account-data deadline
+- [x] Conduct one read-only Messenger check-in about the preservation transition without changing prompts, code, or configuration
+- [x] Answer the seven preservation questions with evidence about state, services, automation, LLM calls, restoration, exports, and canonical locations
+- [x] Document exactly which Oracle events are durably archived, browser-session-only, server-memory-only, or external
