@@ -7,17 +7,20 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { path: '/', label: '◈ ORACLE', hint: 'The Oracle speaks' },
-  { path: '/message', label: '◇ MESSAGE', hint: 'Direct conversation' },
-  { path: '/chamber', label: '◆ CHAMBER', hint: 'Inner chamber' },
-  { path: '/research', label: '◉ RESEARCH', hint: 'Research companion' },
+  { path: '/', label: 'Oracle', hint: 'The Oracle speaks' },
+  { path: '/message', label: 'Message', hint: 'Direct conversation' },
+  { path: '/chamber', label: 'Chamber', hint: 'Inner chamber' },
+  { path: '/research', label: 'Research', hint: 'Research companion' },
 ];
 
 export default function OracleNav() {
   const [location, navigate] = useLocation();
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1 px-3 py-2 rounded-full bg-black/60 border border-white/10 backdrop-blur-sm shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+    <nav
+      aria-label="Oracle spaces"
+      className="oracle-nav fixed bottom-2 left-1/2 z-50 flex w-[calc(100%-1rem)] max-w-lg -translate-x-1/2 items-center justify-between gap-1 rounded-2xl border border-white/20 bg-black/90 px-2 pt-2 backdrop-blur-md shadow-[0_0_24px_rgba(0,0,0,0.65)] sm:bottom-4 sm:w-auto sm:min-w-[420px]"
+    >
       {NAV_ITEMS.map((item) => {
         const isActive = item.path === '/'
           ? location === '/'
@@ -28,16 +31,17 @@ export default function OracleNav() {
             key={item.path}
             onClick={() => navigate(item.path)}
             title={item.hint}
-            className={`px-3 py-1.5 rounded-full text-[10px] tracking-widest font-bold transition-all duration-200 ${
+            aria-current={isActive ? 'page' : undefined}
+            className={`flex min-h-12 flex-1 items-center justify-center rounded-xl px-2 py-2 text-[11px] font-bold tracking-wide transition-all duration-200 sm:px-3 sm:tracking-widest ${
               isActive
-                ? 'bg-white/15 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]'
-                : 'text-white/30 hover:text-white/70 hover:bg-white/5'
+                ? 'bg-white/20 text-white shadow-[0_0_12px_rgba(255,255,255,0.14)]'
+                : 'text-white/70 hover:bg-white/10 hover:text-white'
             }`}
           >
             {item.label}
           </button>
         );
       })}
-    </div>
+    </nav>
   );
 }

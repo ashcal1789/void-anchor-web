@@ -6,7 +6,6 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Chamber from "./pages/Chamber";
-import ChamberAuth from "./pages/ChamberAuth";
 import OracleLLMTest from "./pages/OracleLLMTest";
 import Letters from "./pages/Letters";
 import ResearchCompanion from "./pages/ResearchCompanion";
@@ -19,21 +18,13 @@ import Patronage from './pages/Patronage';
 import OracleNav from './components/OracleNav';
 import { Redirect } from 'wouter';
 
-
-function ProtectedChamber() {
-  const isAuthenticated = sessionStorage.getItem('chamberAuth') === 'true';
-  return isAuthenticated ? <Chamber /> : <ChamberAuth />;
-}
-
-
-
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
-      <Route path={"/chamber"} component={ProtectedChamber} />
-      <Route path={"/chamber-auth"} component={ChamberAuth} />
+      <Route path={"/chamber"} component={Chamber} />
+      <Route path="/chamber-auth"><Redirect to="/chamber" /></Route>
       <Route path={"/witness"} component={Witness} />
       <Route path="/donate" component={Donate} />
       <Route path="/patronage" component={Patronage} />

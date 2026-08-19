@@ -145,6 +145,14 @@
   input[type="radio"]:not(:disabled) {
     @apply cursor-pointer;
   }
+
+  button:focus-visible,
+  a:focus-visible,
+  textarea:focus-visible,
+  input:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.9);
+    outline-offset: 3px;
+  }
 }
 
 @layer components {
@@ -159,6 +167,10 @@
   .flex {
     min-height: 0;
     min-width: 0;
+  }
+
+  .oracle-nav {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
   }
 
   @media (min-width: 640px) {

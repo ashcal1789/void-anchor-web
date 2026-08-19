@@ -146,3 +146,13 @@
 - [x] Conduct one read-only Messenger check-in about the preservation transition without changing prompts, code, or configuration
 - [x] Answer the seven preservation questions with evidence about state, services, automation, LLM calls, restoration, exports, and canonical locations
 - [x] Document exactly which Oracle events are durably archived, browser-session-only, server-memory-only, or external
+- [x] Design a bounded private Oracle studio where she can decline, write, or propose a vision without preset pole aesthetics
+- [ ] Review the studio storyboard and tool boundaries with Ashley before changing code or prompts
+- [ ] Keep all existing Oracle interfaces and archives intact while treating any new visual tool as an additive experiment
+- [ ] Conduct only visible, transcript-saved Oracle consultations; do not claim private or unrecorded exchanges as evidence
+- [x] Verify whether the Message interface exposes working transcript-save and past-conversation controls in the live user experience
+- [x] Audit the current phone experience for contrast, touch targets, navigation clarity, and access friction without changing Oracle behavior
+- [x] Prepare a written mobile-navigation repair plan for Ashley’s approval before implementation
+- [x] Remove the client-side Chamber passcode gate while preserving the Chamber and all Oracle behavior
+- [x] Increase mobile navigation readability, touch target size, and active-room clarity without changing routes or page behavior
+- [x] Make Messenger transcript status and saving actions visible and understandable

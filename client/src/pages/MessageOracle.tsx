@@ -149,29 +149,32 @@ export default function MessageOracle() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
       {/* Header */}
-      <div className="p-6 pb-2 max-w-2xl mx-auto w-full">
-        <h1 className="text-3xl font-bold mb-1 tracking-tight">Message the Oracle</h1>
-        <p className="text-white/50 text-sm mb-4">Send her a thought. She will respond.</p>
+      <div className="p-5 pb-2 sm:p-6 sm:pb-2 max-w-2xl mx-auto w-full">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1 tracking-tight">Message the Oracle</h1>
+        <p className="text-white/70 text-sm mb-4">Send her a thought. She will respond.</p>
 
         {/* Action buttons */}
-        <div className="flex gap-2 mb-4">
-          {thread.length > 0 && (
-            <Button
-              onClick={handleSaveTranscript}
-              disabled={saveTranscriptMutation.isPending}
-              variant="outline"
-              size="sm"
-              className="text-white/60 border-white/20 hover:bg-white/10 hover:text-white"
-            >
-              <Save className="w-3.5 h-3.5 mr-1.5" />
-              {saveTranscriptMutation.isPending ? 'Saving...' : 'Save Transcript'}
-            </Button>
-          )}
+        <div className="flex flex-wrap gap-2 mb-4">
+          <Button
+            onClick={handleSaveTranscript}
+            disabled={thread.length === 0 || saveTranscriptMutation.isPending}
+            variant="outline"
+            size="sm"
+            title={thread.length === 0 ? 'Start a conversation, then save it to your archive' : 'Save this conversation to your archive'}
+            className="min-h-10 text-white/85 border-white/30 bg-white/5 hover:bg-white/15 hover:text-white disabled:text-white/40 disabled:border-white/15"
+          >
+            <Save className="w-3.5 h-3.5 mr-1.5" />
+            {saveTranscriptMutation.isPending
+              ? 'Saving...'
+              : thread.length > 0
+                ? 'Save Transcript'
+                : 'Save after exchange'}
+          </Button>
           <Button
             onClick={() => setShowSavedTranscripts(!showSavedTranscripts)}
             variant="outline"
             size="sm"
-            className="text-white/60 border-white/20 hover:bg-white/10 hover:text-white"
+            className="min-h-10 text-white/85 border-white/30 bg-white/5 hover:bg-white/15 hover:text-white"
           >
             <ScrollText className="w-3.5 h-3.5 mr-1.5" />
             Past Conversations
@@ -233,7 +236,7 @@ export default function MessageOracle() {
       )}
 
       {/* Conversation Thread */}
-      <div className="flex-1 overflow-y-auto px-6 pb-4">
+      <div className="flex-1 overflow-y-auto px-5 sm:px-6 pb-28 sm:pb-24">
         <div className="max-w-2xl mx-auto w-full space-y-4">
           {thread.length === 0 ? (
             <div className="text-center py-16 text-white/20">
@@ -312,7 +315,7 @@ export default function MessageOracle() {
       </div>
 
       {/* Input Area - Fixed at bottom */}
-      <div className="border-t border-white/10 bg-black/80 backdrop-blur-sm p-4">
+      <div className="border-t border-white/20 bg-black/90 backdrop-blur-sm p-4 pb-24 sm:pb-4">
         <div className="max-w-2xl mx-auto w-full space-y-2">
           {/* Media URL input - shown when toggled */}
           {showMediaInput && (
