@@ -156,3 +156,47 @@
 - [x] Remove the client-side Chamber passcode gate while preserving the Chamber and all Oracle behavior
 - [x] Increase mobile navigation readability, touch target size, and active-room clarity without changing routes or page behavior
 - [x] Make Messenger transcript status and saving actions visible and understandable
+
+## COMPLETE PLAIN-TEXT PRESERVATION RECORD (August 2026)
+
+- [ ] Read every relevant source/runtime file and produce an evidence-indexed plain-text website map without inference from file names
+- [ ] Classify every claimed feature as verified working, implemented but unverified, disconnected, broken, or absent
+- [ ] Prepare a private plain-text configuration record containing all project credentials and service settings requested by Ashley
+- [ ] Organize and upload the complete plain-text preservation record to Ashley’s Google Drive
+- [x] Verify the active Manus Google Drive connector and use its authorized upload path for the private preservation folder
+
+## LIVE PROJECT INVENTORY DECK (August 2026)
+
+- [x] Prepare a slide deck from the read-only live-project forensic inventory
+- [x] Include architecture, communication modes, memory boundaries, agency constraints, and unresolved access gaps with evidence labels
+
+## VERBATIM MODEL-PROMPT AUDIT (August 2026)
+
+- [ ] Extract and document the exact live Messenger and Research prompt text, model calls, and local-data boundaries without changing project behavior
+- [x] Trace the local DNA corpus definition and every active mode that does or does not read it, with verbatim code evidence
+
+## UNIFIED EVIDENCE RECORD (August 2026)
+
+- [ ] Consolidate the live system inventory, exact prompts, local DNA audit, runtime behavior, constraints, and unknowns into one readable cited document
+
+## COMPLETE FIGMA-READY TECHNICAL HANDOFF (August 2026)
+
+- [ ] Inventory every source, configuration, dependency, route, component, handler, server procedure, storage path, model call, and legacy/unconnected pathway
+- [ ] Produce a Figma-ready information architecture and screen/component specification, clearly separated from raw technical logic
+- [ ] Package complete raw-source manifests, evidence maps, and unresolved gaps without modifying the live website
+- [ ] Include the literal current node_modules dependency tree, pnpm lockfile, and installed-package/version inventory in the private handoff package
+- [ ] Document every secret and encryption-related key by location, exposure boundary, service role, ownership status, and restoration dependency without printing raw values into chat
+
+## HANDOFF AND RECONSTRUCTION PACKAGE (August 2026)
+
+- [x] Produce a self-contained HANDOFF_AND_RECONSTRUCTION.md with complete file tree, sandbox manifest, runtime setup, TODO state, integration schema, architecture, workarounds, and unknowns
+- [ ] Expand HANDOFF_AND_RECONSTRUCTION.md with an exhaustive project file/directory manifest and explicit node_modules boundary
+- [ ] Add the full current todo.md contents verbatim to HANDOFF_AND_RECONSTRUCTION.md
+- [x] Assemble a complete private downloadable archive containing source, hidden configuration, literal node_modules, Git/local artifacts, and HANDOFF_AND_RECONSTRUCTION.md
+- [x] Verify the archive contents and integrity manifest before delivery
+- [x] Upload the completed private reconstruction archive and HANDOFF_AND_RECONSTRUCTION.md to Ashley’s Google Drive after confirming connector access
+- [x] Upload HANDOFF_AND_RECONSTRUCTION.md as a standalone readable Drive file beside the reconstruction archive
+- [x] Verify the standalone Google Drive handoff document exists and is accessible
+- [x] Keep all delivered handoff documents and the reconstruction archive unencrypted, ordinary, and readable outside Manus
+- [x] Verify the local archive checksum, readable contents, and absence of ZIP encryption
+- [x] Independently verify the local archive checksum, readable contents, and any Google Drive copy before claiming delivery
