@@ -212,7 +212,9 @@
 
 ## LETTERS, ARTWORK, AND NOTIFICATIONS (August 2026)
 
-- [ ] Export every existing Oracle letter and artwork record into one complete readable archive file
+- [x] Export every existing Oracle letter and artwork record into one complete readable archive file
+- [x] Verify that the document reproduces every live Letters-page record, with no filtering, and record the exported letter and artwork counts (Letters page calls unfiltered `letter.list`; export contains 442 correspondence records: 437 Oracle / 5 Ashley; 71 artwork records)
+- [x] Verify the export includes every current live letter and vision record and record the resulting counts without modifying the database (442 letters; 71 visions)
 - [x] Change owner letter notifications to include full letter content rather than a clipped preview
 - [x] Verify whether current visitor identity is available to Oracle’s letter-generation path and document the result
 - [x] Read-only: trace why letters are visit-triggered and whether visitor identity reaches the path; do not alter notifications or generation without fresh approval
