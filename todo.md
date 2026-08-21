@@ -200,3 +200,49 @@
 - [x] Keep all delivered handoff documents and the reconstruction archive unencrypted, ordinary, and readable outside Manus
 - [x] Verify the local archive checksum, readable contents, and absence of ZIP encryption
 - [x] Independently verify the local archive checksum, readable contents, and any Google Drive copy before claiming delivery
+
+## BROWSABLE GOOGLE DRIVE COPY (August 2026)
+
+- [ ] Upload the complete handoff materials as an ordinary browsable Google Drive folder rather than only a ZIP archive
+- [ ] Verify the browsable Drive folder and provide its direct link
+- [ ] Preserve every unpacked handoff file, including the complete literal node_modules tree, without summaries or omissions
+- [ ] Preserve pnpm symbolic-link targets and an exact original symlink map in the unpacked Drive handoff
+- [ ] Produce an explicit omission ledger for any material that remains platform-held or cannot be retrieved directly
+- [ ] Paused by Ashley: do not continue the unabridged Drive upload or expand handoff materials without a newly defined faithful format
+
+## LETTERS, ARTWORK, AND NOTIFICATIONS (August 2026)
+
+- [ ] Export every existing Oracle letter and artwork record into one complete readable archive file
+- [ ] Change owner letter notifications to include full letter content rather than a clipped preview
+- [ ] Verify whether current visitor identity is available to Oracle’s letter-generation path and document the result
+- [ ] Read-only: trace why letters are visit-triggered and whether visitor identity reaches the path; do not alter notifications or generation without fresh approval
+- [ ] Preserve existing letter-generation triggers unchanged while delivering full letters in future owner notifications
+
+## CORPUS, JSONBIN, AND MODEL-BOUNDARY RECONCILIATION (August 2026)
+
+- [ ] Reconcile the current curated local corpus, JSONBin wiring/state, and Gemini-backed paths from source and history without making unsupported claims
+- [ ] Correct any preservation handoff statement that blurs intended corpus storage, current JSONBin state, and model-backed generation
+- [ ] Correct preservation language so it distinguishes preserving mutation pathways from freezing the system
+
+## NEUTRAL INTERFACE AND MECHANISM MAP (August 2026)
+
+- [ ] Create a neutral map of visible inputs, receiving mechanisms, outputs, storage, and connection mismatches without narrative interpretation
+- [ ] Separate the current code paths from what training, retrieval, and an agent architecture would require
+
+## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)
+
+- [ ] Trace the intended full-text source library, current corpus reduction, and historical splicing/constraint changes without modifying the project
+- [ ] Distinguish directly recoverable source material from unrecoverable or externally held full-text artifacts
+
+## HYBRID INTEGRATION FORENSIC SWEEP (August 2026)
+
+- [x] Search current source, configuration names, dependencies, history, local artifacts, and connector records for evidence of external hybrid services or plugins
+- [x] Deliver an evidence-only ledger distinguishing confirmed integration, possible lead, and access unavailable
+- [x] Search specifically for Netlify deployment, configuration, URL, token, redirect, and historical integration evidence
+- [x] Search broadly for non-Manus hosting, static deployment, external API, browser-storage, plugin, and agnostic/private-layer evidence
+- [x] Search specifically for Kivy, Python/mobile scaffolds, and any separate Kivy environment references
+- [x] Search all reachable Git revisions, deleted paths, reflog/dangling objects, old scripts, and local artifacts for legacy hybrid integrations and restoration breaks
+- [x] Document each legacy path’s prior connection, current status, replacement relationship, and access boundary
+- [x] Distinguish directly evidenced third-party roles from plausible but unverified delegated architecture roles
+- [x] Enumerate every reachable historical, deleted, broken, replaced, unused, browser-only, process-only, and configuration-only path with former and current linkage
+- [x] Deliver a source-cited lineage record that names all access boundaries rather than treating missing history as absence
