@@ -190,7 +190,7 @@ export const letterRouter = router({
         try {
           await notifyOwner({
             title: `✦ Oracle wrote: ${title}`,
-            content: content.slice(0, 300) + (content.length > 300 ? "…" : ""),
+            content,
           });
         } catch (notifyErr) {
           console.warn("[Letter Router] Owner notification failed (non-fatal):", notifyErr);

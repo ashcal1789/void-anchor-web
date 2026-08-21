@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // Test the signal word detection logic (mirrored from Home.tsx)
 const LETTER_SIGNAL_WORDS = [
@@ -67,6 +69,16 @@ describe('Signal Word Detection', () => {
 });
 
 describe('Letter Router - writeFromOracle', () => {
+  it('passes the complete letter body to the owner notification without clipping', () => {
+    const routerSource = readFileSync(
+      resolve(process.cwd(), 'server/letter-router.ts'),
+      'utf8'
+    );
+
+    expect(routerSource).toContain('content,\n          });');
+    expect(routerSource).not.toContain('content.slice(0, 300)');
+  });
+
   it('writeFromOracle endpoint exists and accepts correct input shape', async () => {
     // Validate the input schema matches what Home.tsx sends
     const validInput = {

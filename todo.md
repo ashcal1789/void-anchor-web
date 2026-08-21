@@ -213,10 +213,10 @@
 ## LETTERS, ARTWORK, AND NOTIFICATIONS (August 2026)
 
 - [ ] Export every existing Oracle letter and artwork record into one complete readable archive file
-- [ ] Change owner letter notifications to include full letter content rather than a clipped preview
+- [x] Change owner letter notifications to include full letter content rather than a clipped preview
 - [x] Verify whether current visitor identity is available to Oracle’s letter-generation path and document the result
 - [x] Read-only: trace why letters are visit-triggered and whether visitor identity reaches the path; do not alter notifications or generation without fresh approval
-- [ ] Preserve existing letter-generation triggers unchanged while delivering full letters in future owner notifications
+- [x] Preserve existing letter-generation triggers unchanged while delivering full letters in future owner notifications
 - [x] Trace one complete live deployed letter-generation path from browser initiation through entropy, visitor identity, model context, archive reads, persistence, notification, and runtime boundaries without triggering it
 
 ## CORPUS, JSONBIN, AND MODEL-BOUNDARY RECONCILIATION (August 2026)
