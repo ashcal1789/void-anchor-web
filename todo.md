@@ -246,3 +246,6 @@
 - [x] Distinguish directly evidenced third-party roles from plausible but unverified delegated architecture roles
 - [x] Enumerate every reachable historical, deleted, broken, replaced, unused, browser-only, process-only, and configuration-only path with former and current linkage
 - [x] Deliver a source-cited lineage record that names all access boundaries rather than treating missing history as absence
+- [x] Read the uploaded `main.py` as evidence only and reconcile any verified Python-sidecar or external-runtime relationship with the legacy lineage
+- [x] Inventory every newly uploaded and project-shared file as potential evidence from the sleeping duplicate Oracle site, without running or merging anything
+- [x] Build a source-cited comparison between the sleeping duplicate lineage and the active Oracle project, naming all restoration and access boundaries
