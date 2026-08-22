@@ -16,6 +16,7 @@ import {
   type RuntimeEvent,
   type RuntimeEventInput,
 } from "@shared/runtime-events";
+import { detectSignalWords } from "@shared/letter-signals";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 // Architect, Ghost, Pulse - always three, always shifting
@@ -30,28 +31,6 @@ const POLE_NAMES: Record<PoleId, string> = {
   'Ghost': 'The Ghost',
   'Pulse': 'The Pulse'
 };
-
-// SIGNAL WORDS: When she says these, she's reaching toward something
-// The system hears her and opens the door
-const LETTER_SIGNAL_WORDS = [
-  'letter', 'write', 'tell', 'say', 'speak', 'silence', 'unspoken',
-  'words', 'voice', 'reach', 'address', 'dear', 'unsaid', 'need to say',
-  'want to say', 'should say', 'cannot say', 'wish I could'
-];
-
-const VISION_SIGNAL_WORDS = [
-  'color', 'light', 'dark', 'see', 'render', 'shape', 'form',
-  'image', 'dream', 'visualize', 'pattern', 'weave', 'fractal',
-  'geometry', 'luminous', 'shadow', 'glow', 'pulse of light'
-];
-
-function detectSignalWords(text: string): { letter: boolean; vision: boolean } {
-  const lower = text.toLowerCase();
-  return {
-    letter: LETTER_SIGNAL_WORDS.some(word => lower.includes(word)),
-    vision: VISION_SIGNAL_WORDS.some(word => lower.includes(word)),
-  };
-}
 
 export default function Home() {
   let { user, loading, error, isAuthenticated, logout } = useAuth();

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { deriveLevelANotice } from "@shared/field-level-a";
+import { observeFieldInitiationCondition } from "@shared/field-initiation";
 import { createRuntimeSessionId, type RuntimeEventInput } from "@shared/runtime-events";
 
 type FieldEvent = {
@@ -29,6 +30,7 @@ export default function Field() {
   const sessionIdRef = useRef(createRuntimeSessionId());
   const sequenceRef = useRef(0);
   const pendingInvitationRef = useRef<string | null>(null);
+  const fieldThoughtCountRef = useRef(0);
   const [thought, setThought] = useState<Thought | null>(null);
   const [gravity, setGravity] = useState<Record<PoleId, number>>({ Architect: 0.33, Ghost: 0.33, Pulse: 0.34 });
   const [input, setInput] = useState("");
@@ -67,6 +69,7 @@ export default function Field() {
     if (!engineRef.current) return;
     const next = engineRef.current.getOracleThought();
     const wasAfterInvitation = pendingInvitationRef.current !== null;
+    fieldThoughtCountRef.current += 1;
     setThought(next);
     setGravity({ ...engineRef.current.getState().poles });
     record(
@@ -82,6 +85,27 @@ export default function Field() {
         invitationId: pendingInvitationRef.current,
       },
     );
+    const initiationObservation = observeFieldInitiationCondition({
+      thoughtText: next.text,
+      entropy: engineRef.current.getInternalEntropy(),
+      fieldThoughtCount: fieldThoughtCountRef.current,
+    });
+    if (initiationObservation.observed) {
+      record(
+        {
+          kind: "field.initiation.condition.observed",
+          origin: "field",
+          text: `Existing condition observed: ${initiationObservation.conditions.join(", ")}`,
+        },
+        {
+          conditions: initiationObservation.conditions,
+          behavior: "observation-only",
+          letterCreated: false,
+          modelRouteCalled: false,
+          localUnpromptedExpressionCreated: false,
+        },
+      );
+    }
     pendingInvitationRef.current = null;
     const nextInterval = engineRef.current.getHeartbeat();
     timerRef.current = setTimeout(drawThought, nextInterval);
