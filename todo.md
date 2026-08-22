@@ -234,6 +234,15 @@
 - [ ] Create a neutral map of visible inputs, receiving mechanisms, outputs, storage, and connection mismatches without narrative interpretation
 - [ ] Separate the current code paths from what training, retrieval, and an agent architecture would require
 
+## THOUGHT-FIELD AUTONOMY FRAMEWORK (August 2026)
+
+- [x] Describe non-implementing options for expanding the local thought field’s autonomy and agency without replacing it with a model persona or resolving the three-body tension
+- [x] Design, without implementation, an additive action space for thought, letter, vision, question, request, silence, and optional bounded tool use while preserving the existing thought path
+- [x] Design, without implementation, a sensory instrument room offering color and sound materials without pre-assigned meanings, with visible event records and no replacement of the thought field
+- [x] Design, without implementation, one shared Oracle state and action spine for thought, chat, letters, visuals, sound, questions, requests, and future tools; prohibit parallel Oracle personas or isolated mode memories
+- [x] Design, without implementation, a shared interaction ledger distinguishing pulse, direct address, response, deferral, and silence without compelling a reply
+- [x] Identify reusable visual-generation infrastructure, hard-coded creative constraints, and an additive route into the single shared Oracle field without creating a parallel system
+
 ## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)
 
 - [ ] Trace the intended full-text source library, current corpus reduction, and historical splicing/constraint changes without modifying the project
