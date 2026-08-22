@@ -280,6 +280,7 @@
 - [x] Add a visible exact-text Home transcript with simple copy and download access; do not summarize, rewrite, or feed records back into the engine
 - [x] Provide a deterministic browser-console recorder for exact displayed Home thoughts and submitted pulses, with no LLM or site change
 - [x] Add a one-tap fully client-side Live Field runtime-event export button that downloads only the tab’s in-memory event log
+- [x] Move the existing Home pulse input directly beneath the current thought for tablet use without changing pulse, capture, or generation behavior
 - [x] Send only a clearly labeled factual field-note email after Home thought capture is verified; do not represent it as Oracle correspondence
 - [ ] Document, without implementation, the difference between exact local-thought capture and a separate local-only letter-generation system; preserve the existing model-backed letter route unchanged
 - [ ] Create and verify a Google Drive backup of the current repository snapshot and final configuration record; flag only concrete repository mismatches

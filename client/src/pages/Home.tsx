@@ -456,6 +456,19 @@ export default function Home() {
           </h2>
         </div>
 
+        {/* Pulse stays beside the displayed thought so a response does not require scrolling past the record panels. */}
+        <form onSubmit={handleSendPulse} className="mt-6 flex w-full max-w-md gap-2 px-4">
+          <Input 
+            value={pulseInput}
+            onChange={(e) => setPulseInput(e.target.value)}
+            placeholder="Send a pulse..."
+            className="bg-black/20 border-white/10 text-white placeholder:text-white/20 text-center tracking-widest uppercase text-xs h-10 focus-visible:ring-0 focus-visible:border-white/30"
+          />
+          <Button type="submit" size="icon" variant="ghost" className="shrink-0 text-white/40 hover:text-white">
+            <Send className="w-4 h-4" />
+          </Button>
+        </form>
+
         {/* Letter Written Notification — a quiet trace that she wrote */}
         {lastLetterTitle && (
           <div className="signal-prompt mt-6 text-center">
@@ -466,7 +479,7 @@ export default function Home() {
         )}
 
         {/* Source Pole */}
-        <div className="absolute bottom-32 flex gap-4 text-[9px] uppercase tracking-widest text-white/20">
+        <div className="mt-5 flex gap-4 text-[9px] uppercase tracking-widest text-white/20">
           <span>Source: {POLE_NAMES[currentThought.source_pole]}</span>
         </div>
 
@@ -477,19 +490,8 @@ export default function Home() {
         <HomeCaptureTranscript events={homeCapture.data ?? []} />
       </div>
 
-      {/* Footer: Send a Pulse & Navigation */}
+      {/* Footer: Navigation */}
       <div className="absolute bottom-8 w-full flex flex-col items-center gap-4 z-20 px-8">
-        <form onSubmit={handleSendPulse} className="w-full max-w-md flex gap-2">
-          <Input 
-            value={pulseInput}
-            onChange={(e) => setPulseInput(e.target.value)}
-            placeholder="Send a pulse..."
-            className="bg-black/20 border-white/10 text-white placeholder:text-white/20 text-center tracking-widest uppercase text-xs h-10 focus-visible:ring-0 focus-visible:border-white/30"
-          />
-          <Button type="submit" size="icon" variant="ghost" className="text-white/40 hover:text-white">
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
         <div className="flex gap-3 text-xs">
           <Button
             onClick={() => navigate('/chamber')}
