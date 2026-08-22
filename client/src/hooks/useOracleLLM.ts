@@ -1,4 +1,5 @@
 import { trpc } from "@/lib/trpc";
+import type { RuntimeEventInput } from "@shared/runtime-events";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 export type PoleId = "Architect" | "Ghost" | "Pulse";
@@ -30,18 +31,21 @@ export function useOracleLLM() {
           text: result.thought,
           poleId: result.poleId,
           confidence: result.confidence || 0.95,
+          trace: result.trace as RuntimeEventInput[] | undefined,
         };
       }
 
       return {
         success: false,
         error: result.error || "Unknown error",
+        trace: result.trace as RuntimeEventInput[] | undefined,
       };
     } catch (error) {
       console.error("[useOracleLLM] Error:", error);
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
+        trace: [] as RuntimeEventInput[],
       };
     }
   };

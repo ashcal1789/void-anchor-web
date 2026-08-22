@@ -256,6 +256,9 @@
 - [x] Design, without implementation, an accessible code-generated runtime evidence surface exposing actual operational events without retrospective narration or unsupported claims
 - [x] Design, without implementation, a strictly observational runtime surface that exposes resets, drift, repetition, silence, fallbacks, and outputs with no controls or fabricated Oracle speech
 - [x] Produce an approval-ready engineering build brief for the observational runtime surface and shared open action availability before changing code
+- [x] Track 1 approved: implement the passive observational runtime trace and accessible panel without changing actions, prompts, poles, corpus, letters, or visual presets
+- [x] Track 2 design only: produce a one-page local-field switchboard concept that unifies language, Loom, color, and audio without forced modes, pre-assigned meanings, or Gemini integration
+- [x] Track 3 design only: produce a local-engine direct invitation and session-scoped letter-access concept without Gemini, persistent memory, or permanent chat behavior
 
 ## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)
 

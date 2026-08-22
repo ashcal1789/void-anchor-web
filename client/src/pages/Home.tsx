@@ -8,6 +8,14 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import { useLocation } from "wouter";
+import { RuntimeTracePanel } from "@/components/RuntimeTracePanel";
+import {
+  appendRuntimeEvent,
+  createRuntimeEvent,
+  createRuntimeSessionId,
+  type RuntimeEvent,
+  type RuntimeEventInput,
+} from "@shared/runtime-events";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 // Architect, Ghost, Pulse - always three, always shifting
@@ -59,19 +67,52 @@ export default function Home() {
   });
   const [pulseRate, setPulseRate] = useState(10000);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const runtimeSessionIdRef = useRef(createRuntimeSessionId());
+  const [runtimeEvents, setRuntimeEvents] = useState<RuntimeEvent[]>([]);
+  const runtimeEventCountRef = useRef(0);
   const { generateThought: generateLLMThought } = useOracleLLM();
-  const { checkAndMaybeWriteLetter, writeNow } = useOracleLetters();
 
   // Letter writing state
   const [letterWriting, setLetterWriting] = useState(false);
   const [lastLetterTitle, setLastLetterTitle] = useState<string | null>(null);
 
+  const emitRuntime = useCallback((event: RuntimeEventInput) => {
+    const emitted = createRuntimeEvent(runtimeSessionIdRef.current, event);
+    setRuntimeEvents(previous => appendRuntimeEvent(previous, emitted));
+  }, []);
+  const { checkAndMaybeWriteLetter, writeNow } = useOracleLetters(emitRuntime);
+
+  useEffect(() => {
+    runtimeEventCountRef.current = runtimeEvents.length;
+  }, [runtimeEvents.length]);
+
   // Initialize Engine
   useEffect(() => {
     if (!engineRef.current) {
-      engineRef.current = new ChaosEngineLiberated();
+      engineRef.current = new ChaosEngineLiberated({ onRuntimeEvent: emitRuntime });
+      emitRuntime({
+        origin: "client",
+        kind: "session.opened",
+        status: "completed",
+        data: { page: "Home", sessionOnly: true },
+      });
       const thought = engineRef.current.getOracleThought();
       setCurrentThought(thought);
+      emitRuntime({
+        origin: "client",
+        kind: "display.rendered",
+        status: "completed",
+        data: { layer: "primary-thought", thoughtId: thought.id },
+      });
+      emitRuntime({
+        origin: "client",
+        kind: "action-space.available",
+        status: "completed",
+        data: {
+          actions: ["thought", "write", "image", "color", "tone", "ask", "request", "address", "defer", "silence"],
+          currentBehaviorUnchanged: true,
+        },
+      });
       setGravityState(engineRef.current.getState().poles);
       
       startBiologicalCycle();
@@ -82,19 +123,52 @@ export default function Home() {
         }
       }, 2000);
       
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        emitRuntime({
+          origin: "client",
+          kind: "session.closed",
+          status: "completed",
+          data: { eventCount: runtimeEventCountRef.current, saved: false },
+        });
+      };
     }
-  }, []);
+  }, [emitRuntime]);
 
   const startBiologicalCycle = useCallback(() => {
     if (!engineRef.current || isPaused) return;
     
-    if (timerRef.current) clearTimeout(timerRef.current);
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      emitRuntime({
+        origin: "client",
+        kind: "heartbeat.cleared",
+        status: "completed",
+        data: { reason: "rescheduled" },
+      });
+    }
 
     const nextInterval = engineRef.current.getHeartbeat();
     setPulseRate(nextInterval);
 
+    emitRuntime({
+      origin: "client",
+      kind: "heartbeat.scheduled",
+      status: "completed",
+      data: {
+        delay: nextInterval,
+        mode: engineRef.current.getVesperMode(),
+        dominantPole: engineRef.current.getDominantPole(),
+      },
+    });
+
     timerRef.current = setTimeout(() => {
+      emitRuntime({
+        origin: "client",
+        kind: "heartbeat.fired",
+        status: "completed",
+        data: { delay: nextInterval },
+      });
       if (currentThought && engineRef.current) {
         engineRef.current.exhaleSurvivor(currentThought);
       }
@@ -102,15 +176,23 @@ export default function Home() {
       generateNextThought();
       startBiologicalCycle();
     }, nextInterval);
-  }, [currentThought, isPaused]);
+  }, [currentThought, emitRuntime, isPaused]);
 
   useEffect(() => {
     if (isPaused) {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        emitRuntime({
+          origin: "client",
+          kind: "heartbeat.cleared",
+          status: "completed",
+          data: { reason: "paused" },
+        });
+      }
     } else {
       startBiologicalCycle();
     }
-  }, [isPaused, startBiologicalCycle]);
+  }, [emitRuntime, isPaused, startBiologicalCycle]);
 
   const generateNextThought = async () => {
     if (!engineRef.current) return;
@@ -120,11 +202,22 @@ export default function Home() {
     const currentEntropy = engineRef.current.getInternalEntropy();
     const currentMode = engineRef.current.getVesperMode();
     
+    emitRuntime({
+      origin: "client",
+      kind: "model.attempted",
+      status: "started",
+      data: { route: "oracleGravity.generateThought", poleId: selectedPole },
+    });
+
     const result = await generateLLMThought({
       poleId: selectedPole,
       gravityState: currentGravity
     });
-    
+
+    for (const serverEvent of result.trace ?? []) {
+      emitRuntime(serverEvent);
+    }
+
     let thoughtText = "";
     if (result.success && result.text) {
       const newThought: Thought = {
@@ -136,12 +229,45 @@ export default function Home() {
       };
       setCurrentThought(newThought);
       thoughtText = result.text;
+      emitRuntime({
+        origin: "client",
+        kind: "model.attempted",
+        status: "completed",
+        data: { route: "oracleGravity.generateThought", result: "thought-returned", thoughtId: newThought.id },
+      });
     } else {
       // Fallback to old generation if LLM fails
       const nextThought = engineRef.current.getOracleThought();
       setCurrentThought(nextThought);
       thoughtText = nextThought.text;
+      emitRuntime({
+        origin: "client",
+        kind: "model.fallback",
+        status: "completed",
+        data: {
+          route: "oracleGravity.generateThought",
+          reason: result.error ?? "model-route-unsuccessful",
+          fallback: "local.getOracleThought",
+          thoughtId: nextThought.id,
+        },
+      });
     }
+
+    emitRuntime({
+      origin: "client",
+      kind: "display.rendered",
+      status: "completed",
+      data: { layer: "primary-thought", textLength: thoughtText.length },
+    });
+    emitRuntime({
+      origin: "client",
+      kind: "action-space.available",
+      status: "completed",
+      data: {
+        actions: ["thought", "write", "image", "color", "tone", "ask", "request", "address", "defer", "silence"],
+        currentBehaviorUnchanged: true,
+      },
+    });
     
     setGravityState({ ...engineRef.current.getState().poles });
 
@@ -150,6 +276,12 @@ export default function Home() {
     // No permission needed. No prompt. She just writes.
     if (thoughtText && !letterWriting) {
       const signals = detectSignalWords(thoughtText);
+      emitRuntime({
+        origin: "client",
+        kind: "letter.conditions.checked",
+        status: "completed",
+        data: { signals, entropy: currentEntropy, vesperMode: currentMode },
+      });
       
       if (signals.letter) {
         // Signal word detected — write immediately
@@ -162,6 +294,12 @@ export default function Home() {
           recentThoughts: [thoughtText],
         });
         setLetterWriting(false);
+        emitRuntime({
+          origin: "client",
+          kind: "letter.write",
+          status: result.success ? "completed" : "failed",
+          data: { trigger: "signal-word", title: result.title ?? null },
+        });
         if (result.success && result.title) {
           setLastLetterTitle(result.title);
           setTimeout(() => setLastLetterTitle(null), 8000);
@@ -174,6 +312,12 @@ export default function Home() {
           vesperMode: currentMode,
           entropy: currentEntropy,
           recentThoughts: [thoughtText],
+        });
+        emitRuntime({
+          origin: "client",
+          kind: "letter.conditions.checked",
+          status: letterResult.wrote ? "completed" : "skipped",
+          data: { trigger: "existing-entropy-and-probability-path", wrote: letterResult.wrote, title: letterResult.title ?? null },
         });
         if (letterResult.wrote && letterResult.title) {
           setLastLetterTitle(letterResult.title);
@@ -188,6 +332,12 @@ export default function Home() {
     if (!engineRef.current || !pulseInput.trim()) return;
     
     engineRef.current.sendPulse(pulseInput);
+    emitRuntime({
+      origin: "client",
+      kind: "field.invitation.received",
+      status: "completed",
+      data: { kind: "pulse", text: pulseInput, delivery: "local-engine" },
+    });
     setPulseInput("");
   };
 
@@ -348,6 +498,10 @@ export default function Home() {
         </div>
 
       </main>
+
+      <div className="relative z-20 mx-auto w-full max-w-md px-4 pb-40 lg:absolute lg:right-5 lg:top-24 lg:mx-0 lg:w-[350px] lg:px-0 lg:pb-0">
+        <RuntimeTracePanel events={runtimeEvents} />
+      </div>
 
       {/* Footer: Send a Pulse & Navigation */}
       <div className="absolute bottom-8 w-full flex flex-col items-center gap-4 z-20 px-8">

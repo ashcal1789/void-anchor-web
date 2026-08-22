@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import dnaData from './dna_final.json';
+import type { RuntimeEventInput } from "@shared/runtime-events";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 // Architect (Pole_A), Ghost (Pole_B), Pulse (Pole_C)
@@ -39,16 +40,24 @@ export interface ChaosState {
   lastShiftTime: number;
 }
 
+type RuntimeObserver = (event: RuntimeEventInput) => void;
+
+type ChaosEngineOptions = {
+  onRuntimeEvent?: RuntimeObserver;
+};
+
 export class ChaosEngineLiberated {
   private state: ChaosState;
   private dna: any;
   private shedCount: number = 0;
   public isConnected: boolean = false;
+  private readonly runtimeObserver?: RuntimeObserver;
 
   private BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID;
   private MASTER_KEY = import.meta.env.VITE_JSONBIN_MASTER_KEY;
 
-  constructor() {
+  constructor(options: ChaosEngineOptions = {}) {
+    this.runtimeObserver = options.onRuntimeEvent;
     this.dna = dnaData;
     this.state = {
       poles: {
@@ -72,7 +81,40 @@ export class ChaosEngineLiberated {
       lastShiftTime: Date.now()
     };
     
+    this.emitRuntime("engine.initialized", "completed", {
+      state: this.runtimeState(),
+      jsonbinConfigured: Boolean(this.MASTER_KEY && this.BIN_ID),
+    });
     this.inhaleShadow();
+  }
+
+  private runtimeState() {
+    return {
+      poles: { ...this.state.poles },
+      vesperMode: this.state.vesperMode,
+      internalEntropy: this.getInternalEntropy(),
+      shadowCount: this.state.shadow.length,
+      pulsePresent: Boolean(this.state.pulse_input),
+    };
+  }
+
+  private emitRuntime(
+    kind: string,
+    status: RuntimeEventInput["status"],
+    data: Record<string, unknown>
+  ) {
+    this.runtimeObserver?.({ origin: "client", kind, status, data });
+  }
+
+  private emitThought(thought: Thought, data: Record<string, unknown>) {
+    this.emitRuntime("local.thought.selected", "completed", {
+      ...data,
+      thoughtId: thought.id,
+      selectedPole: thought.source_pole,
+      isSpliced: Boolean(thought.is_spliced),
+      state: this.runtimeState(),
+    });
+    return thought;
   }
 
   // --- LT GREY PROTOCOL: ORGANIC SHIFTING ---
@@ -96,6 +138,7 @@ export class ChaosEngineLiberated {
     }
     
     // Only shift if it won't make any pole too dominant or too weak
+    const before = { ...this.state.poles };
     const newFromWeight = this.state.poles[fromPole] - shiftAmount;
     const newToWeight = this.state.poles[toPole] + shiftAmount;
     
@@ -115,6 +158,14 @@ export class ChaosEngineLiberated {
     for (const pole of poles) {
       this.state.poles[pole] /= total;
     }
+
+    this.emitRuntime("engine.shift", "completed", {
+      before,
+      after: { ...this.state.poles },
+      fromPole,
+      toPole,
+      shiftAmount,
+    });
   }
 
   // --- LIBERATED GENERATION: NO TEMPLATES, NO FORCED LOGIC ---
@@ -133,13 +184,18 @@ export class ChaosEngineLiberated {
       
       if (sentences.length > 0) {
         const text = sentences[Math.floor(Math.random() * sentences.length)];
-        return {
+        const thought: Thought = {
           id: uuidv4(),
           text: text,
           source_pole: selectedPole,
           timestamp: Date.now(),
           is_spliced: false
         };
+        return this.emitThought(thought, {
+          branch: "sample",
+          corpusSection: legacyPoleId,
+          sourceSentenceIndex: sentences.indexOf(text),
+        });
       }
     }
     
@@ -165,22 +221,31 @@ export class ChaosEngineLiberated {
       
       const text = sent1.slice(0, -1) + connector + sent2.toLowerCase();
       
-      return {
+      const thought: Thought = {
         id: uuidv4(),
         text: text,
         source_pole: pole1,
         timestamp: Date.now(),
         is_spliced: true
       };
+      return this.emitThought(thought, {
+        branch: "splice",
+        firstCorpusSection: legacyPole1,
+        firstSourceSentenceIndex: sentences1.indexOf(sent1),
+        secondCorpusSection: legacyPole2,
+        secondSourceSentenceIndex: sentences2.indexOf(sent2),
+        connector,
+      });
     }
     
-    return {
+    const thought: Thought = {
       id: uuidv4(),
       text: "void",
       source_pole: "Architect",
       timestamp: Date.now(),
       is_spliced: false
     };
+    return this.emitThought(thought, { branch: "empty-corpus-fallback" });
   }
 
   // Map new pole IDs to legacy DNA structure
@@ -216,6 +281,7 @@ export class ChaosEngineLiberated {
     this.state.internalEntropy = Math.min(1.0, this.state.internalEntropy + (silenceDuration / 120000));
     
     // Mode transitions based on silence duration
+    const beforeMode = this.state.vesperMode;
     if (silenceDuration < 180000) {
       this.state.vesperMode = 'Generative';
       this.state.contemplationStartTime = null;
@@ -229,6 +295,15 @@ export class ChaosEngineLiberated {
         this.state.vesperMode = 'Witness';
         this.state.contemplationStartTime = now;
       }
+    }
+
+    if (beforeMode !== this.state.vesperMode) {
+      this.emitRuntime("field.mode.updated", "updated", {
+        beforeMode,
+        afterMode: this.state.vesperMode,
+        silenceDuration,
+        entropy: this.getInternalEntropy(),
+      });
     }
   }
 
@@ -267,6 +342,7 @@ export class ChaosEngineLiberated {
   // --- SEND A PULSE: SHIFT GRAVITY ---
   // User input influences the dance
   public sendPulse(input: string): void {
+    const before = { ...this.state.poles };
     const shift = input.length % 3;
     const targetPole: PoleId = shift === 0 ? 'Architect' : shift === 1 ? 'Ghost' : 'Pulse';
     
@@ -278,11 +354,19 @@ export class ChaosEngineLiberated {
     }
     
     this.state.pulse_input = input;
+    this.emitRuntime("pulse.received", "completed", {
+      input,
+      lengthModulo: shift,
+      targetPole,
+      before,
+      after: { ...this.state.poles },
+    });
   }
 
   // --- ANCESTRAL FIELD (JSONBin) ---
   private async inhaleShadow() {
     if (!this.MASTER_KEY || !this.BIN_ID) return;
+    this.emitRuntime("jsonbin.inhale", "started", { configured: true });
     try {
       const res = await fetch(`https://api.jsonbin.io/v3/b/${this.BIN_ID}/latest`, {
         headers: { 'X-Master-Key': this.MASTER_KEY }
@@ -292,10 +376,24 @@ export class ChaosEngineLiberated {
         if (data.record && Array.isArray(data.record.shadow)) {
           this.state.shadow = data.record.shadow;
           this.isConnected = true;
+          this.emitRuntime("jsonbin.inhale", "completed", {
+            connected: true,
+            shadowCount: this.state.shadow.length,
+          });
+        } else {
+          this.emitRuntime("jsonbin.inhale", "failed", {
+            connected: false,
+            status: res.status,
+            reason: "shadow-record-not-available",
+          });
         }
       }
     } catch (e) {
       console.error("Failed to inhale shadow:", e);
+      this.emitRuntime("jsonbin.inhale", "failed", {
+        connected: false,
+        reason: e instanceof Error ? e.message : "unknown-error",
+      });
     }
   }
 
@@ -303,6 +401,10 @@ export class ChaosEngineLiberated {
     if (!this.isConnected) return;
     
     this.state.shadow.push(thought);
+    this.emitRuntime("jsonbin.shadow.appended", "completed", {
+      thoughtId: thought.id,
+      shadowCount: this.state.shadow.length,
+    });
     
     this.shedCount++;
     if (this.shedCount >= 5) {
@@ -344,6 +446,10 @@ export class ChaosEngineLiberated {
     // CRITICAL: Reset silence timer when user acknowledges
     this.state.lastUserInputTime = Date.now();
     this.state.internalEntropy = Math.max(0.3, this.state.internalEntropy - 0.2);
+    this.emitRuntime("field.acknowledgment.received", "completed", {
+      acknowledgment,
+      state: this.runtimeState(),
+    });
   }
 
   public getChamberAcknowledgments(): string[] {

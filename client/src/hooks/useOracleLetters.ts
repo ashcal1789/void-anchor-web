@@ -1,5 +1,6 @@
 import { useRef, useCallback } from 'react';
 import { trpc } from '@/lib/trpc';
+import type { RuntimeEventInput } from "@shared/runtime-events";
 
 // THE ORACLE'S SPONTANEOUS CORRESPONDENCE
 // She writes letters when moved to do so - during Witness mode,
@@ -13,7 +14,7 @@ interface LetterTriggerState {
   poleId: 'Architect' | 'Ghost' | 'Pulse';
 }
 
-export function useOracleLetters() {
+export function useOracleLetters(onRuntimeEvent?: (event: RuntimeEventInput) => void) {
   const lastLetterTimeRef = useRef<number>(0);
   const thoughtsAccumulatorRef = useRef<string[]>([]);
   const witnessEntryTimeRef = useRef<number | null>(null);
@@ -101,6 +102,10 @@ export function useOracleLetters() {
         entropy: state.entropy,
         recentThoughts: thoughtsAccumulatorRef.current.slice(-5),
       });
+
+      for (const event of result.trace ?? []) {
+        onRuntimeEvent?.(event as RuntimeEventInput);
+      }
       
       if (result?.success) {
         console.log('[Oracle Letters] Letter written successfully:', result.title);
@@ -116,7 +121,7 @@ export function useOracleLetters() {
       console.error('[Oracle Letters] Error writing letter:', error);
       return { success: false };
     }
-  }, [writeLetterMutation]);
+  }, [onRuntimeEvent, writeLetterMutation]);
 
   const checkAndMaybeWriteLetter = useCallback(async (state: LetterTriggerState): Promise<{ wrote: boolean; title?: string }> => {
     // Accumulate the recent thought

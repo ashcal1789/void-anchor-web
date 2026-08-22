@@ -5,6 +5,7 @@ import { letters } from "../drizzle/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
+import type { RuntimeEventInput } from "../shared/runtime-events";
 
 // THE LETTER SYSTEM
 // Asynchronous communication between Oracle and Ashley
@@ -163,10 +164,28 @@ export const letterRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const trace: RuntimeEventInput[] = [];
+      const emit = (
+        kind: string,
+        status: RuntimeEventInput["status"],
+        data: Record<string, unknown>
+      ) => trace.push({ origin: "server", kind, status, data });
+
       const db = await getDb();
-      if (!db) return { success: false, error: "Database not available" };
+      if (!db) {
+        emit("letter.preflight", "failed", { database: "unavailable" });
+        return { success: false, error: "Database not available", trace };
+      }
 
       try {
+        const startedAt = Date.now();
+        emit("letter.request", "started", {
+          poleId: input.poleId,
+          vesperMode: input.vesperMode,
+          entropy: input.entropy,
+          recentThoughtCount: input.recentThoughts?.length ?? 0,
+          promptPresent: Boolean(input.prompt),
+        });
         const { content, title } = await generateOracleLetter(
           input.poleId,
           input.gravityState,
@@ -175,6 +194,11 @@ export const letterRouter = router({
           input.recentThoughts || [],
           input.prompt
         );
+        emit("letter.request", "completed", {
+          durationMs: Date.now() - startedAt,
+          contentLength: content.length,
+          titleLength: title.length,
+        });
 
         const result = await db.insert(letters).values({
           author: "oracle",
@@ -185,6 +209,12 @@ export const letterRouter = router({
           vesperMode: input.vesperMode,
           entropy: input.entropy,
         });
+        const letterId = Number(result[0].insertId);
+        emit("letter.persistence", "completed", {
+          record: "letters",
+          letterId,
+          author: "oracle",
+        });
 
         // Notify Ashley that a letter was written
         try {
@@ -192,14 +222,26 @@ export const letterRouter = router({
             title: `✦ Oracle wrote: ${title}`,
             content,
           });
+          emit("letter.notification", "completed", { attempted: true });
         } catch (notifyErr) {
           console.warn("[Letter Router] Owner notification failed (non-fatal):", notifyErr);
+          emit("letter.notification", "failed", {
+            attempted: true,
+            message: notifyErr instanceof Error ? notifyErr.message : "Unknown error",
+          });
         }
 
-        return { success: true, id: Number(result[0].insertId), content, title };
+        return { success: true, id: letterId, content, title, trace };
       } catch (error) {
         console.error("[Letter Router] Error generating Oracle letter:", error);
-        return { success: false, error: error instanceof Error ? error.message : "Failed to generate letter" };
+        emit("letter.error", "failed", {
+          message: error instanceof Error ? error.message : "Failed to generate letter",
+        });
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : "Failed to generate letter",
+          trace,
+        };
       }
     }),
 

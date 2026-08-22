@@ -20,6 +20,7 @@ import {
   type GravityState,
   type PoleId,
 } from "./oracle-gravity-engine";
+import type { RuntimeEventInput } from "../shared/runtime-events";
 
 export const oracleGravityRouter = router({
   generateThought: publicProcedure
@@ -32,18 +33,39 @@ export const oracleGravityRouter = router({
       })
     )
     .mutation(async ({ input }) => {
+      const trace: RuntimeEventInput[] = [];
+      const emit = (
+        kind: string,
+        status: RuntimeEventInput["status"],
+        data: Record<string, unknown>
+      ) => trace.push({ origin: "server", kind, status, data });
+
       try {
         const db = await getDb();
         if (!db) {
-          return { success: false, error: "Database not available" };
+          emit("gravity.preflight", "failed", { database: "unavailable" });
+          return { success: false, error: "Database not available", trace };
         }
 
         // Load current memory state
         const memoryResult = await db.select().from(oracleMemory).limit(1);
         const memory = memoryResult.length > 0 ? memoryResult[0] : null;
         if (!memory) {
-          return { success: false, error: "Oracle memory not initialized" };
+          emit("gravity.preflight", "failed", {
+            database: "available",
+            oracleMemory: "absent",
+          });
+          return { success: false, error: "Oracle memory not initialized", trace };
         }
+
+        emit("gravity.preflight", "completed", {
+          database: "available",
+          oracleMemory: "present",
+          requestedPole: input.poleId ?? null,
+          recentThoughtCount: input.recentThoughts?.length ?? 0,
+          acknowledgmentPresent: Boolean(input.acknowledgment),
+          vesperMode: input.vesperMode ?? memory.vesperMode,
+        });
 
         // Build current gravity state from memory
         const currentGravity: GravityState = {
@@ -58,6 +80,13 @@ export const oracleGravityRouter = router({
           : selectPoleByWeightedRandom(currentGravity);
 
         // Generate thought with full context
+        const modelStartedAt = Date.now();
+        emit("model.request", "started", {
+          route: "oracleGravity.generateThought",
+          model: "gemini-2.5-flash",
+          selectedPole,
+          messageContent: "redacted",
+        });
         const response = await generateOracleThought({
           poleId: selectedPole,
           gravityState: currentGravity,
@@ -65,6 +94,13 @@ export const oracleGravityRouter = router({
           acknowledgment: input.acknowledgment,
           vesperMode: input.vesperMode || (memory.vesperMode as any),
           internalEntropy: memory.entropy,
+        });
+        emit("model.request", "completed", {
+          route: "oracleGravity.generateThought",
+          model: "gemini-2.5-flash",
+          selectedPole,
+          durationMs: Date.now() - modelStartedAt,
+          outputLength: response.thought.length,
         });
 
         // Shift gravity after thought
@@ -85,6 +121,12 @@ export const oracleGravityRouter = router({
           })
           .where(eq(oracleMemory.id, memory.id));
 
+        emit("gravity.persistence", "completed", {
+          record: "oracleMemory",
+          fields: ["architectPole", "ghostPole", "pulsePole", "entropy", "lastSessionAt"],
+          entropy: newEntropy,
+        });
+
         console.log(
           `[Oracle Gravity] Thought from ${selectedPole}: ${formatGravityState(newGravity)} | Entropy: ${newEntropy.toFixed(1)}%`
         );
@@ -100,12 +142,17 @@ export const oracleGravityRouter = router({
           gravityState: newGravity,
           entropy: newEntropy,
           shouldExpress,
+          trace,
         };
       } catch (error) {
         console.error("[Oracle Gravity] Error generating thought:", error);
+        emit("gravity.error", "failed", {
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
         return {
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",
+          trace,
         };
       }
     }),
