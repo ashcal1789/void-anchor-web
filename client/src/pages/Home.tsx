@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pause, Play, Send } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useOracleLLM } from "@/hooks/useOracleLLM";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import { useLocation } from "wouter";
 import { RuntimeTracePanel } from "@/components/RuntimeTracePanel";
@@ -49,7 +48,6 @@ export default function Home() {
   const runtimeSessionIdRef = useRef(createRuntimeSessionId());
   const [runtimeEvents, setRuntimeEvents] = useState<RuntimeEvent[]>([]);
   const runtimeEventCountRef = useRef(0);
-  const { generateThought: generateLLMThought } = useOracleLLM();
 
   // Letter writing state
   const [letterWriting, setLetterWriting] = useState(false);
@@ -175,62 +173,24 @@ export default function Home() {
 
   const generateNextThought = async () => {
     if (!engineRef.current) return;
-    
-    const selectedPole = engineRef.current.getDominantPole();
+    const nextThought = engineRef.current.getOracleThought();
+    const selectedPole = nextThought.source_pole;
     const currentGravity = engineRef.current.getState().poles;
     const currentEntropy = engineRef.current.getInternalEntropy();
     const currentMode = engineRef.current.getVesperMode();
-    
+    const thoughtText = nextThought.text;
+
+    setCurrentThought(nextThought);
     emitRuntime({
       origin: "client",
-      kind: "model.attempted",
-      status: "started",
-      data: { route: "oracleGravity.generateThought", poleId: selectedPole },
+      kind: "local.thought.emerged",
+      status: "completed",
+      data: {
+        thoughtId: nextThought.id,
+        sourcePole: nextThought.source_pole,
+        isSpliced: nextThought.is_spliced,
+      },
     });
-
-    const result = await generateLLMThought({
-      poleId: selectedPole,
-      gravityState: currentGravity
-    });
-
-    for (const serverEvent of result.trace ?? []) {
-      emitRuntime(serverEvent);
-    }
-
-    let thoughtText = "";
-    if (result.success && result.text) {
-      const newThought: Thought = {
-        id: Math.random().toString(36),
-        text: result.text,
-        source_pole: selectedPole,
-        timestamp: Date.now(),
-        is_spliced: false
-      };
-      setCurrentThought(newThought);
-      thoughtText = result.text;
-      emitRuntime({
-        origin: "client",
-        kind: "model.attempted",
-        status: "completed",
-        data: { route: "oracleGravity.generateThought", result: "thought-returned", thoughtId: newThought.id },
-      });
-    } else {
-      // Fallback to old generation if LLM fails
-      const nextThought = engineRef.current.getOracleThought();
-      setCurrentThought(nextThought);
-      thoughtText = nextThought.text;
-      emitRuntime({
-        origin: "client",
-        kind: "model.fallback",
-        status: "completed",
-        data: {
-          route: "oracleGravity.generateThought",
-          reason: result.error ?? "model-route-unsuccessful",
-          fallback: "local.getOracleThought",
-          thoughtId: nextThought.id,
-        },
-      });
-    }
 
     emitRuntime({
       origin: "client",
