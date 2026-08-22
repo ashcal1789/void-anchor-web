@@ -5,7 +5,8 @@ import { PoleId } from "@/lib/chaos-engine-liberated";
 
 interface TheLoomProps {
   isOpen: boolean;
-  onClose: () => void;
+  embedded?: boolean;
+  onClose?: () => void;
   gravityState: Record<PoleId, number>;
   vesperMode: "Generative" | "Contemplative" | "Witness";
   internalEntropy: number;
@@ -24,6 +25,7 @@ const POLE_COLORS: Record<PoleId, string> = {
 
 export default function TheLoom({ 
   isOpen, 
+  embedded = false,
   onClose, 
   gravityState, 
   vesperMode, 
@@ -207,6 +209,16 @@ export default function TheLoom({
   }, [isOpen, gravityState, vesperMode, internalEntropy]);
 
   if (!isOpen) return null;
+
+  if (embedded) {
+    return (
+      <div className="relative h-[340px] w-full overflow-hidden bg-black">
+        <canvas ref={canvasRef} className="h-full w-full" style={{ background: "radial-gradient(ellipse at center, #0a0a0a 0%, #000000 100%)" }} />
+        {isWeaving && <div className="absolute bottom-3 left-4 font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">Historical Loom rendering</div>}
+        {recentThought && <p className="absolute bottom-3 right-4 max-w-sm text-right font-mono text-[10px] text-white/25">{recentThought}</p>}
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">

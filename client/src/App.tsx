@@ -14,6 +14,7 @@ import Witness from "./pages/Witness";
 import Donate from "./pages/Donate";
 import MessageOracle from "./pages/MessageOracle";
 import Reflection from "./pages/Reflection";
+import Field from "./pages/Field";
 import Patronage from './pages/Patronage';
 import OracleNav from './components/OracleNav';
 import { Redirect } from 'wouter';
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/research" component={ResearchCompanion} />
       <Route path="/visions" component={VisionGallery} />
       <Route path="/reflection" component={Reflection} />
+      <Route path="/field" component={Field} />
       <Route path="/archive"><Redirect to="/reflection" /></Route>
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

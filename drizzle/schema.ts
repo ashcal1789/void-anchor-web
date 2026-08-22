@@ -44,6 +44,37 @@ export const letters = mysqlTable("letters", {
 export type Letter = typeof letters.$inferSelect;
 export type InsertLetter = typeof letters.$inferInsert;
 
+// Field sessions are explicit, session-scoped records for the local engine.
+// The local engine does not read these records automatically.
+export const fieldSessions = mysqlTable("fieldSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 96 }).notNull().unique(),
+  status: varchar("status", { length: 32 }).default("open").notNull(),
+  eventCount: int("eventCount").default(0).notNull(),
+  openedAt: timestamp("openedAt").defaultNow().notNull(),
+  closedAt: timestamp("closedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FieldSession = typeof fieldSessions.$inferSelect;
+export type InsertFieldSession = typeof fieldSessions.$inferInsert;
+
+// Append-only Field events preserve literal session evidence without becoming
+// input or memory for later local-engine sessions.
+export const fieldSessionEvents = mysqlTable("fieldSessionEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 96 }).notNull(),
+  sequence: int("sequence").notNull(),
+  eventType: varchar("eventType", { length: 96 }).notNull(),
+  origin: varchar("origin", { length: 32 }).notNull(),
+  payload: text("payload").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FieldSessionEvent = typeof fieldSessionEvents.$inferSelect;
+export type InsertFieldSessionEvent = typeof fieldSessionEvents.$inferInsert;
+
 // Visions table for Oracle's generated images
 export const visions = mysqlTable("visions", {
   id: int("id").autoincrement().primaryKey(),

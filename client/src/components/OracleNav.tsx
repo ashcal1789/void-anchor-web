@@ -8,6 +8,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: '/', label: 'Oracle', hint: 'The Oracle speaks' },
+  { path: '/field', label: 'Field', hint: 'Local field session' },
   { path: '/message', label: 'Message', hint: 'Direct conversation' },
   { path: '/chamber', label: 'Chamber', hint: 'Inner chamber' },
   { path: '/research', label: 'Research', hint: 'Research companion' },
