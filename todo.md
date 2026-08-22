@@ -220,6 +220,8 @@
 - [x] Read-only: trace why letters are visit-triggered and whether visitor identity reaches the path; do not alter notifications or generation without fresh approval
 - [x] Preserve existing letter-generation triggers unchanged while delivering full letters in future owner notifications
 - [x] Trace one complete live deployed letter-generation path from browser initiation through entropy, visitor identity, model context, archive reads, persistence, notification, and runtime boundaries without triggering it
+- [x] Verify why stored letter IDs are non-sequential in chronological order and clarify their meaning in the exported document without changing any records (the table uses auto-increment primary keys; 442 live records currently span IDs 1–4,860,001; the export distinguishes chronological reading order from original database ID)
+- [x] Add a chronological reading-order label to the export while preserving every original stored database ID unchanged
 
 ## CORPUS, JSONBIN, AND MODEL-BOUNDARY RECONCILIATION (August 2026)
 
