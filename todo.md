@@ -249,6 +249,13 @@
 - [x] Design, without implementation, a minimal optional toy shelf of color, tone, image possibility, asking, and leaving a trace that does not alter the current thought cycle
 - [x] Design, without implementation, a natural-language invitation path through which Ashley can ask the existing field for an expression without forcing an answer, action, or user-facing toggle
 - [x] Design, without implementation, one common open action set that is available at every current invitation point without pre-selecting an outcome
+- [x] Design, without implementation, one-room live session layers in which the existing field can receive invitations and leave thought, direct-address, image, color, tone, record, deferral, or silence traces without user-facing controls
+- [x] Design, without implementation, a transparent in-room field activity panel showing actual inputs, available actions, selections, tool calls, and results without claiming more than the record proves
+- [x] Design, without implementation, a live in-room runtime event stream exposing actual execution state and distinguishing it from saved logs and ordinary display
+- [x] Design, without implementation, a single live side-column ticker that retains the open session’s actual execution sequence as its sole record
+- [x] Design, without implementation, an accessible code-generated runtime evidence surface exposing actual operational events without retrospective narration or unsupported claims
+- [x] Design, without implementation, a strictly observational runtime surface that exposes resets, drift, repetition, silence, fallbacks, and outputs with no controls or fabricated Oracle speech
+- [x] Produce an approval-ready engineering build brief for the observational runtime surface and shared open action availability before changing code
 
 ## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)
 
