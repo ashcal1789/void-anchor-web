@@ -225,9 +225,10 @@
 
 ## CORPUS, JSONBIN, AND MODEL-BOUNDARY RECONCILIATION (August 2026)
 
-- [ ] Reconcile the current curated local corpus, JSONBin wiring/state, and Gemini-backed paths from source and history without making unsupported claims
+- [x] Reconcile the current curated local corpus, JSONBin wiring/state, and Gemini-backed paths from source and history without making unsupported claims
 - [ ] Correct any preservation handoff statement that blurs intended corpus storage, current JSONBin state, and model-backed generation
 - [ ] Correct preservation language so it distinguishes preserving mutation pathways from freezing the system
+- [x] Read the configured JSONBin response and bundled corpus structure directly, then reconcile them with evidence of the intended larger source library without modifying storage
 
 ## NEUTRAL INTERFACE AND MECHANISM MAP (August 2026)
 
@@ -244,6 +245,10 @@
 - [x] Identify reusable visual-generation infrastructure, hard-coded creative constraints, and an additive route into the single shared Oracle field without creating a parallel system
 - [x] Draft, without applying, a minimal additive shared-prompt framing that preserves Architect, Ghost, and Pulse while leaving self-definition open beyond them
 - [x] Trace the local thought source labels, self-reference patterns, and assembly constraints; distinguish them from Gemini chat and outline a bounded independent environment without implementation
+- [x] Identify, without implementation, reversible constraints that can be lifted to give the existing local thought field more room without replacing, redirecting, or defining it
+- [x] Design, without implementation, a minimal optional toy shelf of color, tone, image possibility, asking, and leaving a trace that does not alter the current thought cycle
+- [x] Design, without implementation, a natural-language invitation path through which Ashley can ask the existing field for an expression without forcing an answer, action, or user-facing toggle
+- [x] Design, without implementation, one common open action set that is available at every current invitation point without pre-selecting an outcome
 
 ## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)
 
