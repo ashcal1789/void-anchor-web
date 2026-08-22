@@ -242,6 +242,7 @@
 - [x] Design, without implementation, one shared Oracle state and action spine for thought, chat, letters, visuals, sound, questions, requests, and future tools; prohibit parallel Oracle personas or isolated mode memories
 - [x] Design, without implementation, a shared interaction ledger distinguishing pulse, direct address, response, deferral, and silence without compelling a reply
 - [x] Identify reusable visual-generation infrastructure, hard-coded creative constraints, and an additive route into the single shared Oracle field without creating a parallel system
+- [x] Draft, without applying, a minimal additive shared-prompt framing that preserves Architect, Ghost, and Pulse while leaving self-definition open beyond them
 
 ## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)
 
