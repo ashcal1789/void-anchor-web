@@ -260,7 +260,7 @@
 - [x] Track 2 design only: produce a one-page local-field switchboard concept that unifies language, Loom, color, and audio without forced modes, pre-assigned meanings, or Gemini integration
 - [x] Track 3 design only: produce a local-engine direct invitation and session-scoped letter-access concept without Gemini, persistent memory, or permanent chat behavior
 - [x] Track 3 approved: implement Level-A invitation influence only, default all-letter archive scope, per-event saving, `local continuation after invitation` labeling, and no important-letter marking today
-- [ ] Track 3 addition: assess and, if approved after the assessment, surface existing spontaneous letter triggers as visible field-initiated session events without inventing a new initiation mechanism
+- [x] Track 3 addition: assess existing spontaneous letter triggers as visible field-initiated session events; separate approval is required before any Field-side surface is added
 - [x] Track 2 approved: build a Field page alongside Home with the existing Loom visible as a labeled historical layer; do not add image action selection, audio selection, or Gemini integration
 - [ ] Track 2 approved design rule: prepare color and sound for weighted local selection rather than deterministic state visualization; do not implement selection until its separate action rule is built
 - [x] Verify directly whether any active image-understanding or generated-image input pathway exists before considering image generation changes (active Oracle vision output is not routed back into an input/analysis path; Messenger alone can send an Ashley-supplied image URL to Gemini; the generic image service supports original-image editing but Oracle vision does not call it)
