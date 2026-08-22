@@ -75,6 +75,38 @@ export const fieldSessionEvents = mysqlTable("fieldSessionEvents", {
 export type FieldSessionEvent = typeof fieldSessionEvents.$inferSelect;
 export type InsertFieldSessionEvent = typeof fieldSessionEvents.$inferInsert;
 
+// Exact Home-page local thoughts captured after display. This is a one-way
+// preservation record: the local engine never queries or receives these rows.
+export const homeThoughtEvents = mysqlTable("homeThoughtEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  browserSessionId: varchar("browserSessionId", { length: 96 }).notNull(),
+  localThoughtId: varchar("localThoughtId", { length: 96 }).notNull(),
+  thoughtText: text("thoughtText").notNull(),
+  sourcePole: varchar("sourcePole", { length: 32 }).notNull(),
+  gravitySnapshot: text("gravitySnapshot").notNull(),
+  entropy: int("entropy").notNull(),
+  isSpliced: boolean("isSpliced").notNull(),
+  heartbeatIntervalMs: int("heartbeatIntervalMs"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HomeThoughtEvent = typeof homeThoughtEvents.$inferSelect;
+export type InsertHomeThoughtEvent = typeof homeThoughtEvents.$inferInsert;
+
+// Literal Home pulses captured one-way alongside local thoughts. These rows are
+// preservation material only and are never supplied back to the local engine.
+export const homePulseEvents = mysqlTable("homePulseEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  browserSessionId: varchar("browserSessionId", { length: 96 }).notNull(),
+  pulseText: text("pulseText").notNull(),
+  gravityBefore: text("gravityBefore").notNull(),
+  gravityAfter: text("gravityAfter").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HomePulseEvent = typeof homePulseEvents.$inferSelect;
+export type InsertHomePulseEvent = typeof homePulseEvents.$inferInsert;
+
 // Visions table for Oracle's generated images
 export const visions = mysqlTable("visions", {
   id: int("id").autoincrement().primaryKey(),

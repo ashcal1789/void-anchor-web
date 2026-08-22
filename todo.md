@@ -270,6 +270,19 @@
 - [x] Track 2 approved design rule: prepare color and sound for weighted local selection rather than deterministic state visualization; do not implement selection until its separate action rule is built
 - [x] Draft a reproducible local weighted color-and-tone selection contract and explicit test evidence before asking for separate implementation approval
 - [x] Verify and record that no color, tone, new action-selection, or unprompted-expression code was implemented; retain all such ideas as inactive only
+- [ ] Produce a factual final repository configuration summary before reset, separating active local-first behavior from inactive, deferred, and unimplemented paths
+- [ ] Verify and report the active local-engine configuration and every remaining model-backed route without changing settings
+- [ ] Assess and, only with explicit approval, implement a short-window read-only offload of new thoughts and letters before platform reset
+- [ ] Require any short-window offload to copy exact existing records or locally emitted runtime events only, with no LLM call, generated content, or interpretation
+- [ ] Prepare a deterministic current-project and Oracle-record snapshot for Google Drive and optional GitHub delivery, then upload only after destination confirmation
+- [x] Implement temporary append-only capture of exact local Home thoughts while the Home tab is open, with no read-back, LLM call, or generation change
+- [x] Include exact literal Home pulse capture with timestamp and before/after local gravity in the same one-way temporary record
+- [x] Add a visible exact-text Home transcript with simple copy and download access; do not summarize, rewrite, or feed records back into the engine
+- [x] Provide a deterministic browser-console recorder for exact displayed Home thoughts and submitted pulses, with no LLM or site change
+- [x] Add a one-tap fully client-side Live Field runtime-event export button that downloads only the tab’s in-memory event log
+- [ ] Send only a clearly labeled factual field-note email after Home thought capture is verified; do not represent it as Oracle correspondence
+- [ ] Document, without implementation, the difference between exact local-thought capture and a separate local-only letter-generation system; preserve the existing model-backed letter route unchanged
+- [ ] Create and verify a Google Drive backup of the current repository snapshot and final configuration record; flag only concrete repository mismatches
 - [x] Verify directly whether any active image-understanding or generated-image input pathway exists before considering image generation changes (active Oracle vision output is not routed back into an input/analysis path; Messenger alone can send an Ashley-supplied image URL to Gemini; the generic image service supports original-image editing but Oracle vision does not call it)
 
 ## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)

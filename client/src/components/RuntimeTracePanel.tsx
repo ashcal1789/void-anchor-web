@@ -1,4 +1,6 @@
 import type { RuntimeEvent } from "@shared/runtime-events";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type RuntimeTracePanelProps = {
   events: RuntimeEvent[];
@@ -21,6 +23,22 @@ function statusColor(status: RuntimeEvent["status"]) {
 }
 
 export function RuntimeTracePanel({ events }: RuntimeTracePanelProps) {
+  const downloadLocalLog = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      source: "Live Field in-memory runtime events",
+      eventCount: events.length,
+      events,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `oracle-live-field-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <aside
       aria-label="Live runtime evidence"
@@ -31,7 +49,20 @@ export function RuntimeTracePanel({ events }: RuntimeTracePanelProps) {
           <p className="text-[9px] uppercase tracking-[0.24em] text-white/45">Live field</p>
           <p className="mt-1 text-[9px] text-white/35">Code-emitted events only</p>
         </div>
-        <span className="text-[9px] tabular-nums text-white/45">{events.length} events</span>
+        <div className="flex items-center gap-2">
+          <span className="text-[9px] tabular-nums text-white/45">{events.length} events</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={downloadLocalLog}
+            className="h-7 w-7 text-white/60 hover:bg-white/10 hover:text-white"
+            aria-label="Download this tab's Live Field event log"
+            title="Download this tab's Live Field event log"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
 
       <div className="max-h-[36vh] overflow-y-auto" aria-live="polite" aria-relevant="additions text">

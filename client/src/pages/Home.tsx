@@ -8,6 +8,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useOracleLetters } from "@/hooks/useOracleLetters";
 import { useLocation } from "wouter";
 import { RuntimeTracePanel } from "@/components/RuntimeTracePanel";
+import { HomeCaptureTranscript } from "@/components/HomeCaptureTranscript";
 import {
   appendRuntimeEvent,
   createRuntimeEvent,
@@ -16,6 +17,7 @@ import {
   type RuntimeEventInput,
 } from "@shared/runtime-events";
 import { detectSignalWords } from "@shared/letter-signals";
+import { trpc } from "@/lib/trpc";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
 // Architect, Ghost, Pulse - always three, always shifting
@@ -48,6 +50,13 @@ export default function Home() {
   const runtimeSessionIdRef = useRef(createRuntimeSessionId());
   const [runtimeEvents, setRuntimeEvents] = useState<RuntimeEvent[]>([]);
   const runtimeEventCountRef = useRef(0);
+  const capturedThoughtIdsRef = useRef(new Set<string>());
+  const captureHomeThought = trpc.field.recordHomeThought.useMutation();
+  const captureHomePulse = trpc.field.recordHomePulse.useMutation();
+  const homeCapture = trpc.field.homeCapture.useQuery(
+    { browserSessionId: runtimeSessionIdRef.current },
+    { refetchInterval: 1000 }
+  );
 
   // Letter writing state
   const [letterWriting, setLetterWriting] = useState(false);
@@ -62,6 +71,23 @@ export default function Home() {
   useEffect(() => {
     runtimeEventCountRef.current = runtimeEvents.length;
   }, [runtimeEvents.length]);
+
+  // Preserve the literal result only after React has rendered it. This is
+  // intentionally one-way: no capture rows are fed back into the engine.
+  useEffect(() => {
+    if (!currentThought || !engineRef.current || capturedThoughtIdsRef.current.has(currentThought.id)) return;
+    capturedThoughtIdsRef.current.add(currentThought.id);
+    captureHomeThought.mutate({
+      browserSessionId: runtimeSessionIdRef.current,
+      localThoughtId: currentThought.id,
+      thoughtText: currentThought.text,
+      sourcePole: currentThought.source_pole,
+      gravitySnapshot: { ...engineRef.current.getState().poles },
+      entropy: engineRef.current.getInternalEntropy(),
+      isSpliced: Boolean(currentThought.is_spliced),
+      heartbeatIntervalMs: pulseRate,
+    });
+  }, [captureHomeThought, currentThought, pulseRate]);
 
   // Initialize Engine
   useEffect(() => {
@@ -269,13 +295,21 @@ export default function Home() {
   const handleSendPulse = (e: React.FormEvent) => {
     e.preventDefault();
     if (!engineRef.current || !pulseInput.trim()) return;
-    
-    engineRef.current.sendPulse(pulseInput);
+    const literalPulse = pulseInput.trim();
+    const gravityBefore = { ...engineRef.current.getState().poles };
+    engineRef.current.sendPulse(literalPulse);
+    const gravityAfter = { ...engineRef.current.getState().poles };
+    captureHomePulse.mutate({
+      browserSessionId: runtimeSessionIdRef.current,
+      pulseText: literalPulse,
+      gravityBefore,
+      gravityAfter,
+    });
     emitRuntime({
       origin: "client",
       kind: "field.invitation.received",
       status: "completed",
-      data: { kind: "pulse", text: pulseInput, delivery: "local-engine" },
+      data: { kind: "pulse", text: literalPulse, delivery: "local-engine" },
     });
     setPulseInput("");
   };
@@ -440,6 +474,7 @@ export default function Home() {
 
       <div className="relative z-20 mx-auto w-full max-w-md px-4 pb-40 lg:absolute lg:right-5 lg:top-24 lg:mx-0 lg:w-[350px] lg:px-0 lg:pb-0">
         <RuntimeTracePanel events={runtimeEvents} />
+        <HomeCaptureTranscript events={homeCapture.data ?? []} />
       </div>
 
       {/* Footer: Send a Pulse & Navigation */}
