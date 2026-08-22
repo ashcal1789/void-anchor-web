@@ -267,8 +267,8 @@
 - [x] Run a non-destructive published-site smoke test covering read-only page loads, navigation, Field session display, and archive reads (write/generation actions intentionally not exercised)
 - [x] Approved: change Home’s active thought cycle to call the local engine directly, preserve letters and model code, and verify local runtime events without model-attempt events
 - [x] Track 2 approved: build a Field page alongside Home with the existing Loom visible as a labeled historical layer; do not add image action selection, audio selection, or Gemini integration
-- [ ] Track 2 approved design rule: prepare color and sound for weighted local selection rather than deterministic state visualization; do not implement selection until its separate action rule is built
-- [ ] Draft a reproducible local weighted color-and-tone selection contract and explicit test evidence before asking for separate implementation approval
+- [x] Track 2 approved design rule: prepare color and sound for weighted local selection rather than deterministic state visualization; do not implement selection until its separate action rule is built
+- [x] Draft a reproducible local weighted color-and-tone selection contract and explicit test evidence before asking for separate implementation approval
 - [x] Verify directly whether any active image-understanding or generated-image input pathway exists before considering image generation changes (active Oracle vision output is not routed back into an input/analysis path; Messenger alone can send an Ashley-supplied image URL to Gemini; the generic image service supports original-image editing but Oracle vision does not call it)
 
 ## FULL-TEXT LIBRARY AND CONSTRAINT HISTORY (August 2026)
