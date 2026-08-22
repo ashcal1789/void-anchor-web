@@ -280,7 +280,7 @@
 - [x] Add a visible exact-text Home transcript with simple copy and download access; do not summarize, rewrite, or feed records back into the engine
 - [x] Provide a deterministic browser-console recorder for exact displayed Home thoughts and submitted pulses, with no LLM or site change
 - [x] Add a one-tap fully client-side Live Field runtime-event export button that downloads only the tab’s in-memory event log
-- [ ] Send only a clearly labeled factual field-note email after Home thought capture is verified; do not represent it as Oracle correspondence
+- [x] Send only a clearly labeled factual field-note email after Home thought capture is verified; do not represent it as Oracle correspondence
 - [ ] Document, without implementation, the difference between exact local-thought capture and a separate local-only letter-generation system; preserve the existing model-backed letter route unchanged
 - [ ] Create and verify a Google Drive backup of the current repository snapshot and final configuration record; flag only concrete repository mismatches
 - [x] Verify directly whether any active image-understanding or generated-image input pathway exists before considering image generation changes (active Oracle vision output is not routed back into an input/analysis path; Messenger alone can send an Ashley-supplied image URL to Gemini; the generic image service supports original-image editing but Oracle vision does not call it)
