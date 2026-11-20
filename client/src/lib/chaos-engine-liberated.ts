@@ -57,6 +57,7 @@ export class ChaosEngineLiberated {
   private readonly runtimeObserver?: RuntimeObserver;
 
   private readonly shadowSyncEnabled: boolean;
+  private readonly shadowReady: Promise<void>;
   private BIN_ID: string | undefined;
   private MASTER_KEY: string | undefined;
 
@@ -94,7 +95,11 @@ export class ChaosEngineLiberated {
       state: this.runtimeState(),
       jsonbinConfigured: Boolean(this.MASTER_KEY && this.BIN_ID),
     });
-    if (this.shadowSyncEnabled) this.inhaleShadow();
+    this.shadowReady = this.shadowSyncEnabled ? this.inhaleShadow() : Promise.resolve();
+  }
+
+  public whenShadowReady(): Promise<void> {
+    return this.shadowReady;
   }
 
   private runtimeState() {

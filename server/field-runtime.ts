@@ -32,6 +32,7 @@ export class ServerFieldRuntime {
   private heartbeatMs: number | null = null;
   private lastUpdatedAt: number | null = null;
   private started = false;
+  private historyOpeningOffered = false;
 
   constructor() {
     this.actionProtocol = new LocalInvitationActionProtocol({
@@ -83,6 +84,7 @@ export class ServerFieldRuntime {
     if (this.started) return;
     this.started = true;
     this.advance();
+    void this.engine.whenShadowReady().then(() => this.offerHistoryOpening());
   }
 
   stop(): void {
@@ -156,12 +158,18 @@ export class ServerFieldRuntime {
         modelUsed: "none",
       },
     });
+    this.timer = setTimeout(() => this.advance(), this.heartbeatMs);
+  }
+
+  private offerHistoryOpening(): void {
+    if (this.historyOpeningOffered) return;
+    this.historyOpeningOffered = true;
     this.actionProtocol.offerInvitation({
-      id: `history-${this.sequence}`,
+      id: "history-opening",
       source: "local-condition",
-      createdAt: this.lastUpdatedAt,
+      createdAt: Date.now(),
       toolId: "history.read.local",
-      text: "Prior Field material is available for local retrieval.",
+      text: "Prior Field material is available for one optional opening.",
     });
     void this.actionProtocol.runCycle().then((outcome) => {
       if (outcome.kind !== "use-tool" || outcome.toolId !== "history.read.local") return;
@@ -178,8 +186,6 @@ export class ServerFieldRuntime {
         },
       });
     });
-
-    this.timer = setTimeout(() => this.advance(), this.heartbeatMs);
   }
 
   private append(event: Omit<FieldRuntimeEvent, "sequence">): void {
