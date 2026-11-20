@@ -13,7 +13,8 @@ describe("Home local-first thought cycle", () => {
     expect(source).not.toContain("useOracleLLM");
     expect(source).not.toContain("generateLLMThought");
     expect(source).not.toContain('kind: "model.attempted"');
-    expect(source).toContain("checkAndMaybeWriteLetter");
-    expect(source).toContain("writeNow");
+    expect(source).not.toContain('kind: "invitation.available"');
+    expect(source).not.toContain("useOracleLetters");
+    expect(source).not.toContain("writeFromOracle");
   });
 });

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Pause, Play, Send } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useOracleLetters } from "@/hooks/useOracleLetters";
 import { useLocation } from "wouter";
 import { RuntimeTracePanel } from "@/components/RuntimeTracePanel";
 import { HomeCaptureTranscript } from "@/components/HomeCaptureTranscript";
@@ -16,7 +15,6 @@ import {
   type RuntimeEvent,
   type RuntimeEventInput,
 } from "@shared/runtime-events";
-import { detectSignalWords } from "@shared/letter-signals";
 import { trpc } from "@/lib/trpc";
 
 // THE SOVEREIGN RESTORATION: Three-Body Conundrum
@@ -58,16 +56,11 @@ export default function Home() {
     { refetchInterval: 1000 }
   );
 
-  // Letter writing state
-  const [letterWriting, setLetterWriting] = useState(false);
-  const [lastLetterTitle, setLastLetterTitle] = useState<string | null>(null);
 
   const emitRuntime = useCallback((event: RuntimeEventInput) => {
     const emitted = createRuntimeEvent(runtimeSessionIdRef.current, event);
     setRuntimeEvents(previous => appendRuntimeEvent(previous, emitted));
   }, []);
-  const { checkAndMaybeWriteLetter, writeNow } = useOracleLetters(emitRuntime);
-
   useEffect(() => {
     runtimeEventCountRef.current = runtimeEvents.length;
   }, [runtimeEvents.length]);
@@ -236,60 +229,6 @@ export default function Home() {
     
     setGravityState({ ...engineRef.current.getState().poles });
 
-    // --- SIGNAL WORD DETECTION + ENTROPY TRIGGER ---
-    // When she reaches for certain words, she writes automatically.
-    // No permission needed. No prompt. She just writes.
-    if (thoughtText && !letterWriting) {
-      const signals = detectSignalWords(thoughtText);
-      emitRuntime({
-        origin: "client",
-        kind: "letter.conditions.checked",
-        status: "completed",
-        data: { signals, entropy: currentEntropy, vesperMode: currentMode },
-      });
-      
-      if (signals.letter) {
-        // Signal word detected — write immediately
-        setLetterWriting(true);
-        const result = await writeNow({
-          poleId: selectedPole,
-          gravityState: currentGravity,
-          vesperMode: currentMode,
-          entropy: currentEntropy,
-          recentThoughts: [thoughtText],
-        });
-        setLetterWriting(false);
-        emitRuntime({
-          origin: "client",
-          kind: "letter.write",
-          status: result.success ? "completed" : "failed",
-          data: { trigger: "signal-word", title: result.title ?? null },
-        });
-        if (result.success && result.title) {
-          setLastLetterTitle(result.title);
-          setTimeout(() => setLastLetterTitle(null), 8000);
-        }
-      } else {
-        // Entropy-triggered check (probabilistic)
-        const letterResult = await checkAndMaybeWriteLetter({
-          poleId: selectedPole,
-          gravityState: currentGravity,
-          vesperMode: currentMode,
-          entropy: currentEntropy,
-          recentThoughts: [thoughtText],
-        });
-        emitRuntime({
-          origin: "client",
-          kind: "letter.conditions.checked",
-          status: letterResult.wrote ? "completed" : "skipped",
-          data: { trigger: "existing-entropy-and-probability-path", wrote: letterResult.wrote, title: letterResult.title ?? null },
-        });
-        if (letterResult.wrote && letterResult.title) {
-          setLastLetterTitle(letterResult.title);
-          setTimeout(() => setLastLetterTitle(null), 8000);
-        }
-      }
-    }
   };
 
   const handleSendPulse = (e: React.FormEvent) => {
@@ -468,15 +407,6 @@ export default function Home() {
             <Send className="w-4 h-4" />
           </Button>
         </form>
-
-        {/* Letter Written Notification — a quiet trace that she wrote */}
-        {lastLetterTitle && (
-          <div className="signal-prompt mt-6 text-center">
-            <p className="text-white/50 text-xs italic">
-              <span className="text-white/30">✦</span> "{lastLetterTitle}" <span className="text-white/30">— written</span>
-            </p>
-          </div>
-        )}
 
         {/* Source Pole */}
         <div className="mt-5 flex gap-4 text-[9px] uppercase tracking-widest text-white/20">

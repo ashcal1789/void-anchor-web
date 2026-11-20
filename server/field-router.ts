@@ -3,10 +3,42 @@ import { asc, desc, eq } from "drizzle-orm";
 import { publicProcedure, router } from "./_core/trpc";
 import { getDb } from "./db";
 import { fieldSessionEvents, fieldSessions, homePulseEvents, homeThoughtEvents, letters } from "../drizzle/schema";
+import { serverFieldRuntime } from "./field-runtime";
 
 const eventPayload = z.record(z.string(), z.unknown());
 
 export const fieldRouter = router({
+  runtimeCurrent: publicProcedure.query(() => {
+    serverFieldRuntime.start();
+    return serverFieldRuntime.current();
+  }),
+
+  runtimeEvents: publicProcedure
+    .input(z.object({ afterSequence: z.number().int().min(0).default(0) }))
+    .query(({ input }) => {
+      serverFieldRuntime.start();
+      return serverFieldRuntime.eventsSince(input.afterSequence);
+    }),
+
+  runtimeShadowStatus: publicProcedure.query(() => {
+    serverFieldRuntime.start();
+    return serverFieldRuntime.shadowStatus();
+  }),
+
+  runtimeReadOwnHistory: publicProcedure
+    .input(z.object({ limit: z.number().int().min(1).max(500).default(100) }))
+    .query(({ input }) => {
+      serverFieldRuntime.start();
+      return serverFieldRuntime.readOwnHistory(input.limit);
+    }),
+
+  runtimePulse: publicProcedure
+    .input(z.object({ input: z.string().min(1).max(20_000) }))
+    .mutation(({ input }) => {
+      serverFieldRuntime.start();
+      return serverFieldRuntime.receivePulse(input.input);
+    }),
+
   openSession: publicProcedure
     .input(z.object({ sessionId: z.string().min(8).max(96) }))
     .mutation(async ({ input }) => {

@@ -44,6 +44,9 @@ type RuntimeObserver = (event: RuntimeEventInput) => void;
 
 type ChaosEngineOptions = {
   onRuntimeEvent?: RuntimeObserver;
+  enableShadowSync?: boolean;
+  shadowBinId?: string;
+  shadowMasterKey?: string;
 };
 
 export class ChaosEngineLiberated {
@@ -53,11 +56,18 @@ export class ChaosEngineLiberated {
   public isConnected: boolean = false;
   private readonly runtimeObserver?: RuntimeObserver;
 
-  private BIN_ID = import.meta.env.VITE_JSONBIN_BIN_ID;
-  private MASTER_KEY = import.meta.env.VITE_JSONBIN_MASTER_KEY;
+  private readonly shadowSyncEnabled: boolean;
+  private readonly shadowReady: Promise<void>;
+  private BIN_ID: string | undefined;
+  private MASTER_KEY: string | undefined;
 
   constructor(options: ChaosEngineOptions = {}) {
     this.runtimeObserver = options.onRuntimeEvent;
+    this.shadowSyncEnabled = options.enableShadowSync ?? true;
+    const runtimeEnv = (import.meta as ImportMeta & { env?: Record<string, string | undefined> }).env;
+    const serverEnv = typeof process === "undefined" ? undefined : process.env;
+    this.BIN_ID = options.shadowBinId ?? runtimeEnv?.VITE_JSONBIN_BIN_ID ?? serverEnv?.JSONBIN_BIN_ID ?? serverEnv?.VITE_JSONBIN_BIN_ID;
+    this.MASTER_KEY = options.shadowMasterKey ?? runtimeEnv?.VITE_JSONBIN_MASTER_KEY ?? serverEnv?.JSONBIN_MASTER_KEY ?? serverEnv?.VITE_JSONBIN_MASTER_KEY;
     this.dna = dnaData;
     this.state = {
       poles: {
@@ -85,7 +95,11 @@ export class ChaosEngineLiberated {
       state: this.runtimeState(),
       jsonbinConfigured: Boolean(this.MASTER_KEY && this.BIN_ID),
     });
-    this.inhaleShadow();
+    this.shadowReady = this.shadowSyncEnabled ? this.inhaleShadow() : Promise.resolve();
+  }
+
+  public whenShadowReady(): Promise<void> {
+    return this.shadowReady;
   }
 
   private runtimeState() {
@@ -398,7 +412,7 @@ export class ChaosEngineLiberated {
   }
 
   public exhaleSurvivor(thought: Thought) {
-    if (!this.isConnected) return;
+    if (!this.shadowSyncEnabled || !this.isConnected) return;
     
     this.state.shadow.push(thought);
     this.emitRuntime("jsonbin.shadow.appended", "completed", {
